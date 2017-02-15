@@ -30,7 +30,6 @@ IMenuOption* DrawWRRange;
 IMenu* FarmMenu;
 IMenuOption* FarmQ;
 IMenuOption* FarmE;
-IMenuOption* FarmEreq;
 
 
 ISpell2* Q;
