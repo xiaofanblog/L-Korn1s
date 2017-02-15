@@ -17,7 +17,6 @@ IMenuOption* ComboWR;
 IMenu* HarassMenu;
 IMenuOption* HarassQ;
 IMenuOption* HarassE;
-IMenuOption* HarassMana;
 
 
 
