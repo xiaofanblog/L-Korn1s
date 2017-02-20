@@ -266,7 +266,7 @@ void Farm()
 				E->AttackMinions();
 		}
 	}
-	if (FarmE->Enabled())
+	if (FarmQ->Enabled())
 	{
 		if (Q->IsReady())
 		{
