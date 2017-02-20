@@ -12,12 +12,13 @@ IMenuOption* ComboW;
 IMenuOption* ComboE;
 IMenuOption* ComboR;
 IMenuOption* ComboWR;
+IMenuOption* GunbladeCombo;
+IMenuOption* IgniteCombo;
 
 
 IMenu* HarassMenu;
 IMenuOption* HarassQ;
 IMenuOption* HarassE;
-
 
 
 IMenu* DrawingMenu;
@@ -30,12 +31,18 @@ IMenuOption* DrawWRRange;
 IMenu* FarmMenu;
 IMenuOption* FarmQ;
 IMenuOption* FarmE;
+IMenuOption* FarmQL;
+IMenuOption* FarmQJ;
 
+IInventoryItem* Gunblade;
+IInventoryItem* Cutlass;
 
 ISpell2* Q;
 ISpell2* W;
 ISpell2* E;
 ISpell2* R;
+ISpell2* Ignite;
+
 
 IUnit* Player;
 
@@ -46,6 +53,10 @@ void LoadSpells()
 	W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, false, true, kCollidesWithNothing);
 	E = GPluginSDK->CreateSpell2(kSlotE, kCircleCast, false, false, kCollidesWithNothing);
 	R = GPluginSDK->CreateSpell2(kSlotR, kTargetCast, false, true, kCollidesWithNothing);
+	Gunblade = GPluginSDK->CreateItemForId(3146, 700);
+	Cutlass = GPluginSDK->CreateItemForId(3144, 550);
+	if (GEntityList->Player()->GetSpellSlot("SummonerDot") != kSlotUnknown)
+		Ignite = GPluginSDK->CreateSpell2(GEntityList->Player()->GetSpellSlot("SummonerDot"), kTargetCast, false, false, kCollidesWithNothing);
 }
 
 void Menu()
@@ -55,9 +66,11 @@ void Menu()
 	{
 		ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
 		ComboW = ComboMenu->CheckBox("Use W to gapclose(Useful pre-6)", true);
-		ComboWR = ComboMenu->CheckBox("Use W to get In Range for R", true);
 		ComboE = ComboMenu->CheckBox("Use E in Combo", true);
 		ComboR = ComboMenu->CheckBox("Use R in Combo", true);
+		ComboWR = ComboMenu->AddKey("Chase combo(W Gap Close for R)", 'T');
+		GunbladeCombo = ComboMenu->CheckBox("Use items", true);
+		IgniteCombo = ComboMenu->CheckBox("Use Ignite", true);
 
 	}
 	HarassMenu = MainMenu->AddMenu("Harass");
@@ -76,14 +89,40 @@ void Menu()
 		DrawWRRange = DrawingMenu->CheckBox("Draw W R Range", true);
 	}
 	FarmMenu = MainMenu->AddMenu("Farming");
-	FarmQ = FarmMenu->CheckBox("Last hit with Q", true);
+	FarmQ = FarmMenu->CheckBox("Last Hit with Q", true);
+	FarmQL = FarmMenu->CheckBox("Lane Clear with Q", true);
 	FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
 }
 
-void Combo()
-
+void ComboWRG()
 {
 	{
+		bool hasIgnite = GEntityList->Player()->GetSpellState(GEntityList->Player()->GetSpellSlot("SummonerDot")) == Ready;
+
+		if (Gunblade->IsOwned() && Gunblade->IsReady() && GunbladeCombo->Enabled() && !(Player->IsDead()))
+		{
+			if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && Gunblade->IsTargetInRange(GTargetSelector->GetFocusedTarget()))
+			{
+				Gunblade->CastOnTarget(GTargetSelector->GetFocusedTarget());
+			}
+			else
+			{
+				Gunblade->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, SpellDamage, 700));
+			}
+		}
+		if (ComboR->Enabled() && R->IsReady())
+		{
+			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
+			if (target != nullptr)
+			{
+				R->CastOnTarget(target);
+			}
+		}
+		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+		if (target != nullptr && IgniteCombo->Enabled() && hasIgnite && GDamage->GetSummonerSpellDamage(GEntityList->Player(), target, kSummonerSpellIgnite) > target->GetHealth())
+		{
+			Ignite->CastOnTarget(target);
+		}
 		if (ComboQ->Enabled() && Q->IsReady())
 		{
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
@@ -102,7 +141,7 @@ void Combo()
 		}
 		if (ComboW->Enabled() && W->IsReady())
 		{
-			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range()+120);
+			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range() + 120);
 			if (target != nullptr)
 			{
 				float myDistance = SimpleLib::SimpleLib::GetDistance(target, Player);
@@ -115,15 +154,68 @@ void Combo()
 		}
 		if (ComboWR->Enabled() && R->IsReady())
 		{
-			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range()+R->Range());
+			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range() + R->Range());
 			if (target != nullptr)
 			{
 				float myDistance = SimpleLib::SimpleLib::GetDistance(target, Player);
-				if (myDistance >= 700){
+				if (myDistance >= 700) {
 					W->CastOnPosition(target->ServerPosition());
 				}
 
 			}
+		}
+	}
+
+}
+
+void Combo()
+{
+	{
+		bool hasIgnite = GEntityList->Player()->GetSpellState(GEntityList->Player()->GetSpellSlot("SummonerDot")) == Ready;
+		if (Gunblade->IsOwned() && Gunblade->IsReady() && GunbladeCombo->Enabled() && !(Player->IsDead()))
+		{
+			if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && Gunblade->IsTargetInRange(GTargetSelector->GetFocusedTarget()))
+			{
+				Gunblade->CastOnTarget(GTargetSelector->GetFocusedTarget());
+			}
+			else
+			{
+				Gunblade->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, SpellDamage, 700));
+			}
+		}
+		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+		if (target != nullptr && IgniteCombo->Enabled() && hasIgnite && GDamage->GetSummonerSpellDamage(GEntityList->Player(), target, kSummonerSpellIgnite) > target->GetHealth())
+		{
+			Ignite->CastOnTarget(target);
+		}
+		if (ComboQ->Enabled() && Q->IsReady())
+		{
+			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+			if (target != nullptr)
+			{
+				Q->CastOnTarget(target);
+			}
+		}
+		if (ComboE->Enabled() && E->IsReady())
+		{
+			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+			if (target != nullptr)
+			{
+				E->CastOnTarget(target);
+			}
+		}
+		if (ComboW->Enabled() && W->IsReady())
+		{
+			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range() + 120);
+			if (target != nullptr)
+			{
+				float myDistance = SimpleLib::SimpleLib::GetDistance(target, Player);
+				if (myDistance >= 200)
+				{
+					W->CastOnTarget(target);
+				}
+			}
+
 		}
 		if (ComboR->Enabled() && R->IsReady())
 		{
@@ -133,6 +225,7 @@ void Combo()
 				R->CastOnTarget(target);
 			}
 		}
+
 	}
 }
 
@@ -173,6 +266,13 @@ void Farm()
 				E->AttackMinions();
 		}
 	}
+	if (FarmE->Enabled())
+	{
+		if (Q->IsReady())
+		{
+			Q->AttackMinions();
+		}
+	}
 }
 void Auto()
 {
@@ -207,6 +307,10 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
 	{
 		Mixed();
+	}
+	if (GetAsyncKeyState(ComboWR->GetInteger()) & 0x8000)
+	{
+		ComboWRG();
 	}
 	Auto();
 }
