@@ -187,12 +187,13 @@ enum eLeagueEvents
 	kEventOnEnterVisible,
 	kEventOnExitVisible,
 	kEventOnUpdateChargedSpell,
-	kEventOnPlayAnimation
+	kEventOnPlayAnimation,
+	kEventOnPauseAnimation
 };
 
 enum eTargetPriority
 {
-	QuickestKill,			/* Prioritize the quickest kill based on damage type */
+	QuickestKill,				/* Prioritize the quickest kill based on damage type */
 	ClosestPriority,			/* Prioritize based on distance */
 	ClosestToCursorPriority,	/* Prioritize based on distance from cursor */
 	LowestHealthPriority		/* Prioritize based on lowest health */
@@ -239,10 +240,11 @@ enum eFontLocation
 enum eCollisionFlags
 {
 	kCollidesWithNothing = 0,
-	kCollidesWithMinions = (1 << 1), // Spell collides with enemy minions
-	kCollidesWithHeroes = (1 << 2), // Spell collides with enemy champions
-	kCollidesWithYasuoWall = (1 << 3), // Spell collides with Yasuo wall
-	kCollidesWithWalls = (1 << 4), // Spell collides with walls
+	kCollidesWithMinions = (1 << 1),	// Spell collides with enemy minions
+	kCollidesWithHeroes = (1 << 2),		// Spell collides with enemy champions
+	kCollidesWithYasuoWall = (1 << 3),	// Spell collides with Yasuo wall
+	kCollidesWithWalls = (1 << 4),		// Spell collides with walls
+	kCollidesWithAllies = (1 << 5)		// Spell collides with ally champions
 };
 
 enum eOrbwalkingMode
@@ -254,6 +256,45 @@ enum eOrbwalkingMode
 	kModeFreeze,
 	kModeCustom,
 	kModeNone
+};
+
+enum eGameUnitClass
+{
+	kClassUnknown,
+	kNeutralMinionCamp,
+	kObj_AI_Base,
+	kFollowerObject,
+	kFollowerObjectWithLerpMovement,
+	kObj_AI_Hero,
+	kObj_AI_Marker,
+	kObj_AI_Minion,
+	kLevelPropAI,
+	kObj_AI_Turret,
+	kObj_GeneralParticleEmitter,
+	kObj_SpellChainMissile,
+	kObj_SpellCircleMissile,
+	kObj_SpellLineMissile,
+	kObj_SpellMissile,
+	kMissile,
+	kMissileClient,
+	kDrawFX,
+	kUnrevealedTarget,
+	kObj_LampBulb,
+	kObj_Barracks,
+	kObj_BarracksDampener,
+	kObj_AnimatedBuilding,
+	kObj_Building,
+	kObj_Levelsizer,
+	kObj_NavPoint,
+	kObj_SpawnPoint,
+	kObj_Lake,
+	kObj_HQ,
+	kObj_InfoPoint,
+	kLevelPropGameObject,
+	kLevelPropSpawnerPoint,
+	kObj_Shop,
+	kObj_Turret,
+	kGrassObject
 };
 
 enum ePingCategory
@@ -293,4 +334,4 @@ enum eTaunt
 	kToggle,
 };
 
-#endif // LPPConstants_h__#pragma once
+#endif // LPPConstants_h__

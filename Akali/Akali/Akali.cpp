@@ -1,7 +1,7 @@
 #include "PluginSDK.h"
 #include "SimpleLib.h"
 
-PluginSetup("Akali")
+PluginSetup("Kornis's Akali")
 
 
 IMenu* MainMenu;
@@ -12,7 +12,8 @@ IMenuOption* ComboW;
 IMenuOption* ComboE;
 IMenuOption* ComboR;
 IMenuOption* ComboWR;
-IMenuOption* GunbladeCombo;
+IMenuOption* ComboRStack;
+IMenuOption* ItemsCombo;
 IMenuOption* IgniteCombo;
 
 
@@ -32,7 +33,18 @@ IMenu* FarmMenu;
 IMenuOption* FarmQ;
 IMenuOption* FarmE;
 IMenuOption* FarmQL;
-IMenuOption* FarmQJ;
+IMenuOption* FarmEnergy;
+
+IMenu* FleeMenu;
+IMenuOption* FleeW;
+IMenuOption* FleeR;
+IMenuOption* FleeKey;
+
+IMenu* KillstealMenu;
+IMenuOption* KSQ;
+IMenuOption* KSE;
+IMenuOption* KSR;
+IMenuOption* KSRGap;
 
 IInventoryItem* Gunblade;
 IInventoryItem* Cutlass;
@@ -61,15 +73,16 @@ void LoadSpells()
 
 void Menu()
 {
-	MainMenu = GPluginSDK->AddMenu("Akali");
+	MainMenu = GPluginSDK->AddMenu("Kornis Akali");
 	ComboMenu = MainMenu->AddMenu("Combo");
 	{
 		ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
 		ComboW = ComboMenu->CheckBox("Use W to gapclose(Useful pre-6)", true);
 		ComboE = ComboMenu->CheckBox("Use E in Combo", true);
 		ComboR = ComboMenu->CheckBox("Use R in Combo", true);
+		ComboRStack = ComboMenu->AddInteger("Save x R for Killsecure", 0, 3, 1);
 		ComboWR = ComboMenu->AddKey("Chase combo(W Gap Close for R)", 'T');
-		GunbladeCombo = ComboMenu->CheckBox("Use items", true);
+		ItemsCombo = ComboMenu->CheckBox("Use Items", true);
 		IgniteCombo = ComboMenu->CheckBox("Use Ignite", true);
 
 	}
@@ -89,17 +102,35 @@ void Menu()
 		DrawWRRange = DrawingMenu->CheckBox("Draw W R Range", true);
 	}
 	FarmMenu = MainMenu->AddMenu("Farming");
-	FarmQ = FarmMenu->CheckBox("Last Hit with Q", true);
-	FarmQL = FarmMenu->CheckBox("Lane Clear with Q", true);
-	FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
+	{
+		FarmEnergy = FarmMenu->AddInteger("Energy percent for clear", 10, 100, 50);
+		FarmQL = FarmMenu->CheckBox("Last Hit with Q", true);
+		FarmQ = FarmMenu->CheckBox("Lane Clear with Q", true);
+		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
+	}
+	FleeMenu = MainMenu->AddMenu("Flee menu");
+	{
+		FleeW = FleeMenu->CheckBox("Flee with W", true);
+		FleeR = FleeMenu->CheckBox("Flee with R(SOON)", true);
+		FleeKey = FleeMenu->AddKey("Flee Key", 'G');
+	}
+
+	KillstealMenu = MainMenu->AddMenu("Killsteal");
+	{
+		KSQ = KillstealMenu->CheckBox("Use Q", true);
+		KSE = KillstealMenu->CheckBox("Use E", true);
+		KSR = KillstealMenu->CheckBox("Use R", true);
+		KSRGap = KillstealMenu->CheckBox("Use R to gap", true);
+	}
 }
 
 void ComboWRG()
 {
 	{
+		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
 		bool hasIgnite = GEntityList->Player()->GetSpellState(GEntityList->Player()->GetSpellSlot("SummonerDot")) == Ready;
 
-		if (Gunblade->IsOwned() && Gunblade->IsReady() && GunbladeCombo->Enabled() && !(Player->IsDead()))
+		if (Gunblade->IsOwned() && Gunblade->IsReady() && ItemsCombo->Enabled() && !(Player->IsDead()))
 		{
 			if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && Gunblade->IsTargetInRange(GTargetSelector->GetFocusedTarget()))
 			{
@@ -108,6 +139,17 @@ void ComboWRG()
 			else
 			{
 				Gunblade->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, SpellDamage, 700));
+			}
+		}
+		if (Cutlass->IsOwned() && Cutlass->IsReady() && ItemsCombo->Enabled() && !(Player->IsDead()))
+		{
+			if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && Cutlass->IsTargetInRange(GTargetSelector->GetFocusedTarget()))
+			{
+				Cutlass->CastOnTarget(GTargetSelector->GetFocusedTarget());
+			}
+			else
+			{
+				Cutlass->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, SpellDamage, 550));
 			}
 		}
 		if (ComboR->Enabled() && R->IsReady())
@@ -168,11 +210,16 @@ void ComboWRG()
 
 }
 
+int GetUltStacks()
+{
+	return GEntityList->Player()->HasBuff("AkaliShadowDance") ? GEntityList->Player()->GetBuffCount("AkaliShadowDance") : 0;
+}
+
 void Combo()
 {
 	{
 		bool hasIgnite = GEntityList->Player()->GetSpellState(GEntityList->Player()->GetSpellSlot("SummonerDot")) == Ready;
-		if (Gunblade->IsOwned() && Gunblade->IsReady() && GunbladeCombo->Enabled() && !(Player->IsDead()))
+		if (Gunblade->IsOwned() && Gunblade->IsReady() && ItemsCombo->Enabled() && !(Player->IsDead()))
 		{
 			if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && Gunblade->IsTargetInRange(GTargetSelector->GetFocusedTarget()))
 			{
@@ -181,6 +228,17 @@ void Combo()
 			else
 			{
 				Gunblade->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, SpellDamage, 700));
+			}
+		}
+		if (Cutlass->IsOwned() && Cutlass->IsReady() && ItemsCombo->Enabled() && !(Player->IsDead()))
+		{
+			if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && Cutlass->IsTargetInRange(GTargetSelector->GetFocusedTarget()))
+			{
+				Cutlass->CastOnTarget(GTargetSelector->GetFocusedTarget());
+			}
+			else
+			{
+				Cutlass->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, SpellDamage, 550));
 			}
 		}
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
@@ -201,7 +259,7 @@ void Combo()
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
 			if (target != nullptr)
 			{
-				E->CastOnTarget(target);
+				E->CastOnPlayer();
 			}
 		}
 		if (ComboW->Enabled() && W->IsReady())
@@ -217,7 +275,7 @@ void Combo()
 			}
 
 		}
-		if (ComboR->Enabled() && R->IsReady())
+		if (ComboR->Enabled() && R->IsReady() && GetUltStacks() > ComboRStack->GetInteger())
 		{
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
 			if (target != nullptr)
@@ -229,13 +287,52 @@ void Combo()
 	}
 }
 
+void CheckRKS(IUnit* Enemy)
+{
+	for (auto target : GEntityList->GetAllMinions(false, true, true))
+	{
+		if (target->IsValidTarget(GEntityList->Player(), R->Range()) && (Enemy->GetPosition() - target->GetPosition()).Length() < R->Range())
+		{
+			R->CastOnTarget(target);
+		}
+	}
+}
+void Flee()
+{
+	if (!GGame->IsChatOpen())
+	{
+		/*if (FleeR->Enabled())
+		{
+			GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+			auto minion = GTargetSelector->FindTarget(ClosestToCursorPriority, SpellDamage, R->Range());
+			for (auto minion : GEntityList->GetAllMinions(false, true, true))
+				if (R->IsReady())
+				{
+					if (minion != nullptr)
+					{
+						if (minion->IsEnemy(GEntityList->Player()) && !minion->IsDead() && GEntityList->Player()->IsValidTarget(minion, R->Range()))
+						{
+							R->CastOnTarget(minion);
+						}
+					}
+				}
+		}*/
+
+		if (FleeW->Enabled() && W->IsReady())
+		{
+			W->CastOnPosition(GGame->CursorPosition());
+		}
+
+	}
+}
+
 void LastHit()
 {
 	for (auto Minion : GEntityList->GetAllMinions(false, true, true))
 	{
 		if (!Minion->IsDead() && Minion != nullptr)
 		{
-			if (FarmQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()) && GDamage->GetSpellDamage(GEntityList->Player(), Minion, kSlotQ) >= Minion->GetHealth())
+			if (FarmQL->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()) && GDamage->GetSpellDamage(GEntityList->Player(), Minion, kSlotQ) >= Minion->GetHealth())
 			{
 				Q->CastOnUnit(Minion);
 			}
@@ -257,13 +354,47 @@ void Mixed()
 	}
 }
 
+void Killsteal()
+{
+		for (auto Enemy : GEntityList->GetAllHeros(false, true))
+		{
+			auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotQ);
+			auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotE);
+			auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotR);
+
+			if (Enemy != nullptr && !Enemy->IsDead())
+			{
+				if (KSQ->Enabled() && KSRGap->Enabled() && Q->IsReady() && R->IsReady() && GetUltStacks() > 1 && Enemy->IsValidTarget(GEntityList->Player(), R->Range() * 2) && QDamage > Enemy->GetHealth())
+				{
+					CheckRKS(Enemy);
+					R->CastOnTarget(Enemy);
+				}
+				if (KSQ->Enabled() && Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && QDamage > Enemy->GetHealth())
+				{
+					Q->CastOnTarget(Enemy);
+				}
+				if (KSE->Enabled() && E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && EDamage > Enemy->GetHealth())
+				{
+					E->CastOnTarget(Enemy);
+				}
+				if (KSR->Enabled() && R->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), R->Range()) && RDamage > Enemy->GetHealth())
+				{
+					R->CastOnTarget(Enemy);
+				}
+			}
+		}
+}
+
+
 void Farm()
 {
+	if (Player->ManaPercent() < FarmEnergy->GetInteger())
+		return;
 	if (FarmE->Enabled())
 	{
 		if (E->IsReady())
 		{
-				E->AttackMinions();
+			E->AttackMinions();
 		}
 	}
 	if (FarmQ->Enabled())
@@ -312,7 +443,12 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		ComboWRG();
 	}
+	if (GetAsyncKeyState(FleeKey->GetInteger()) & 0x8000)
+	{
+		Flee();
+	}
 	Auto();
+	Killsteal();
 }
 
 
@@ -321,11 +457,10 @@ PLUGIN_EVENT(void) OnRender()
 	if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range()); }
 	if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), R->Range()); }
 	if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
-	if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()+120); }
-	if (DrawWRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()+R->Range()); }
-
-
+	if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range() + 120); }
+	if (DrawWRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range() + R->Range()); }
 }
+
 
 
 PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)

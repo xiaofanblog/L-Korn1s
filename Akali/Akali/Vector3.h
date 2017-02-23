@@ -1,4 +1,3 @@
-
 #ifndef Vector3_h__
 #define Vector3_h__
 
@@ -136,6 +135,12 @@ public:
 		*this /= len;
 
 		return *this;
+	}
+
+	Vec2 Extend(Vec2 const Other, float Len)
+	{
+		Vec2 vecThis = *this;
+		return (vecThis + (Other - vecThis).VectorNormalize() * Len);
 	}
 
 	float Length()
@@ -289,6 +294,12 @@ public:
 		*this /= len;
 
 		return *this;
+	}
+
+	Vec3 Extend(Vec3 const Other, float Len)
+	{
+		Vec3 vecThis = *this;
+		return (vecThis + (Other - vecThis).VectorNormalize() * Len);
 	}
 
 	float Length()

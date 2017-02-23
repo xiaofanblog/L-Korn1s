@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{520DCF5B-8D49-4D63-AC4F-4D01D6832489}</ProjectGuid>
+    <ProjectGuid>{D3EE88DF-CEED-44B5-98E9-6777EC5850F4}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Akali</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
