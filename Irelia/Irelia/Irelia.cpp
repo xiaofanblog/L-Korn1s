@@ -11,12 +11,13 @@ IMenu* ComboMenu;
 IMenuOption* ComboQ;
 IMenuOption* ComboW;
 IMenuOption* ComboE;
+IMenuOption* ComboEStun;
 IMenuOption* ComboR;
 IMenuOption* ComboQmin;
 IMenuOption* ComboRgap;
 IMenuOption* ComboQgap;
 IMenuOption* ComboItems;
-IMenuOption* ComboIgnite;
+IMenuOption* Rkillable;
 
 IMenu* HarassMenu;
 IMenuOption* HarassQ;
@@ -88,12 +89,13 @@ void Menu()
 		ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
 		ComboW = ComboMenu->CheckBox("Use W in Combo", true);
 		ComboE = ComboMenu->CheckBox("Use E in Combo", true);
+		ComboEStun = ComboMenu->CheckBox("Use E only for stun", true);
 		ComboR = ComboMenu->CheckBox("Use R in Combo", true);
+		Rkillable = ComboMenu->CheckBox("Use R only if killable with combo", true);
 		ComboQmin = ComboMenu->AddInteger("Min. Q Range ", 20, 400, 250);
 		ComboQgap = ComboMenu->CheckBox("Use Q to Gapclose", true);
 		ComboRgap = ComboMenu->CheckBox("Use R to Gapclose", true);
 		ComboItems = ComboMenu->CheckBox("Use Items", true);
-		ComboIgnite = ComboMenu->CheckBox("Use ignite", true);
 
 	}
 	HarassMenu = MainMenu->AddMenu("Harass");
@@ -185,11 +187,6 @@ void Combo()
 	auto Qtarget = GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, Q->Range());
 	auto Wtarget = GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, Q->Range() - 200);
 
-	bool hasIgnite = GEntityList->Player()->GetSpellState(GEntityList->Player()->GetSpellSlot("SummonerDot")) == Ready;
-	if (Qtarget != nullptr && ComboIgnite->Enabled() && hasIgnite && GDamage->GetSummonerSpellDamage(GEntityList->Player(), Qtarget, kSummonerSpellIgnite) > Qtarget->GetHealth())
-	{
-		Ignite->CastOnTarget(Qtarget);
-	}
 	if (Botrk->IsOwned() && Botrk->IsReady() && ComboItems->Enabled() && !(Player->IsDead()))
 	{
 		if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && Botrk->IsTargetInRange(GTargetSelector->GetFocusedTarget()))
@@ -244,18 +241,41 @@ void Combo()
 					W->CastOnPlayer();
 				}
 			}
-			if (ComboE->Enabled() && E->IsReady() && E->Range())
+			if (ComboE->Enabled() && E->IsReady() && E->Range() && !ComboEStun->Enabled())
 			{
 				if (Etarget != nullptr)
 				{
 					E->CastOnTarget(Etarget);
 				}
 			}
-			if (ComboR->Enabled() && R->IsReady() && !Player->HasBuff("IreliaTranscendentBladesSpell") && R->Range())
+			if (ComboE->Enabled() && E->IsReady() && E->Range() && ComboEStun->Enabled())
 			{
-				if (Rtarget != nullptr)
+				if (Enemy->HealthPercent() > Player->HealthPercent())
 				{
-					R->CastOnTarget(Rtarget, 5);
+					E->CastOnTarget(Etarget);
+				}
+			}
+
+			if (ComboR->Enabled() && R->IsReady() && !Player->HasBuff("IreliaTranscendentBladesSpell") && R->Range() && !Rkillable->Enabled())
+			{
+				if (Q->IsReady() && E->IsReady())
+				{
+					if (Rtarget != nullptr)
+					{
+						R->CastOnTarget(Rtarget, 5);
+					}
+				}
+			}
+			if (ComboR->Enabled() && R->IsReady() && !Player->HasBuff("IreliaTranscendentBladesSpell") && Q->Range() && Rkillable->Enabled())
+			{
+				auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotQ);
+				auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotE);
+				auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotR);
+				if (RDamage*3 + EDamage + QDamage > Enemy->GetHealth() && Q->IsReady() && E->IsReady())
+				{
+					{
+						R->CastOnTarget(Qtarget, 5);
+					}
 				}
 			}
 			if (Player->HasBuff("IreliaTranscendentBladesSpell"))
@@ -265,6 +285,7 @@ void Combo()
 		}
 	}
 }
+	
 void LastHit()
 {
 	if (Player->ManaPercent() > LasthitMana->GetInteger())
