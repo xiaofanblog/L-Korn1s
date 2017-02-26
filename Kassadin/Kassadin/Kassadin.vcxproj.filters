@@ -29,10 +29,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\League++ SDK\PluginSDK.cpp">
+    <ClCompile Include="Kassadin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Kassadin.cpp">
+    <ClCompile Include="PluginSDK.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

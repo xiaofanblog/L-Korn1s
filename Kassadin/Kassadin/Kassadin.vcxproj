@@ -152,7 +152,7 @@
     <ClInclude Include="..\..\..\League++ SDK\Vector3.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\League++ SDK\PluginSDK.cpp" />
+    <ClCompile Include="PluginSDK.cpp" />
     <ClCompile Include="Kassadin.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

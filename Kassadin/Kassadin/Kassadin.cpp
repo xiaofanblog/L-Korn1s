@@ -1,4 +1,5 @@
 #include "PluginSDK.h"
+#include <string>
 
 PluginSetup("Kassadin")
 
@@ -10,12 +11,11 @@ IMenuOption* ComboQ;
 IMenuOption* ComboW;
 IMenuOption* ComboE;
 IMenuOption* ComboR;
-IMenuOption* ComboRD;
-IMenuOption* IgniteCombo;
 
 
 IMenu* HarassMenu;
 IMenuOption* HarassQ;
+IMenuOption* HarassMana;
 
 
 IMenu* DrawingMenu;
@@ -27,6 +27,12 @@ IMenu* FarmMenu;
 IMenuOption* FarmQ;
 IMenuOption* FarmE;
 IMenuOption* FarmW;
+IMenuOption* FarmMana;
+
+IMenu* KillstealMenu;
+IMenuOption* KSQ;
+IMenuOption* KSE;
+IMenuOption* KSR;
 
 IMenu* LastMenu;
 IMenuOption* LastQ;
@@ -38,7 +44,6 @@ ISpell2* Q;
 ISpell2* W;
 ISpell2* E;
 ISpell2* R;
-ISpell2* Ignite;
 
 
 IUnit* Player;
@@ -50,8 +55,6 @@ void LoadSpells()
 	W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, kCollidesWithNothing);
 	E = GPluginSDK->CreateSpell2(kSlotE, kConeCast, false, false, kCollidesWithNothing);
 	R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, false, false, kCollidesWithNothing);
-	if (GEntityList->Player()->GetSpellSlot("SummonerDot") != kSlotUnknown)
-		Ignite = GPluginSDK->CreateSpell2(GEntityList->Player()->GetSpellSlot("SummonerDot"), kTargetCast, false, false, kCollidesWithNothing);
 }
 
 void Menu()
@@ -63,11 +66,12 @@ void Menu()
 		ComboW = ComboMenu->CheckBox("Use W", true);
 		ComboE = ComboMenu->CheckBox("Use E", true);
 		ComboR = ComboMenu->CheckBox("Use R", true);
-		IgniteCombo = ComboMenu->CheckBox("Use Ignite", true);
+
 
 	}
 	HarassMenu = MainMenu->AddMenu("Harass");
 	{
+		HarassMana = HarassMenu->AddInteger("Mana Percent for Harass", 10, 100, 50);
 		HarassQ = HarassMenu->CheckBox("Use Q", true);
 	}
 
@@ -78,8 +82,15 @@ void Menu()
 		DrawERange = DrawingMenu->CheckBox("Draw E Range", true);
 		DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
 	}
+	KillstealMenu = MainMenu->AddMenu("Killsteal");
+	{
+		KSQ = KillstealMenu->CheckBox("Killsteal with Q", true);
+		KSE = KillstealMenu->CheckBox("Killsteal with E", true);
+		KSR = KillstealMenu->CheckBox("Killsteal with R", true);
+	}
 	FarmMenu = MainMenu->AddMenu("Farming");
 	{
+		FarmMana = FarmMenu->AddInteger("Mana Percent for LaneClear", 10, 100, 50);
 		FarmQ = FarmMenu->CheckBox("Lane Clear with Q", true);
 		FarmW = FarmMenu->CheckBox("Lane Clear with W", true);
 		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
@@ -87,8 +98,8 @@ void Menu()
 
 	LastMenu = MainMenu->AddMenu("Last Hit");
 	{
-		LastQ = FarmMenu->CheckBox("Last hit Q", true);
-		LastW = FarmMenu->CheckBox("Last hit W", true);
+		LastQ = LastMenu->CheckBox("Last hit Q", true);
+		LastW = LastMenu->CheckBox("Last hit W", true);
 	}
 }
 
@@ -110,7 +121,7 @@ void Combo()
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
 			if (target != nullptr)
 			{
-				R->CastOnTarget(target);
+				R->CastOnTarget(target, kHitChanceMedium);
 			}
 		}
 
@@ -131,11 +142,6 @@ void Combo()
 				E->CastOnTarget(target);
 			}
 		}
-		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
-		if (target != nullptr && IgniteCombo->Enabled() && hasIgnite && GDamage->GetSummonerSpellDamage(GEntityList->Player(), target, kSummonerSpellIgnite) > target->GetHealth())
-		{
-			Ignite->CastOnTarget(target);
-		}
 
 	}
 }
@@ -152,7 +158,37 @@ void LastHit()
 			}
 			if (LastW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range() + 200) && GDamage->GetSpellDamage(GEntityList->Player(), Minion, kSlotW) >= Minion->GetHealth())
 			{
-				W->CastOnPlayer();
+				if (W->CastOnPlayer())
+				{
+					GOrbwalking->SetOverrideTarget(Minion);
+					return;
+				}
+			}
+		}
+	}
+}
+
+void Killsteal()
+{
+	for (auto Enemy : GEntityList->GetAllHeros(false, true))
+	{
+		auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotQ);
+		auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotE);
+		auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotR);
+
+		if (Enemy != nullptr && !Enemy->IsDead())
+		{
+			if (KSQ->Enabled() && Q->IsReady() && QDamage > Enemy->GetHealth())
+			{
+				Q->CastOnTarget(Enemy);
+			}
+			if (KSE->Enabled() && E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && EDamage > Enemy->GetHealth())
+			{
+				E->CastOnTarget(Enemy);
+			}
+			if (KSR->Enabled() && R->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), R->Range()) && RDamage > Enemy->GetHealth())
+			{
+				R->CastOnTarget(Enemy, kHitChanceMedium);
 			}
 		}
 	}
@@ -160,6 +196,7 @@ void LastHit()
 
 void Mixed()
 {
+	if (Player->ManaPercent() > HarassMana->GetInteger())
 	{
 		if (ComboQ->Enabled() && Q->IsReady())
 		{
@@ -174,25 +211,22 @@ void Mixed()
 
 void Farm()
 {
-	if (FarmQ->Enabled())
+	if (Player->ManaPercent() > FarmMana->GetInteger())
 	{
-		if (Q->IsReady())
+		for (auto Minion : GEntityList->GetAllMinions(false, true, true))
 		{
-			Q->AttackMinions();
-		}
-	}
-	if (FarmE->Enabled())
-	{
-		if (E->IsReady())
-		{
-			E->AttackMinions();
-		}
-	}
-	if (FarmW->Enabled())
-	{
-		if (W->IsReady())
-		{
-			W->CastOnPlayer();
+			if (FarmQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+			{
+				Q->CastOnUnit(Minion);
+			}
+			if (FarmE->Enabled() && E->IsReady() && Minion->IsValidTarget(GEntityList->Player(), R->Range()))
+			{
+				E->CastOnUnit(Minion);
+			}
+			if (FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), 200))
+			{
+				W->CastOnPlayer();
+			}
 		}
 	}
 }
@@ -216,6 +250,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Mixed();
 	}
+	Killsteal();
 }
 
 
