@@ -326,6 +326,7 @@ void Flee()
 
 		if (FleeW->Enabled() && W->IsReady())
 		{
+			GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
 			W->CastOnPosition(GGame->CursorPosition());
 		}
 
