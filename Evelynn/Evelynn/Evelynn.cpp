@@ -10,6 +10,7 @@ IMenuOption* ComboQ;
 IMenuOption* ComboW;
 IMenuOption* ComboE;
 IMenuOption* ComboR;
+IMenuOption* ComboRmin;
 IMenuOption* ItemsCombo;
 
 
@@ -74,6 +75,7 @@ void Menu()
 		ComboW = ComboMenu->CheckBox("Use W in Combo", true);
 		ComboE = ComboMenu->CheckBox("Use E in Combo", true);
 		ComboR = ComboMenu->CheckBox("Use R in Combo", true);
+		ComboRmin = ComboMenu->AddInteger("Use R if enemies X >",1,5,2);
 		ItemsCombo = ComboMenu->CheckBox("Use Items", true);
 
 	}
@@ -123,6 +125,25 @@ void AutoSmite() // AUTO SMITE PRO BY REMBRANDT
 			}
 		}
 	}
+}
+
+int GetEnemiesInRange(float range)
+{
+	auto enemies = GEntityList->GetAllHeros(false, true);
+	auto enemiesInRange = 0;
+
+	for (auto enemy : enemies)
+	{
+		if (enemy != nullptr && enemy->GetTeam() != GEntityList->Player()->GetTeam())
+		{
+			auto flDistance = (enemy->GetPosition() - GEntityList->Player()->GetPosition()).Length();
+			if (flDistance < range)
+			{
+				enemiesInRange++;
+			}
+		}
+	}
+	return enemiesInRange;
 }
 
 void Combo()
@@ -187,11 +208,10 @@ void Combo()
 	}
 	if (ComboR->Enabled() && R->IsReady() && R->Range())
 	{
-
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
-		if (target != nullptr)
-		{
-			R->CastOnTarget(target);
+		if (target != nullptr && !target->IsDead() && !target->IsInvulnerable() && GetEnemiesInRange(R->Range()) >= ComboRmin->GetInteger() && GEntityList->Player()->IsValidTarget(target, R->Range()))
+			{
+				R->CastOnTarget(target);
 		}
 	}
 }
