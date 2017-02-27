@@ -15,6 +15,7 @@ IMenuOption* ComboEStun;
 IMenuOption* ComboR;
 IMenuOption* ComboQmin;
 IMenuOption* ComboRgap;
+IMenuOption* ComboRgapks;
 IMenuOption* ComboQgap;
 IMenuOption* ComboItems;
 IMenuOption* Rkillable;
@@ -30,6 +31,8 @@ IMenuOption* DrawQRange;
 IMenuOption* DrawERange;
 IMenuOption* DrawRRange;
 IMenuOption* DrawQkill;
+IMenuOption* DrawDamage;
+IMenuOption* DrawFill;
 
 IMenu* LastHitMenu;
 IMenuOption* LasthitQ;
@@ -61,7 +64,7 @@ ISpell2* Ignite;
 IUnit* Player;
 
 int xOffset = 10;
-int yOffset = 20;
+int yOffset = 15;
 int Width = 103;
 int Height = 8;
 Vec4 Color = Vec4(105, 198, 5, 255);
@@ -73,7 +76,7 @@ void LoadSpells()
 	Q = GPluginSDK->CreateSpell2(kSlotQ, kTargetCast, false, false, kCollidesWithNothing);
 	W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, kCollidesWithNothing);
 	E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, kCollidesWithNothing);
-	R = GPluginSDK->CreateSpell2(kSlotR, kLineCast, true, true, kCollidesWithYasuoWall);
+	R = GPluginSDK->CreateSpell2(kSlotR, kTargetCast, false, false, kCollidesWithYasuoWall);
 	if (GEntityList->Player()->GetSpellSlot("SummonerDot") != kSlotUnknown)
 		Ignite = GPluginSDK->CreateSpell2(GEntityList->Player()->GetSpellSlot("SummonerDot"), kTargetCast, false, false, kCollidesWithNothing);
 
@@ -95,6 +98,7 @@ void Menu()
 		ComboQmin = ComboMenu->AddInteger("Min. Q Range ", 20, 400, 250);
 		ComboQgap = ComboMenu->CheckBox("Use Q to Gapclose", true);
 		ComboRgap = ComboMenu->CheckBox("Use R to Gapclose", true);
+		ComboRgapks = ComboMenu->CheckBox("R gap only when killable", true);
 		ComboItems = ComboMenu->CheckBox("Use Items", true);
 
 	}
@@ -112,6 +116,8 @@ void Menu()
 		DrawERange = DrawingMenu->CheckBox("Draw E Range", true);
 		DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
 		DrawQkill = DrawingMenu->CheckBox("Draw Minions Killable With Q", true);
+		DrawDamage = DrawingMenu->CheckBox("Draw if killable", true);
+		DrawFill = DrawingMenu->CheckBox("Fill damage", true);
 	}
 	LaneClearMenu = MainMenu->AddMenu("Lane Clear");
 	{
@@ -163,10 +169,15 @@ void minionQ(IUnit* Enemy)
 
 void minionR(IUnit* Enemy)
 {
-	if (Enemy != nullptr && ComboRgap->Enabled() && !Enemy->IsDead() && Q->IsReady() && R->IsReady())
+	if (Enemy != nullptr && ComboRgap->Enabled() && !Enemy->IsDead() && Q->IsReady() && R->IsReady() && ComboRgapks->Enabled())
 	{
-		for (auto minionR : GEntityList->GetAllMinions(false, true, true))
+		auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotQ);
+		auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotE);
+		auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotR);
+		if (RDamage * 3 + EDamage + QDamage > Enemy->GetHealth())
 		{
+			for (auto minionR : GEntityList->GetAllMinions(false, true, true))
+			{
 				auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), minionR, kSlotR);
 				auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), minionR, kSlotQ);
 				if (minionR->IsValidTarget(GEntityList->Player(), Q->Range()) && (Enemy->GetPosition() - minionR->GetPosition()).Length() < Q->Range() && minionR->GetHealth() > QDamage && (minionR->GetHealth() - RDamage * 2) < QDamage)
@@ -176,10 +187,63 @@ void minionR(IUnit* Enemy)
 						R->CastOnUnit(minionR);
 					}
 				}
+			}
+		}
+	}
+	if (Enemy != nullptr && ComboRgap->Enabled() && !Enemy->IsDead() && Q->IsReady() && R->IsReady() && !ComboRgapks->Enabled())
+	{
+		for (auto minionR : GEntityList->GetAllMinions(false, true, true))
+		{
+			auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), minionR, kSlotR);
+			auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), minionR, kSlotQ);
+			if (minionR->IsValidTarget(GEntityList->Player(), Q->Range()) && (Enemy->GetPosition() - minionR->GetPosition()).Length() < Q->Range() && minionR->GetHealth() > QDamage && (minionR->GetHealth() - RDamage * 2) < QDamage)
+			{
+				if (minionR != nullptr)
+				{
+					R->CastOnUnit(minionR);
+				}
+			}
 		}
 	}
 }
+void dmgdraw()
+{
+	if (!DrawDamage->Enabled())
+		return;
+	for (auto hero : GEntityList->GetAllHeros(false, true))
+	{
+		Vec2 barPos = Vec2();
+		if (hero->GetHPBarPosition(barPos) && !hero->IsDead())
+		{
+			auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotQ);
+			auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotE);
+			auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotR);
+			float percentHealthAfterDamage = max(0, hero->GetHealth() - float(RDamage * 3 + EDamage + QDamage)) / hero->GetMaxHealth();
+			float yPos = barPos.y + yOffset;
+			float xPosDamage = (barPos.x + xOffset) + Width * percentHealthAfterDamage;
+			float xPosCurrentHp = barPos.x + xOffset + Width * (hero->GetHealth() / hero->GetMaxHealth());
 
+			if (RDamage * 3 + EDamage + QDamage > hero->GetHealth())
+			{
+				GRender->DrawTextW(Vec2(barPos.x + xOffset, barPos.y + yOffset - 13), Color, "Killable");
+			}
+			if (DrawFill->Enabled() && !hero->IsDead())
+			{
+				float differenceInHP = xPosCurrentHp - xPosDamage;
+				float pos1 = barPos.x + 9 + (107 * percentHealthAfterDamage);
+
+				for (int i = 0; i < differenceInHP; i++)
+				{
+					GRender->DrawLine(Vec2(pos1 + i, yPos), Vec2(pos1 + i, yPos + Height), FillColor);
+				}
+				if (!hero->IsVisible())
+				{
+					
+				}
+			}
+		}
+	}
+}
 void Combo()
 {
 	auto Etarget = GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, E->Range());
@@ -256,31 +320,43 @@ void Combo()
 				}
 			}
 
-			if (ComboR->Enabled() && R->IsReady() && !Player->HasBuff("IreliaTranscendentBladesSpell") && R->Range() && !Rkillable->Enabled())
+			if (ComboR->Enabled() && R->IsReady() && R->Range() && !Rkillable->Enabled())
 			{
 				if (Q->IsReady() && E->IsReady())
 				{
 					if (Rtarget != nullptr)
 					{
-						R->CastOnTarget(Rtarget, 5);
+						if (!Player->HasBuff("IreliaTranscendentBladesSpell"))
+						{
+							R->CastOnTarget(Rtarget);
+						}
+					}
+				}
+				if (Player->HasBuff("IreliaTranscendentBladesSpell"))
+				{
+					{
+						R->CastOnTarget(Rtarget);
 					}
 				}
 			}
-			if (ComboR->Enabled() && R->IsReady() && !Player->HasBuff("IreliaTranscendentBladesSpell") && Q->Range() && Rkillable->Enabled())
+			if (ComboR->Enabled() && R->IsReady() && Q->Range() && Rkillable->Enabled())
 			{
 				auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotQ);
 				auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotE);
 				auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotR);
 				if (RDamage*3 + EDamage + QDamage > Enemy->GetHealth() && Q->IsReady() && E->IsReady())
 				{
+					if (!Player->HasBuff("IreliaTranscendentBladesSpell"))
 					{
-						R->CastOnTarget(Qtarget, 5);
+						R->CastOnTarget(Qtarget);
 					}
 				}
-			}
-			if (Player->HasBuff("IreliaTranscendentBladesSpell"))
-			{
-				R->CastOnTarget(Rtarget, 5);
+				if (Player->HasBuff("IreliaTranscendentBladesSpell"))
+				{
+					{
+						R->CastOnTarget(Rtarget);
+					}
+				}
 			}
 		}
 	}
@@ -348,21 +424,22 @@ void Killsteal()
 			{
 				Q->CastOnTarget(Enemy);
 			}
-			if (KSE->Enabled() && E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && EDamage > Enemy->GetHealth())
+			else if (KSE->Enabled() && E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && EDamage > Enemy->GetHealth())
 			{
 				E->CastOnTarget(Enemy);
 			}
-			if (KSR->Enabled() && R->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), R->Range()) && RDamage*3 > Enemy->GetHealth())
+			else if (KSR->Enabled() && R->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), R->Range()) && RDamage*3 > Enemy->GetHealth())
 			{
 				if (!Player->HasBuff("IreliaTranscendentBladesSpell"))
 				{
 					R->CastOnTarget(Enemy);
 				}
+				if (Player->HasBuff("IreliaTranscendentBladesSpell"))
+				{
+					R->CastOnTarget(Enemy);
+				}
 			}  
-			if (Player->HasBuff("IreliaTranscendentBladesSpell"))
-			{
-				R->CastOnTarget(Enemy);
-			}
+			
 		}
 	}
 }
@@ -391,6 +468,7 @@ void Farm()
 			}
 		}
 	}
+	
 }
 
 
@@ -426,13 +504,20 @@ PLUGIN_EVENT(void) OnRender()
 	{
 		for (auto minionQ : GEntityList->GetAllMinions(false, true, false))
 		{
-			auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), minionQ, kSlotQ);
-			if (QDamage > minionQ->GetHealth() && minionQ != nullptr)
+			if (minionQ->IsValidTarget(GEntityList->Player(), Q->Range()))
 			{
-				GRender->DrawOutlinedCircle(minionQ->GetPosition(), Vec4(255, 255, 0, 255), 80.f);
+				auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), minionQ, kSlotQ);
+				{
+					if (QDamage > minionQ->GetHealth() && minionQ != nullptr && !minionQ->IsDead())
+					{
+						GRender->DrawOutlinedCircle(minionQ->GetPosition(), Vec4(255, 255, 0, 255), 80.f);
+					}
+				}
 			}
+
 		}
 	}
+	dmgdraw();
 }
 
 
