@@ -76,8 +76,6 @@ Vec4 FillColor = Vec4(198, 176, 5, 255);
 void LoadSpells()
 {
 
-	E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, kCollidesWithYasuoWall);
-	R = GPluginSDK->CreateSpell2(kSlotR, kConeCast, false, false, kCollidesWithNothing);
 	if (GEntityList->Player()->GetSpellSlot("SummonerFlash") != kSlotUnknown)
 		Flash = GPluginSDK->CreateSpell(GEntityList->Player()->GetSpellSlot("SummonerFlash"), 425);
 }
@@ -88,7 +86,7 @@ void Menu()
 	ComboMenu = MainMenu->AddMenu("Combo");
 	{
 		ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
-		ComboQnotpoison = ComboMenu->CheckBox("Only Q if NOT POISONED", true);
+		ComboQnotpoison = ComboMenu->CheckBox("Only Q if NOT POISONED", false);
 		ComboW = ComboMenu->CheckBox("Use W in Combo", true);
 		ComboE = ComboMenu->CheckBox("Use E in Combo", true);
 		ComboEonlyPoison = ComboMenu->CheckBox("Only E if POISONED", false);
@@ -300,7 +298,7 @@ void Rflash()
 	{
 		if (R->IsReady() && Flash != nullptr && Flash->IsReady() && R->Range() + 410 && ComboREnable->Enabled())
 		{
-			if ((Player->GetPosition() - Enemy->GetPosition()).Length() > R->Range() && Enemy != nullptr && ((Player->GetPosition() - Enemy->GetPosition()).Length()) < R->Range()+410 && !Enemy->IsDead())
+			if ((Player->GetPosition() - Enemy->GetPosition()).Length() > R->Range() && Enemy->IsValidTarget() && Enemy != nullptr && ((Player->GetPosition() - Enemy->GetPosition()).Length()) < R->Range()+410 && !Enemy->IsDead())
 			{
 
 				if (R->CastOnPosition(Enemy->ServerPosition()))
@@ -371,17 +369,20 @@ void Farm()
 {
 	if (Player->ManaPercent() < FarmMana->GetInteger())
 		return;
-	if (FarmE->Enabled())
+	if (FarmE->Enabled() && E->IsReady())
 	{
-		if (E->IsReady())
+		if (E->LastHitMinion())
+			return;
+		else
 		{
-			for(auto minions : GEntityList->GetAllMinions(false, true, true))
+			auto minions = GEntityList->GetAllMinions(false, true, false);
+			for (IUnit* minion : minions)
 			{
-				if (minions != nullptr)
+				if (minion != nullptr)
 				{
-					if (!(minions->IsDead()) && minions->HasBuffOfType(BUFF_Poison) && E->Range())
+					if (!(minion->IsDead()) && minion->HasBuffOfType(BUFF_Poison) && SimpleLib::SimpleLib::GetDistance(Player, minion) <= E->Range())
 					{
-						E->CastOnUnit(minions);
+						E->CastOnUnit(minion);
 					}
 				}
 			}
@@ -443,12 +444,12 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	if (GetAsyncKeyState(ComboAAkey->GetInteger()))
 	{
 		auto level = Player->GetLevel();
-		if (ComboAA->Enabled() && level >= ComboAALevel->GetInteger())
+		if (ComboAA->Enabled() && level >= ComboAALevel->GetInteger() && Player->GetMana() > 100)
 		{
 			GOrbwalking->SetAttacksAllowed(false);
 		}
 	}
-	if (!GetAsyncKeyState(ComboAAkey->GetInteger()))
+	if (!GetAsyncKeyState(ComboAAkey->GetInteger()) && Player->GetMana() < 100)
 	{
 		{
 			GOrbwalking->SetAttacksAllowed(true);
@@ -484,8 +485,10 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
-	Q = SimpleLib::SimpleLib::LoadSkillshot('q', 0.4, 850.0, HUGE_VAL, 75.0, kCircleCast, false, true, kCollidesWithNothing);
-	W = SimpleLib::SimpleLib::LoadSkillshot('w', 0.25, 800.0, 2000.0, 75.0, kCircleCast, true, false, kCollidesWithNothing);
+	Q = SimpleLib::SimpleLib::LoadSkillshot('q', 0.4, 850.0, HUGE_VAL, 75.0, kCircleCast, false, false, kCollidesWithNothing);
+	W = SimpleLib::SimpleLib::LoadSkillshot('w', 0.25, 800.0, 2000.0, 75.0, kCircleCast, false, false, kCollidesWithNothing);
+	E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, true, false, kCollidesWithNothing);
+	R = SimpleLib::SimpleLib::LoadSkillshot('r', 0.50, 825.0, HUGE_VAL, 825.0, kConeCast, false, true, kCollidesWithNothing);
 
 }
 
