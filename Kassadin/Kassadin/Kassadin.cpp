@@ -33,10 +33,14 @@ IMenu* KillstealMenu;
 IMenuOption* KSQ;
 IMenuOption* KSE;
 IMenuOption* KSR;
+IMenuOption* KSRgap;
 
 IMenu* LastMenu;
 IMenuOption* LastQ;
 IMenuOption* LastW;
+
+IMenu* FleeMenu;
+IMenuOption* FleeKey;
 
 
 
@@ -87,6 +91,7 @@ void Menu()
 		KSQ = KillstealMenu->CheckBox("Killsteal with Q", true);
 		KSE = KillstealMenu->CheckBox("Killsteal with E", true);
 		KSR = KillstealMenu->CheckBox("Killsteal with R", true);
+		KSRgap = KillstealMenu->CheckBox("Gap R for Q range KS", true);
 	}
 	FarmMenu = MainMenu->AddMenu("Farming");
 	{
@@ -100,6 +105,10 @@ void Menu()
 	{
 		LastQ = LastMenu->CheckBox("Last hit Q", true);
 		LastW = LastMenu->CheckBox("Last hit W", true);
+	}
+	FleeMenu = MainMenu->AddMenu("Flee");
+	{
+		FleeKey = FleeMenu->AddKey("Flee with R", 'G');
 	}
 }
 
@@ -178,7 +187,7 @@ void Killsteal()
 
 		if (Enemy != nullptr && !Enemy->IsDead())
 		{
-			if (KSQ->Enabled() && Q->IsReady() && QDamage > Enemy->GetHealth())
+			if (KSQ->Enabled() && Q->IsReady() && QDamage > Enemy->GetHealth() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
 			{
 				Q->CastOnTarget(Enemy);
 			}
@@ -190,7 +199,31 @@ void Killsteal()
 			{
 				R->CastOnTarget(Enemy, kHitChanceMedium);
 			}
+
+			if (KSRgap->Enabled() && R->IsReady() && Q->IsReady() && KSQ->Enabled() && QDamage > Enemy->GetHealth() && (Player->GetPosition() - Enemy->GetPosition()).Length() < 1100)
+			{
+				if (!Enemy->IsDead() && Player->GetMana() > Q->ManaCost() + R->ManaCost() && (Player->GetPosition() - Enemy->GetPosition()).Length() > Q->Range())
+				{
+
+					R->CastOnPosition(Enemy->ServerPosition());
+					Q->CastOnTarget(Enemy);
+
+				}
+			}
+
 		}
+
+	}
+}
+
+void Flee()
+{
+	if (!GGame->IsChatOpen())
+	{
+
+			GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+			R->CastOnPosition(GGame->CursorPosition());
+
 	}
 }
 
@@ -249,6 +282,10 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
 	{
 		Mixed();
+	}
+	if (GetAsyncKeyState(FleeKey->GetInteger()) & 0x8000)
+	{
+		Flee();
 	}
 	Killsteal();
 }
