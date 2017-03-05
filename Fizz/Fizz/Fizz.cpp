@@ -1,4 +1,5 @@
 #include "PluginSDK.h"
+#include <string>
 
 PluginSetup("Kornis's Fizz")
 
@@ -100,8 +101,8 @@ void Menu()
 		ComboR = ComboMenu->AddMenu("R Settings");
 		ComboRenable = ComboR->CheckBox("Use R", true);
 		ComboRhp = ComboR->AddInteger("Use R if enemy HP <", 1, 100, 35);
-		ComboRkill = ComboR->CheckBox("Use R only if killable with combo", true);
-		ComboRalways = ComboR->CheckBox("Use R always", false);
+		ComboRkill = ComboR->CheckBox("Use R only if killable with combo", false);
+		ComboRalways = ComboR->CheckBox("Use R always", true);
 		ComboRmode = ComboR->AddInteger("R Mode:Gapclose[1]Dash[2]After Dash[3]", 1, 3, 2);
 		ComboSemiManual = ComboR->AddKey("Semi-Manual R", 'R');
 
@@ -173,6 +174,31 @@ void EFlash()
 			}
 		}
 	}
+}
+
+
+float GetDistance(IUnit* source, IUnit* target)
+{
+	auto x1 = source->GetPosition().x;
+	auto x2 = target->GetPosition().x;
+	auto y1 = source->GetPosition().y;
+	auto y2 = target->GetPosition().y;
+	auto z1 = source->GetPosition().z;
+	auto z2 = target->GetPosition().z;
+	return static_cast<float>(sqrt(pow((x2 - x1), 2.0) + pow((y2 - y1), 2.0) + pow((z2 - z1), 2.0)));
+}
+
+void CastE(IUnit* hit)
+{
+	auto time = 0.25f + GetDistance(Player, hit) / 1550;
+	Vec3 futurePos;
+	GPrediction->GetFutureUnitPosition(hit, time, true, futurePos);
+	Vec2 hitpos = futurePos.To2D().Extend(Player->GetPosition().To2D(), -40);
+	Vec3 Hithere;
+	Hithere.x = hitpos.x;
+	Hithere.y = futurePos.y;
+	Hithere.z = hitpos.y;
+	E->CastOnPosition(Hithere);
 }
 
 
@@ -270,13 +296,13 @@ void Combo()
 	}*/
 
 	// What a mess >.>
-	auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
-	auto targetE = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range() * 2);
+	auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
 	if (target != nullptr && !target->IsInvulnerable() && !target->IsDead())
 	{
 
 		if (R->IsReady())
 		{
+			auto targetE = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range() * 2);
 			if ((target->GetPosition() - Player->GetPosition()).Length() > Q->Range() && target->IsValidTarget(GEntityList->Player(), R->Range() - 150))
 			{
 				auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotQ);
@@ -330,14 +356,19 @@ void Combo()
 				{
 					W->CastOnPlayer();
 				}
-				if (Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetE, E->Range() * 2) && E->IsReady() && ComboEenable->Enabled())
+				auto targetEa = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 800);
+				if (targetEa != nullptr)
 				{
-					E->CastOnPosition(targetE->ServerPosition());
-				}
+					if (E->IsReady() && Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, 800) && ComboEenable->Enabled())
+					{
+						E->CastOnPosition(targetEa->ServerPosition());
+					}
 
-				if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetE, E->Range()) && ComboEenable->Enabled())
-				{
-					E->CastOnTarget(targetE);
+					if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()) && ComboEenable->Enabled())
+					{
+
+						CastE(targetEa);
+					}
 				}
 
 			}
@@ -374,14 +405,19 @@ void Combo()
 					W->CastOnPlayer();
 				}
 
-				if (Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetE, E->Range() * 2) && E->IsReady() && ComboEenable->Enabled())
+				auto targetEa = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 800);
+				if (targetEa != nullptr)
 				{
-					E->CastOnPosition(targetE->ServerPosition());
-				}
+					if (E->IsReady() && Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, 800) && ComboEenable->Enabled())
+					{
+						E->CastOnPosition(targetEa->ServerPosition());
+					}
 
-				if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetE, E->Range()) && ComboEenable->Enabled())
-				{
-					E->CastOnTarget(targetE);
+					if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()) && ComboEenable->Enabled())
+					{
+
+						CastE(targetEa);
+					}
 				}
 			}
 			if (ComboRmode->GetInteger() == 3)
@@ -416,28 +452,39 @@ void Combo()
 						}
 					}
 				}
-				if (Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetE, (E->Range() * 2)) && E->IsReady() && ComboEenable->Enabled())
+				auto targetEa = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 800);
+				if (targetEa != nullptr)
 				{
-					E->CastOnPosition(targetE->ServerPosition());
-				}
+					if (E->IsReady() && Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, 800) && ComboEenable->Enabled())
+					{
+						E->CastOnPosition(targetEa->ServerPosition());
+					}
 
-				if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetE, E->Range()) && ComboEenable->Enabled())
-				{
-					E->CastOnTarget(targetE);
+					if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()) && ComboEenable->Enabled())
+					{
+
+						CastE(targetEa);
+					}
 				}
 			}
 		}
-		else if (!R->IsReady())
+	}
+
+
+	if (!R->IsReady())
+	{
+		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+		if (target != nullptr && !target->IsInvulnerable() && !target->IsDead())
 		{
-			if (!ComboQsave->Enabled() && ComboQenable->Enabled() && target->IsValidTarget(GEntityList->Player(), Q->Range()))
+			if (Q->IsReady() && !ComboQsave->Enabled() && ComboQenable->Enabled() && target->IsValidTarget(GEntityList->Player(), Q->Range()))
 			{
 				Q->CastOnTarget(target);
 			}
-			if (ComboQsave->Enabled() && ComboQenable->Enabled() && target->IsValidTarget(GEntityList->Player(), Q->Range()))
+			if (Q->IsReady() && ComboQsave->Enabled() && ComboQenable->Enabled() && target->IsValidTarget(GEntityList->Player(), Q->Range()))
 			{
 				auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotQ);
 				auto WDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotW);
-				if (W->IsReady() && QDamage + WDamage > target->GetHealth())
+				if (W->IsReady() && QDamage + WDamage >= target->GetHealth())
 				{
 					if (W->CastOnPlayer())
 					{
@@ -445,7 +492,7 @@ void Combo()
 					}
 
 				}
-				if (!W->IsReady() && QDamage > target->GetHealth())
+				if (!W->IsReady() && QDamage >= target->GetHealth())
 				{
 					Q->CastOnTarget(target);
 				}
@@ -457,67 +504,92 @@ void Combo()
 				{
 					Q->CastOnTarget(target);
 				}
+				if (15 > target->HealthPercent())
+				{
+					Q->CastOnTarget(target);
+				}
 			}
-			if (ComboW->Enabled() && target->IsValidTarget(GEntityList->Player(), 500))
+			if (ComboW->Enabled() && W->IsReady() && target->IsValidTarget(GEntityList->Player(), 500))
 			{
 				W->CastOnPlayer();
 			}
-			if (Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetE, (E->Range()*2)) && E->IsReady() && ComboEenable->Enabled())
+		}
+		auto targetEa = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 800);
+		if (targetEa != nullptr)
+		{
+			if (E->IsReady() && Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, 800) && ComboEenable->Enabled())
 			{
-				E->CastOnPosition(targetE->ServerPosition());
+				E->CastOnPosition(targetEa->ServerPosition());
 			}
 
-			if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetE, E->Range()) && ComboEenable->Enabled())
+			if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()) && ComboEenable->Enabled())
 			{
-				E->CastOnTarget(targetE, kHitChanceHigh);
 
+				CastE(targetEa);
 			}
 		}
 	}
 }
+
+
 void Mixed()
 {
-	auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
 	if (HarassMana->GetInteger() < Player->ManaPercent())
 	{
-		if (HarassMode->GetInteger() == 1)
+		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+		if (target != nullptr && !target->IsInvulnerable() && !target->IsDead())
 		{
-			if (HarassW->Enabled() && target->IsValidTarget(GEntityList->Player(), Q->Range()+10) && W->IsReady())
-			{
-				W->CastOnPlayer();
-			}
-			if (HarassQ->Enabled() && target->IsValidTarget(GEntityList->Player(), Q->Range()) && Q->IsReady())
-			{
-				Q->CastOnTarget(target);
-			}
-			if (Player->IsTargetable() && GEntityList->Player()->IsValidTarget(target, E->Range()) && E->IsReady() && HarassE->Enabled() && (target->GetPosition() - Player->GetPosition()).Length() <= E->Range() + 270)
-			{
-				E->CastOnTarget(target);
-			}
-			if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(target, E->Range()) && HarassE->Enabled())
-			{
-				E->CastOnTarget(target);
-			}
-		}
-		if (HarassMode->GetInteger() == 2)
-		{
-			if (Player->IsTargetable() && GEntityList->Player()->IsValidTarget(target, E->Range()) && E->IsReady() && HarassE->Enabled() && (target->GetPosition() - Player->GetPosition()).Length() <= E->Range() + 270)
-			{
-				E->CastOnTarget(target);
-			}
-			if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(target, E->Range()) && HarassE->Enabled())
-			{
-				E->CastOnTarget(target);
-			}
-			if (!E->IsReady())
+			if (HarassMode->GetInteger() == 1)
 			{
 				if (HarassW->Enabled() && target->IsValidTarget(GEntityList->Player(), Q->Range() + 10))
 				{
+					if (W->CastOnPlayer())
+					{
+						Q->CastOnTarget(target);
+					}
+				}
+				auto targetEa = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 800);
+				if (targetEa != nullptr)
+				{
+					if (E->IsReady() && Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, 800) && ComboEenable->Enabled())
+					{
+						E->CastOnPosition(targetEa->ServerPosition());
+					}
+
+					if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()) && ComboEenable->Enabled())
+					{
+
+						CastE(targetEa);
+					}
+				}
+			}
+		}
+
+		if (HarassMode->GetInteger() == 2)
+		{
+			auto targetEa = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 800);
+			if (targetEa != nullptr)
+			{
+				if (E->IsReady() && Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, 800) && HarassE->Enabled())
+				{
+					E->CastOnPosition(targetEa->ServerPosition());
+				}
+
+				if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()) && HarassE->Enabled())
+				{
+					E->CastOnTarget(targetEa, kHitChanceHigh);
+
+				}
+			}
+			if (!E->IsReady())
+			{
+				if (HarassW->Enabled() && targetEa->IsValidTarget(GEntityList->Player(), Q->Range() + 10))
+				{
 					W->CastOnPlayer();
 				}
-				if (HarassQ->Enabled() && target->IsValidTarget(GEntityList->Player(), Q->Range()))
+				if (HarassQ->Enabled() && targetEa->IsValidTarget(GEntityList->Player(), Q->Range()))
 				{
-					Q->CastOnTarget(target);
+					Q->CastOnTarget(targetEa);
 				}
 			}
 		}

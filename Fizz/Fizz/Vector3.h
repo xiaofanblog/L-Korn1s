@@ -137,18 +137,6 @@ public:
 		return *this;
 	}
 
-	Vec2 Extend(Vec2 const Other, float Len)
-	{
-		Vec2 vecThis = *this;
-		return (vecThis + (Other - vecThis).VectorNormalize() * Len);
-	}
-
-	Vec2 Extend(Vec2 const Other, float Len) const
-	{
-		Vec2 vecThis = *this;
-		return (vecThis + (Other - vecThis).VectorNormalize() * Len);
-	}
-
 	float Length()
 	{
 		return sqrtf(x * x + y * y);
@@ -157,6 +145,13 @@ public:
 	float DotProduct(const Vec2& vecOther)
 	{
 		return ((x * vecOther.x) + (y * vecOther.y));
+	}
+
+	Vec2 Extend(const Vec2& toVector3, float distance) const
+	{
+		auto from = Vec2(x, y);
+
+		return from + (distance * (toVector3 - from).VectorNormalize());
 	}
 };
 
@@ -302,18 +297,6 @@ public:
 		return *this;
 	}
 
-	Vec3 Extend(Vec3 const Other, float Len)
-	{
-		Vec3 vecThis = *this;
-		return (vecThis + (Other - vecThis).VectorNormalize() * Len);
-	}
-
-	Vec3 Extend(Vec3 const Other, float Len) const
-	{
-		Vec3 vecThis = *this;
-		return (vecThis + (Other - vecThis).VectorNormalize() * Len);
-	}
-
 	float Length()
 	{
 		return sqrtf(x * x + y * y + z * z);
@@ -327,6 +310,10 @@ public:
 	float DotProduct(const Vec3& vecOther)
 	{
 		return ((x * vecOther.x) + (y * vecOther.y) + (z * vecOther.z));
+	}
+	Vec2 To2D() const
+	{
+		return Vec2(x, z);
 	}
 };
 
