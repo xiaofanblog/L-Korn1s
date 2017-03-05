@@ -13,8 +13,8 @@ IMenuOption* ComboWheal;
 IMenuOption* ComboWcc;
 IMenuOption* ComboE;
 IMenuOption* ComboItems;
-IMenuOption* ComboMode;
 IMenuOption* ComboModeChange;
+IMenuOption* ComboSmite;
 
 
 IMenu* HarassMenu;
@@ -54,6 +54,8 @@ ISpell2* E;
 ISpell2* R;
 ISpell2* Smite;
 
+float KeyPre;
+int ComboMode = 1;
 
 IUnit* Player;
 
@@ -83,9 +85,9 @@ void Menu()
 		ComboWcc = ComboMenu->CheckBox("Use W 4 stacks on CC", true);
 		/*ComboWheal = ComboMenu->AddInteger("Use W if HP <", 5, 30, 20);*/
 		ComboE = ComboMenu->CheckBox("Use E in Combo", true);
-		ComboMode = ComboMenu->AddInteger("Priority: Q [1] W [2] E[3]", 1, 3, 1);
-		//ComboModeChange = ComboMenu->AddKey("Priority change", 'T');
+		ComboModeChange = ComboMenu->AddKey("Priority change", 'T');
 		ComboItems = ComboMenu->CheckBox("Use Items", true);
+		ComboSmite = ComboMenu->CheckBox("Use Smite in combo", true);
 
 	}
 	HarassMenu = MainMenu->AddMenu("Harass");
@@ -176,10 +178,33 @@ int EnemiesInRange(IUnit* Source, float range)
 	}
 	return enemiesInRange;
 }
+void ChangePriority()
+{
+	if (GetAsyncKeyState(ComboModeChange->GetInteger()) && !GGame->IsChatOpen() && GGame->Time() > KeyPre)
+	{
+		if (ComboMode == 1)
+		{
+			ComboMode = 2;
+			KeyPre = GGame->Time() + 0.250;
+		}
+		else if (ComboMode == 2)
+		{
+			ComboMode = 3;
+			KeyPre = GGame->Time() + 0.250;
+		}
+		else
+		{
+			ComboMode = 1;
+			KeyPre = GGame->Time() + 0.250;
+		}
+	}
+}
+
+
 
 void Combo()
 {
-	if (Smite != nullptr && Smite->IsReady()) // AUTO SMITE PRO BY REMBRANDT
+	if (Smite != nullptr && Smite->IsReady() && ComboSmite->Enabled()) // AUTO SMITE PRO BY REMBRANDT
 	{
 
 		if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
@@ -208,7 +233,7 @@ void Combo()
 			{
 				if (Player->GetMana() == 4)
 				{
-					if (ComboMode->GetInteger() == 1)
+					if (ComboMode == 1)
 					{
 						if (!Enemy->IsDead() && Enemy != nullptr && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
 						{
@@ -216,7 +241,7 @@ void Combo()
 						}
 
 					}
-					if (ComboMode->GetInteger() == 2)
+					if (ComboMode == 2)
 					{
 						if (!Enemy->IsDead() && Enemy != nullptr && Enemy->IsValidTarget(GEntityList->Player(), W->Range()))
 						{
@@ -224,7 +249,7 @@ void Combo()
 						}
 
 					}
-					if (ComboMode->GetInteger() == 3)
+					if (ComboMode == 3)
 					{
 						if (!Enemy->IsDead() && Enemy != nullptr && Enemy->IsValidTarget(GEntityList->Player(), E->Range()))
 						{
@@ -268,6 +293,8 @@ void Combo()
 		}
 	}
 }
+
+
 
 
 
@@ -408,6 +435,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	AutoSmite();
 	Killsteal();
 	SkinChanger();
+	ChangePriority();
 }
 
 
@@ -429,21 +457,21 @@ PLUGIN_EVENT(void) OnRender()
 		Vec2 pos;
 		if (GGame->Projection(GEntityList->Player()->GetPosition(), &pos))
 		{
-			if (ComboMode->GetInteger() == 1)
+			if (ComboMode == 1)
 			{
 				std::string text = std::string("Priority: Q");
 				Vec4 clr = Vec4(188, 255, 50, 255);
 				pFont->SetColor(clr);
 				pFont->Render(pos.x, pos.y, text.c_str());
 			}
-			if (ComboMode->GetInteger() == 2)
+			if (ComboMode == 2)
 			{
 				std::string text = std::string("Priority: W");
 				Vec4 clr = Vec4(188, 255, 50, 255);
 				pFont->SetColor(clr);
 				pFont->Render(pos.x, pos.y, text.c_str());
 			}
-			if (ComboMode->GetInteger() == 3)
+			if (ComboMode == 3)
 			{
 				std::string text = std::string("Priority: E");
 				Vec4 clr = Vec4(188, 255, 50, 255);
