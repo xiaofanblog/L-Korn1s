@@ -11,6 +11,7 @@ IMenu* ComboMenu;
 IMenuOption* ComboQ;
 IMenuOption* ComboW;
 IMenuOption* ComboE;
+IMenuOption* ComboWstart;
 IMenu* RMenu;
 IMenuOption* ComboQnotpoison;
 IMenuOption* ComboRkillable;
@@ -80,6 +81,13 @@ void LoadSpells()
 {
 	if (GEntityList->Player()->GetSpellSlot("SummonerFlash") != kSlotUnknown)
 		Flash = GPluginSDK->CreateSpell(GEntityList->Player()->GetSpellSlot("SummonerFlash"), 425);
+	Q = GPluginSDK->CreateSpell2(kSlotQ, kCircleCast, false, false, kCollidesWithNothing);
+	Q->SetSkillshot(0.6, 40.f, FLT_MAX, 850.f);
+	W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, false, false, kCollidesWithNothing);
+	W->SetSkillshot(0.25, 75.f, FLT_MAX, 800.f);
+	E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, kCollidesWithYasuoWall);
+	R = GPluginSDK->CreateSpell2(kSlotR, kConeCast, false, false, kCollidesWithNothing);
+	
 }
 
 void Menu()
@@ -90,6 +98,7 @@ void Menu()
 		ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
 		ComboQnotpoison = ComboMenu->CheckBox("Only Q if NOT POISONED", false);
 		ComboW = ComboMenu->CheckBox("Use W in Combo", true);
+		ComboWstart = ComboMenu->CheckBox("Start combo with W", true);
 		ComboE = ComboMenu->CheckBox("Use E in Combo", true);
 		ComboEonlyPoison = ComboMenu->CheckBox("Only E if POISONED", false);
 		ComboRflash = ComboMenu->AddKey("R Flash", 'T');
@@ -125,7 +134,7 @@ void Menu()
 	{
 		FarmMana = FarmMenu->AddInteger("Mana for clear", 10, 100, 50);
 		FarmQ = FarmMenu->CheckBox("Lane Clear with Q", true);
-		FarmQhit = FarmMenu->AddInteger("Q hit X minions >", 1, 6, 3);
+		FarmQhit = FarmMenu->AddInteger("Q hit X minions >", 1, 6, 2);
 		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
 		FarmEpoison = FarmMenu->CheckBox("E only if poison", false);
 		Jungle = FarmMenu->CheckBox("Use in Jungle", true);
@@ -216,87 +225,137 @@ void Combo()
 		if (!Enemy->IsDead())
 		{
 
-			auto Qtarget = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range()-10);
-			auto Wtarget = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range()-10);
-			if (!ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
+			auto Qtarget = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+			auto Wtarget = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
+			if (!ComboWstart->Enabled())
 			{
-				if (Qtarget != nullptr)
+				if (!ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
 				{
+					if (Qtarget != nullptr)
 					{
-						Q->CastOnTarget(Qtarget);
+						{
+							Q->CastOnTarget(Qtarget);
+						}
 					}
 				}
-			}
-			if (ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
-			{
-				if (Qtarget != nullptr)
+				if (ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
 				{
-					if (!Qtarget->HasBuffOfType(BUFF_Poison))
+					if (Qtarget != nullptr)
 					{
-						Q->CastOnTarget(Qtarget);
+						if (!Qtarget->HasBuffOfType(BUFF_Poison))
+						{
+							Q->CastOnTarget(Qtarget);
+						}
 					}
 				}
-			}
-			if (ComboW->Enabled() && W->IsReady() && W->Range())
-			{
-				if (Wtarget != nullptr)
+				if (ComboW->Enabled() && W->IsReady() && W->Range())
 				{
-					auto distance = (Player->GetPosition() - Wtarget->GetPosition()).Length();
-					if (distance >= 400)
+					if (Wtarget != nullptr)
 					{
-						W->CastOnTarget(Wtarget, kHitChanceHigh);
+						auto distance = (Player->GetPosition() - Wtarget->GetPosition()).Length();
+						if (distance >= 400)
+						{
+							W->CastOnTarget(Wtarget, kHitChanceHigh);
+						}
 					}
 				}
-			}
 
-			if (ComboE->Enabled())
-			{
-				if (E->IsReady())
+				if (ComboE->Enabled())
 				{
-					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
-					if (target != nullptr)
+					if (E->IsReady())
 					{
-						if (!(ComboEonlyPoison->Enabled()) || target->HasBuffOfType(BUFF_Poison))
-							E->CastOnTarget(target);
-					}
-				}
-			}
-			if (ComboRkillable->Enabled())
-			{
-				if (ComboREnable->Enabled() && R->IsReady() && GetEnemiesInRange(float(ComboRRANGE->GetInteger())) >= ComboRMin->GetInteger())
-				{
-					auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotQ);
-					auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotE);
-					auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotR);
-					if (QDamage + EDamage * 4 + RDamage > Enemy->GetHealth())
-					{
-						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, float(ComboRRANGE->GetInteger()));
-						if (target != nullptr && ComboRFacing->Enabled() && target->IsFacing(Player))
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+						if (target != nullptr)
 						{
-							R->CastOnTarget(target);
-						}
-						if (target != nullptr && !ComboRFacing->Enabled())
-						{
-							R->CastOnTarget(target);
+							if (!(ComboEonlyPoison->Enabled()) || target->HasBuffOfType(BUFF_Poison))
+								E->CastOnTarget(target);
 						}
 					}
 				}
 			}
-			if (!ComboRkillable->Enabled())
+			if (ComboWstart->Enabled())
 			{
-				if (ComboREnable->Enabled() && R->IsReady() && GetEnemiesInRange(float(ComboRRANGE->GetInteger())) >= ComboRMin->GetInteger())
+				if (ComboW->Enabled() && W->IsReady() && W->Range())
 				{
-					if (Enemy->HealthPercent() < ComboRHealth->GetInteger())
+					if (Wtarget != nullptr)
 					{
-						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, float(ComboRRANGE->GetInteger()));
-						if (target != nullptr && ComboRFacing->Enabled() && target->IsFacing(Player))
+						auto distance = (Player->GetPosition() - Wtarget->GetPosition()).Length();
+						if (distance >= 400)
 						{
-							R->CastOnTarget(target);
+							W->CastOnTarget(Wtarget, kHitChanceHigh);
 						}
-						if (target != nullptr && !ComboRFacing->Enabled())
+					}
+				}
+
+
+				if (!ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
+				{
+					if (Qtarget != nullptr)
+					{
 						{
-							R->CastOnTarget(target);
+							Q->CastOnTarget(Qtarget);
 						}
+					}
+				}
+				if (ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
+				{
+					if (Qtarget != nullptr)
+					{
+						if (!Qtarget->HasBuffOfType(BUFF_Poison))
+						{
+							Q->CastOnTarget(Qtarget);
+						}
+					}
+				}
+				if (ComboE->Enabled())
+				{
+					if (E->IsReady())
+					{
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+						if (target != nullptr)
+						{
+							if (!(ComboEonlyPoison->Enabled()) || target->HasBuffOfType(BUFF_Poison))
+								E->CastOnTarget(target);
+						}
+					}
+				}
+			}
+		}
+		if (ComboRkillable->Enabled())
+		{
+			if (ComboREnable->Enabled() && R->IsReady() && GetEnemiesInRange(float(ComboRRANGE->GetInteger())) >= ComboRMin->GetInteger())
+			{
+				auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotQ);
+				auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotE);
+				auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotR);
+				if (QDamage + EDamage * 4 + RDamage > Enemy->GetHealth())
+				{
+					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, float(ComboRRANGE->GetInteger()));
+					if (target != nullptr && ComboRFacing->Enabled() && target->IsFacing(Player))
+					{
+						R->CastOnTarget(target);
+					}
+					if (target != nullptr && !ComboRFacing->Enabled())
+					{
+						R->CastOnTarget(target);
+					}
+				}
+			}
+		}
+		if (!ComboRkillable->Enabled())
+		{
+			if (ComboREnable->Enabled() && R->IsReady() && GetEnemiesInRange(float(ComboRRANGE->GetInteger())) >= ComboRMin->GetInteger())
+			{
+				if (Enemy->HealthPercent() < ComboRHealth->GetInteger())
+				{
+					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, float(ComboRRANGE->GetInteger()));
+					if (target != nullptr && ComboRFacing->Enabled() && target->IsFacing(Player))
+					{
+						R->CastOnTarget(target);
+					}
+					if (target != nullptr && !ComboRFacing->Enabled())
+					{
+						R->CastOnTarget(target);
 					}
 				}
 			}
@@ -391,22 +450,23 @@ void Farm()
 		return;
 	if (FarmE->Enabled() && E->IsReady())
 	{
-		if (E->AttackMinions())
-			return;
-		else
-		{
-			auto minions = GEntityList->GetAllMinions(false, true, true);
-			for (IUnit* minion : minions)
+		if (!FarmEpoison->Enabled())
+			if (E->AttackMinions())
+				return;
+			else
 			{
-				if (minion != nullptr)
+				auto minions = GEntityList->GetAllMinions(false, true, true);
+				for (IUnit* minion : minions)
 				{
-					if (!(minion->IsDead()) && minion->HasBuffOfType(BUFF_Poison) && SimpleLib::SimpleLib::GetDistance(Player, minion) <= E->Range())
+					if (minion != nullptr)
 					{
-						E->CastOnUnit(minion);
+						if (!(minion->IsDead()) && minion->HasBuffOfType(BUFF_Poison) && SimpleLib::SimpleLib::GetDistance(Player, minion) <= E->Range())
+						{
+							E->CastOnUnit(minion);
+						}
 					}
 				}
 			}
-		}
 	}
 	if (FarmQ->Enabled())
 	{
@@ -421,11 +481,25 @@ void Farm()
 			}
 		}
 	}
-	if (Jungle->Enabled())
+}
+
+void JungleClear()
+{
+	for (auto Minion : GEntityList->GetAllMinions(false, true, true))
 	{
-		if (Q->IsReady() && FarmQ->Enabled())
+		if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget())
 		{
-			Q->AttackMinions();
+			if (Jungle && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+			{
+				Vec3 vecCastPosition;
+				int iMinionsHit = 0;
+
+				Q->FindBestCastPosition(true, false, vecCastPosition, iMinionsHit);
+
+				if (Q->IsReady() && iMinionsHit >= 1) {
+					Q->CastOnPosition(vecCastPosition);
+				}
+			}
 		}
 	}
 }
@@ -459,6 +533,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
 	{
 		Farm();
+		JungleClear();
 	}
 	if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
 	{
@@ -529,10 +604,6 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
-	Q = SimpleLib::SimpleLib::LoadSkillshot('q', 0.4, 850.0, HUGE_VAL, 75.0, kCircleCast, false, false, kCollidesWithNothing);
-	W = SimpleLib::SimpleLib::LoadSkillshot('w', 0.25, 800.0, 2000.0, 75.0, kCircleCast, false, false, kCollidesWithNothing);
-	E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, true, false, kCollidesWithNothing);
-	R = SimpleLib::SimpleLib::LoadSkillshot('r', 0.50, 825.0, HUGE_VAL, 825.0, kConeCast, false, true, kCollidesWithNothing);
 
 }
 
