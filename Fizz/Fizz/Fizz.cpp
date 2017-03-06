@@ -12,6 +12,7 @@ IMenuOption* ComboQenable;
 IMenuOption* ComboQsave;
 IMenu* ComboWen;
 IMenuOption* ComboW;
+IMenuOption* ComboWproc;
 IMenu* ComboE;
 IMenuOption* ComboEenable;
 IMenuOption* ComboE1;
@@ -72,6 +73,7 @@ int Height = 8;
 Vec4 Color = Vec4(105, 198, 5, 255);
 Vec4 FillColor = Vec4(198, 176, 5, 255);
 
+
 void LoadSpells()
 {
 
@@ -89,12 +91,14 @@ void Menu()
 	MainMenu = GPluginSDK->AddMenu("Kornis Fizz");
 	ComboMenu = MainMenu->AddMenu("Combo");
 	{
+
 		ComboQ = ComboMenu->AddMenu("Q Settings");
 		ComboQenable = ComboQ->CheckBox("Use Q", true);
 		/*ComboQgap = ComboQ->CheckBox("Use Q to gap if kilable with R combo", true);*/
 		ComboQsave = ComboQ->CheckBox("Smart Q", true);
 		ComboWen = ComboMenu->AddMenu("W Settings");
 		ComboW = ComboWen->CheckBox("Use W", true);
+		ComboWproc = ComboWen->CheckBox("Wait for W proc", true);
 		ComboE = ComboMenu->AddMenu("E Settings");
 		ComboEenable = ComboE->CheckBox("Use E", true);
 		ComboE1 = ComboE->AddKey("E Flash Combo ", 'T');
@@ -260,6 +264,21 @@ void dmgdraw()
 	
 }*/
 
+static void OnCreateObject(IUnit* Source)
+{
+	if (strstr(Source->GetObjectName(), "Fizz_Base_W_DmgMarkerMaintain.troy"))
+	{
+		if (ComboWproc->Enabled())
+		{
+			if (GOrbwalking->GetOrbwalkingMode() == kModeCombo &&
+				GetDistance(GEntityList->Player(), Source) < GOrbwalking->GetAutoAttackRange(GEntityList->Player()) + 50)
+			{
+				W->CastOnPlayer();
+			}
+		}
+	}
+}
+
 void Combo()
 {
 	/*for (auto Enemy : GEntityList->GetAllHeros(false, true))
@@ -296,10 +315,10 @@ void Combo()
 	}*/
 
 	// What a mess >.>
+
 	auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
 	if (target != nullptr && !target->IsInvulnerable() && !target->IsDead())
 	{
-
 		if (R->IsReady())
 		{
 			auto targetE = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range() * 2);
@@ -509,10 +528,14 @@ void Combo()
 					Q->CastOnTarget(target);
 				}
 			}
-			if (ComboW->Enabled() && W->IsReady() && target->IsValidTarget(GEntityList->Player(), 500))
+			if (!ComboWproc->Enabled())
 			{
-				W->CastOnPlayer();
+				if (ComboW->Enabled() && W->IsReady() && target->IsValidTarget(GEntityList->Player(), 500))
+				{
+					W->CastOnPlayer();
+				}
 			}
+
 		}
 		auto targetEa = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 800);
 		if (targetEa != nullptr)
@@ -713,7 +736,8 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	Player = GEntityList->Player();
 
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
-	GEventManager->AddEventHandler(kEventOnRender, OnRender);
+	GEventManager->AddEventHandler(kEventOnRender, OnRender);		
+	GEventManager->AddEventHandler(kEventOnCreateObject, OnCreateObject);
 
 }
 
@@ -722,4 +746,5 @@ PLUGIN_API void OnUnload()
 	MainMenu->Remove();
 	GEventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->RemoveEventHandler(kEventOnRender, OnRender);
+	GEventManager->RemoveEventHandler(kEventOnCreateObject, OnCreateObject);
 }
