@@ -49,6 +49,7 @@ IMenu* FarmMenu;
 IMenuOption* FarmMana;
 IMenuOption* FarmQ;
 IMenuOption* FarmE;
+IMenuOption* FarmELH;
 IMenuOption* FarmEpoison;
 IMenuOption* FarmQhit;
 IMenuOption* Jungle;
@@ -70,6 +71,8 @@ ISpell* Flash;
 
 IUnit* Player;
 
+
+std::vector<IUnit*> minions;
 int xOffset = 10;
 int yOffset = 15;
 int Width = 103;
@@ -136,6 +139,7 @@ void Menu()
 		FarmQ = FarmMenu->CheckBox("Lane Clear with Q", true);
 		FarmQhit = FarmMenu->AddInteger("Q hit X minions >", 1, 6, 2);
 		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
+		FarmELH = FarmMenu->CheckBox("Last hit E in Lane Clear", true);
 		FarmEpoison = FarmMenu->CheckBox("E only if poison", false);
 		Jungle = FarmMenu->CheckBox("Use in Jungle", true);
 	}
@@ -379,6 +383,14 @@ void Rflash()
 				}
 			}
 		}
+		if (Enemy->IsValidTarget() && W->Range() && !Flash->IsReady() && !R->IsReady())
+		{
+			if (Enemy != nullptr)
+			{
+
+				W->CastOnTarget(Enemy);
+			}
+		}
 
 	}
 }
@@ -394,7 +406,7 @@ void LastHit()
 		{
 			if (GEntityList->Player()->IsValidTarget(minion, E->Range()))
 			{
-				if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>((GEntityList->Player()->GetPosition() - minion->GetPosition()).Length() / E->Speed()), static_cast<int>(E->GetDelay())))
+				if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed())-125, static_cast<int>(E->GetDelay()*1000)))
 				{
 					E->CastOnUnit(minion);
 				}
@@ -446,38 +458,47 @@ void Killsteal()
 
 void Farm()
 {
-	if (Player->ManaPercent() < FarmMana->GetInteger())
-		return;
-	if (FarmE->Enabled() && E->IsReady())
+
+	minions = GEntityList->GetAllMinions(false, true, true);
+	for (IUnit* minion : minions)
 	{
-		if (!FarmEpoison->Enabled())
-			if (E->AttackMinions())
-				return;
-			else
-			{
-				auto minions = GEntityList->GetAllMinions(false, true, true);
-				for (IUnit* minion : minions)
+		if (Player->ManaPercent() < FarmMana->GetInteger())
+			return;
+		if (FarmE->Enabled() && E->IsReady())
+		{
+			if (!FarmEpoison->Enabled())
+				if (E->AttackMinions())
+					return;
+				else
 				{
 					if (minion != nullptr)
 					{
 						if (!(minion->IsDead()) && minion->HasBuffOfType(BUFF_Poison) && SimpleLib::SimpleLib::GetDistance(Player, minion) <= E->Range())
 						{
 							E->CastOnUnit(minion);
+
 						}
 					}
 				}
-			}
-	}
-	if (FarmQ->Enabled())
-	{
-		if (Q->IsReady())
+		}
+		
+		if (FarmQ->Enabled() && Q->IsReady())
 		{
 			Vec3 pos;
 			int hit;
-			GPrediction->FindBestCastPosition(Q->Range(), Q->Radius(), false, true, false, pos, hit);
+			GPrediction->FindBestCastPosition(Q->Range(), 100, false, true, false, pos, hit);
 			if (hit >= FarmQhit->GetInteger())
-			{
 				Q->CastOnPosition(pos);
+
+		}
+		if (!E->IsReady() || !FarmELH->Enabled())
+			return;
+		if (GEntityList->Player()->IsValidTarget(minion, E->Range()))
+		{
+			if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, static_cast<int>(E->GetDelay() * 1000)))
+			{
+				E->CastOnUnit(minion);
+
 			}
 		}
 	}
@@ -485,20 +506,24 @@ void Farm()
 
 void JungleClear()
 {
-	for (auto Minion : GEntityList->GetAllMinions(false, true, true))
+	for (auto Minion : GEntityList->GetAllMinions(false, false, true))
 	{
-		if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget())
+		if (Jungle->Enabled())
 		{
-			if (Jungle && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+			if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget())
 			{
-				Vec3 vecCastPosition;
-				int iMinionsHit = 0;
+				if (Jungle && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+				{
+					Vec3 vecCastPosition;
+					int iMinionsHit = 0;
 
-				Q->FindBestCastPosition(true, false, vecCastPosition, iMinionsHit);
+					Q->FindBestCastPosition(true, false, vecCastPosition, iMinionsHit);
 
-				if (Q->IsReady() && iMinionsHit >= 1) {
-					Q->CastOnPosition(vecCastPosition);
+					if (Q->IsReady() && iMinionsHit >= 1) {
+						Q->CastOnPosition(vecCastPosition);
+					}
 				}
+
 			}
 		}
 	}
