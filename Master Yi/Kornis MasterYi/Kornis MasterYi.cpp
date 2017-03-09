@@ -60,10 +60,10 @@ void LoadSpells()
 	auto PlayerSum2 = GPluginSDK->GetEntityList()->Player()->GetSpellName(kSummonerSlot2);
 	if (strstr(PlayerSum1, "SummonerSmite")) { Smite = GPluginSDK->CreateSpell2(kSummonerSlot1, kTargetCast, false, false, kCollidesWithNothing); }
 	if (strstr(PlayerSum2, "SummonerSmite")) { Smite = GPluginSDK->CreateSpell2(kSummonerSlot2, kTargetCast, false, false, kCollidesWithNothing); }
-	Q = GPluginSDK->CreateSpell2(kSlotQ, kTargetCast, false, false, kCollidesWithNothing);
+	Q = GPluginSDK->CreateSpell2(kSlotQ, kTargetCast, false, false, kCollidesWithYasuoWall);
 	W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, kCollidesWithNothing);
 	E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, kCollidesWithNothing);
-	R = GPluginSDK->CreateSpell2(kSlotR, kTargetCast, false, false, kCollidesWithNothing);
+	R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, false, false, kCollidesWithNothing);
 	Botrk = GPluginSDK->CreateItemForId(3153, 550);
 	Cutlass = GPluginSDK->CreateItemForId(3144, 550);
 
@@ -71,7 +71,7 @@ void LoadSpells()
 
 void Menu()
 {
-	MainMenu = GPluginSDK->AddMenu("Kornis Evelynn");
+	MainMenu = GPluginSDK->AddMenu("Kornis Master Yi");
 	ComboMenu = MainMenu->AddMenu("Combo");
 	{
 		ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
@@ -98,7 +98,7 @@ void Menu()
 	}
 	FarmMenu = MainMenu->AddMenu("Farming");
 	{
-		FarmMana = FarmMenu->AddInteger("Mana percent for clear", 10, 100, 50);
+		FarmMana = FarmMenu->AddInteger("Mana percent for clear", 10, 100, 30);
 		FarmQ = FarmMenu->CheckBox("Lane Clear with Q", true);
 		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
 	}
