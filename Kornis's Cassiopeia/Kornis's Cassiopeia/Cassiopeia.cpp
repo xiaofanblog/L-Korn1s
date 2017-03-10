@@ -79,6 +79,7 @@ int Width = 103;
 int Height = 8;
 Vec4 Color = Vec4(105, 198, 5, 255);
 Vec4 FillColor = Vec4(198, 176, 5, 255);
+float delay;
 
 void LoadSpells()
 {
@@ -139,7 +140,7 @@ void Menu()
 		FarmQ = FarmMenu->CheckBox("Lane Clear with Q", true);
 		FarmQhit = FarmMenu->AddInteger("Q hit X minions >", 1, 6, 2);
 		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
-		FarmELH = FarmMenu->CheckBox("Last hit E in Lane Clear", true);
+		FarmELH = FarmMenu->CheckBox("Last hit E in Lane Clear", false);
 		FarmEpoison = FarmMenu->CheckBox("E only if poison", false);
 		Jungle = FarmMenu->CheckBox("Use in Jungle", true);
 	}
@@ -464,22 +465,37 @@ void Farm()
 	{
 		if (Player->ManaPercent() < FarmMana->GetInteger())
 			return;
-		if (FarmE->Enabled() && E->IsReady())
+		if (FarmELH->Enabled() && FarmE->Enabled() && GGame->Time() > delay)
+		{
+			GGame->PrintChat("Turn off Lane Clear E, or Last Hit E in LaneClear to work!");
+			delay = GGame->Time() + 3;
+		}
+		if (FarmELH->Enabled() && !FarmE->Enabled() && GEntityList->Player()->IsValidTarget(minion, E->Range()))
+		{
+			if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, static_cast<int>(E->GetDelay() * 1000)))
+			{
+				E->CastOnUnit(minion);
+			}
+		}
+		
+		if (FarmE->Enabled() && E->IsReady() && !FarmELH->Enabled())
 		{
 			if (!FarmEpoison->Enabled())
-				if (E->AttackMinions())
-					return;
-				else
-				{
-					if (minion != nullptr)
-					{
-						if (!(minion->IsDead()) && minion->HasBuffOfType(BUFF_Poison) && SimpleLib::SimpleLib::GetDistance(Player, minion) <= E->Range())
-						{
-							E->CastOnUnit(minion);
+			{
+				if(E->AttackMinions())
+				return;
+			}
 
-						}
+			else
+			{
+				if (minion != nullptr)
+				{
+					if (!minion->IsDead() && minion->HasBuffOfType(BUFF_Poison) && SimpleLib::SimpleLib::GetDistance(Player, minion) <= E->Range())
+					{
+						E->CastOnUnit(minion);
 					}
 				}
+			}
 		}
 		
 		if (FarmQ->Enabled() && Q->IsReady())
@@ -491,16 +507,7 @@ void Farm()
 				Q->CastOnPosition(pos);
 
 		}
-		if (!E->IsReady() || !FarmELH->Enabled())
-			return;
-		if (GEntityList->Player()->IsValidTarget(minion, E->Range()))
-		{
-			if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, static_cast<int>(E->GetDelay() * 1000)))
-			{
-				E->CastOnUnit(minion);
 
-			}
-		}
 	}
 }
 
@@ -576,7 +583,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 			GOrbwalking->SetAttacksAllowed(false);
 		}
 	}
-	if (!GetAsyncKeyState(ComboAAkey->GetInteger()) && Player->GetMana() < 100)
+	if (!GetAsyncKeyState(ComboAAkey->GetInteger()) || Player->GetMana() < 100)
 	{
 		{
 			GOrbwalking->SetAttacksAllowed(true);
