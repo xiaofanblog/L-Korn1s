@@ -223,6 +223,10 @@ void Combo()
 					Titanic_Hydra->CastOnPlayer();
 				}
 			}
+			if (!ComboQAA->Enabled() && ComboQ->Enabled() && Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()))
+			{
+				Q->CastOnPlayer();
+			}
 			if (!Enemy->IsDead() && Enemy != nullptr && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && ComboE->Enabled())
 			{
 				if ((Enemy->GetPosition() - GEntityList->Player()->GetPosition()).Length() > ComboEmin->GetInteger())
@@ -335,13 +339,12 @@ PLUGIN_EVENT(void) OnAfterAttack(IUnit* source, IUnit* target)
 	{
 	case kModeCombo:
 		for (auto hero : GEntityList->GetAllHeros(false, true)) {
-			if (ComboQAA->Enabled() && Q->IsReady() && (hero->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 250)
+			if (ComboQAA->Enabled() && Q->IsReady() && (hero->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 300)
 			{
 				Q->CastOnPlayer();
 			}
 		}
 		break;
-	default:;
 	}
 }
 
