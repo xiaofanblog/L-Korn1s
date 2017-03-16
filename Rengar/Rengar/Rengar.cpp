@@ -51,6 +51,9 @@ IMenuOption* SkinChangeEnable;
 
 
 IInventoryItem* Youmuus;
+IInventoryItem* Tiamat;
+IInventoryItem* Titanic_Hydra;
+IInventoryItem* Ravenous_Hydra;
 
 ISpell2* Q;
 ISpell2* W;
@@ -65,6 +68,7 @@ short keystate;
 bool smiteKeyWasDown = false;
 
 IUnit* Player;
+IUnit* Enemy;
 
 
 void LoadSpells()
@@ -79,6 +83,9 @@ void LoadSpells()
 	Q->SetOverrideRange(550);
 
 	Youmuus = GPluginSDK->CreateItemForId(3142, 0);
+	Titanic_Hydra = GPluginSDK->CreateItemForId(3748, 385);
+	Ravenous_Hydra = GPluginSDK->CreateItemForId(3074, 385);
+	Tiamat = GPluginSDK->CreateItemForId(3077, 385);
 
 }
 
@@ -214,109 +221,129 @@ int EnemiesInRange(IUnit* Source, float range)
 
 void Combo()
 {
-	if (Smite != nullptr && Smite->IsReady() && ComboSmite->Enabled()) // AUTO SMITE PRO BY REMBRANDT
-	{
 
-		if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
-		{
-
-			Smite->CastOnTarget(GTargetSelector->GetFocusedTarget());
-		}
-		else
-		{
-			Smite->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, 700));
-		}
-	}
-	if (Youmuus->IsOwned() && Youmuus->IsReady() && ComboItems->Enabled() && !(Player->IsDead()))
-	{
-		if (EnemiesInRange(Player, 500) > 0)
-		{
-			Youmuus->CastOnPlayer();
-		}
-	}
 	if (!GEntityList->Player()->HasBuff("RengarR"))
 	{
-
-		for (auto Enemy : GEntityList->GetAllHeros(false, true))
+		if (Smite != nullptr && Smite->IsReady() && ComboSmite->Enabled()) // AUTO SMITE PRO BY REMBRANDT
 		{
-			if (Enemy->IsValidTarget())
+
+			if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
 			{
-				if (Player->GetMana() == 4 || Player->GetMana() < 4)
-				{
-					if (PriorityEcombo->Enabled() && E->IsReady())
-					{
-						if (!Enemy->IsDead() && Enemy != nullptr && Enemy->IsValidTarget(GEntityList->Player(), E->Range()))
-						{
-							if ((Enemy->GetPosition() - Player->GetPosition()).Length() > Q->Range())
-							{
-								E->CastOnTarget(Enemy);
-							}
-						}
-					}
-				}
-				if (Player->GetMana() == 4)
-				{
-					if (ComboMode == 1)
-					{
-						if (!Enemy->IsDead() && Enemy != nullptr && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
-						{
-							Q->CastOnTarget(Enemy);
-						}
 
-					}
-					if (ComboMode == 2)
-					{
-						if (!Enemy->IsDead() && Enemy != nullptr && Enemy->IsValidTarget(GEntityList->Player(), W->Range()))
-						{
-							W->CastOnTarget(Enemy);
-						}
+				Smite->CastOnTarget(GTargetSelector->GetFocusedTarget());
+			}
+			else
+			{
+				Smite->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, 700));
+			}
+		}
+		if (Youmuus->IsOwned() && Youmuus->IsReady() && ComboItems->Enabled() && !(Player->IsDead()))
+		{
+			if (EnemiesInRange(Player, 500) > 0)
+			{
+				Youmuus->CastOnPlayer();
+			}
+		}
+		if (Ravenous_Hydra->IsOwned() && Ravenous_Hydra->IsReady() && ComboItems->Enabled() && !(Player->IsDead()))
+		{
+			if (EnemiesInRange(Player, 385) > 0)
+			{
+				Ravenous_Hydra->CastOnPlayer();
+			}
+		}
+		if (Tiamat->IsOwned() && Tiamat->IsReady() && ComboItems->Enabled() && !(Player->IsDead()))
+		{
+			if (EnemiesInRange(Player, 385) > 0)
+			{
+				Tiamat->CastOnPlayer();
+			}
+		}
+		if (Titanic_Hydra->IsOwned() && Titanic_Hydra->IsReady() && ComboItems->Enabled() && !(Player->IsDead()))
+		{
+			if (EnemiesInRange(Player, 385) > 0)
+			{
+				Titanic_Hydra->CastOnPlayer();
+			}
+		}
+		Enemy = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+		for (auto Enemy : GEntityList->GetAllHeros(false, true));
+		if (Enemy != nullptr && Enemy->IsValidTarget() && Enemy->IsHero() && Enemy->IsValidTarget())
+		{
 
-					}
-					if (ComboMode == 3)
-					{
-						if (!Enemy->IsDead() && Enemy != nullptr && Enemy->IsValidTarget(GEntityList->Player(), E->Range()))
-						{
-							E->CastOnTarget(Enemy);
-						}
-
-					}
-					if (ComboWcc->Enabled() && W->IsReady())
-					{
-						if (Player->HasBuffOfType(BUFF_Stun) || Player->HasBuffOfType(BUFF_Silence) || Player->HasBuffOfType(BUFF_Taunt) || Player->HasBuffOfType(BUFF_Polymorph) || Player->HasBuffOfType(BUFF_Snare) || Player->HasBuffOfType(BUFF_Charm) || Player->HasBuffOfType(BUFF_Knockback))
-						{
-							W->CastOnPlayer();
-						}
-					}
-				}
-				if (Player->GetMana() < 4)
+			if (Player->GetMana() == 4 || Player->GetMana() < 4)
+			{
+				if (PriorityEcombo->Enabled() && E->IsReady())
 				{
-					if (ComboQ->Enabled())
+					if (Enemy->IsValidTarget(GEntityList->Player(), E->Range()))
 					{
-						if (!Enemy->IsDead() && Enemy != nullptr && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
-						{
-							Q->CastOnTarget(Enemy);
-						}
-					}
-					if (ComboW->Enabled())
-					{
-						if (!Enemy->IsDead() && Enemy != nullptr && Enemy->IsValidTarget(GEntityList->Player(), W->Range()))
-						{
-							W->CastOnTarget(Enemy);
-						}
-					}
-					if (ComboE->Enabled())
-					{
-						if (!Enemy->IsDead() && Enemy != nullptr && Enemy->IsValidTarget(GEntityList->Player(), E->Range()))
+						if ((Enemy->GetPosition() - Player->GetPosition()).Length() > Q->Range())
 						{
 							E->CastOnTarget(Enemy);
 						}
 					}
 				}
 			}
+			if (Player->GetMana() == 4)
+			{
+				if (ComboMode == 1)
+				{
+					if (Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+					{
+						Q->CastOnTarget(Enemy);
+					}
+
+				}
+				if (ComboMode == 2)
+				{
+					if (Enemy->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+						W->CastOnTarget(Enemy);
+					}
+
+				}
+				if (ComboMode == 3)
+				{
+					if (Enemy->IsValidTarget(GEntityList->Player(), E->Range()))
+					{
+						E->CastOnTarget(Enemy);
+					}
+
+				}
+				if (ComboWcc->Enabled() && W->IsReady())
+				{
+					if (Player->HasBuffOfType(BUFF_Stun) || Player->HasBuffOfType(BUFF_Silence) || Player->HasBuffOfType(BUFF_Taunt) || Player->HasBuffOfType(BUFF_Polymorph) || Player->HasBuffOfType(BUFF_Snare) || Player->HasBuffOfType(BUFF_Charm) || Player->HasBuffOfType(BUFF_Knockback))
+					{
+						W->CastOnPlayer();
+					}
+				}
+			}
+			if (Player->GetMana() < 4)
+			{
+				if (ComboQ->Enabled())
+				{
+					if (Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+					{
+						Q->CastOnTarget(Enemy);
+					}
+				}
+				if (ComboW->Enabled())
+				{
+					if (Enemy->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+						W->CastOnTarget(Enemy);
+					}
+				}
+				if (ComboE->Enabled())
+				{
+					if (Enemy->IsValidTarget(GEntityList->Player(), E->Range()))
+					{
+						E->CastOnTarget(Enemy);
+					}
+				}
+			}
 		}
 	}
 }
-
 
 
 
@@ -370,7 +397,7 @@ void Farm()
 		{
 			for (auto Minion : GEntityList->GetAllMinions(false, true, true))
 			{
-				if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget())
+				if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget() && Minion->IsCreep())
 				{
 					if (FarmQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), 400))
 					{
@@ -407,7 +434,7 @@ void Farm()
 
 			for (auto Minion : GEntityList->GetAllMinions(false, true, true))
 			{
-				if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget())
+				if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget() && Minion->IsCreep())
 				{
 					if (FarmQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), 400))
 					{
