@@ -147,11 +147,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\League-SDK-master\League++ SDK\LPPConstants.h" />
-    <ClInclude Include="..\..\..\League-SDK-master\League++ SDK\PluginData.h" />
-    <ClInclude Include="..\..\..\League-SDK-master\League++ SDK\PluginSDK.h" />
-    <ClInclude Include="..\..\..\League-SDK-master\League++ SDK\Vector3.h" />
+    <ClInclude Include="..\..\Kornis%27s Cassiopeia\Kornis%27s Cassiopeia\LPPConstants.h" />
+    <ClInclude Include="..\..\Kornis%27s Cassiopeia\Kornis%27s Cassiopeia\PluginData.h" />
+    <ClInclude Include="..\..\Kornis%27s Cassiopeia\Kornis%27s Cassiopeia\PluginSDK.h" />
     <ClInclude Include="..\..\Kornis%27s Cassiopeia\Kornis%27s Cassiopeia\SimpleLib.h" />
+    <ClInclude Include="..\..\Kornis%27s Cassiopeia\Kornis%27s Cassiopeia\Vector3.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Kornis%27s Cassiopeia\Kornis%27s Cassiopeia\Cassiopeia.cpp" />

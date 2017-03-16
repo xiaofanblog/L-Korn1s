@@ -15,19 +15,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\League-SDK-master\League++ SDK\PluginData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\League-SDK-master\League++ SDK\PluginSDK.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\League-SDK-master\League++ SDK\Vector3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\League-SDK-master\League++ SDK\LPPConstants.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\Kornis%27s Cassiopeia\Kornis%27s Cassiopeia\SimpleLib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Kornis%27s Cassiopeia\Kornis%27s Cassiopeia\LPPConstants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Kornis%27s Cassiopeia\Kornis%27s Cassiopeia\PluginData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Kornis%27s Cassiopeia\Kornis%27s Cassiopeia\PluginSDK.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Kornis%27s Cassiopeia\Kornis%27s Cassiopeia\Vector3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

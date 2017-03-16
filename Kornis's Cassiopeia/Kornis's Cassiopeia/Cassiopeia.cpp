@@ -52,6 +52,7 @@ IMenuOption* FarmE;
 IMenuOption* FarmELH;
 IMenuOption* FarmEpoison;
 IMenuOption* FarmQhit;
+IMenuOption* FarmETypeChoose;
 IMenuOption* Jungle;
 
 IMenu* LastHitMenu;
@@ -68,6 +69,7 @@ ISpell2* E;
 ISpell2* R;
 ISpell* Flash;
 
+std::vector<std::string> FarmEType = { "Block AA(Smooth)", "With AA" };
 
 IUnit* Player;
 
@@ -93,6 +95,7 @@ void LoadSpells()
 	R = GPluginSDK->CreateSpell2(kSlotR, kConeCast, false, false, kCollidesWithNothing);
 	
 }
+
 
 void Menu()
 {
@@ -141,6 +144,7 @@ void Menu()
 		FarmQhit = FarmMenu->AddInteger("Q hit X minions >", 1, 6, 2);
 		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
 		FarmELH = FarmMenu->CheckBox("Last hit E in Lane Clear", false);
+		FarmETypeChoose = FarmMenu->AddSelection("Last Hit E Type", 0, FarmEType);
 		FarmEpoison = FarmMenu->CheckBox("E only if poison", false);
 		Jungle = FarmMenu->CheckBox("Use in Jungle", true);
 	}
@@ -463,51 +467,96 @@ void Farm()
 	minions = GEntityList->GetAllMinions(false, true, true);
 	for (IUnit* minion : minions)
 	{
-		if (Player->ManaPercent() < FarmMana->GetInteger())
-			return;
 		if (FarmELH->Enabled() && FarmE->Enabled() && GGame->Time() > delay)
 		{
 			GGame->PrintChat("Turn off Lane Clear E, or Last Hit E in LaneClear to work!");
 			delay = GGame->Time() + 3;
 		}
-		if (FarmELH->Enabled() && !FarmE->Enabled() && GEntityList->Player()->IsValidTarget(minion, E->Range()))
+		if (FarmELH->Enabled() && !FarmE->Enabled())
 		{
-			if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, static_cast<int>(E->GetDelay() * 1000)))
+			if (GEntityList->Player()->IsValidTarget(minion, E->Range()))
 			{
-				E->CastOnUnit(minion);
+				if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, static_cast<int>(E->GetDelay() * 1000)))
+				{
+					E->CastOnUnit(minion);
+				}
 			}
 		}
-		
-		if (FarmE->Enabled() && E->IsReady() && !FarmELH->Enabled())
+		if (Player->ManaPercent() > FarmMana->GetInteger())
 		{
-			if (!FarmEpoison->Enabled())
+			if (FarmE->Enabled() && E->IsReady() && !FarmELH->Enabled())
 			{
-				if(E->AttackMinions())
-				return;
+				if (!FarmEpoison->Enabled())
+				{
+					if (E->AttackMinions())
+						return;
+				}
+
+				else
+				{
+					if (minion != nullptr)
+					{
+						if (!minion->IsDead() && minion->HasBuffOfType(BUFF_Poison) && SimpleLib::SimpleLib::GetDistance(Player, minion) <= E->Range())
+						{
+							E->CastOnUnit(minion);
+						}
+					}
+				}
 			}
 
-			else
+			if (FarmQ->Enabled() && Q->IsReady() && minion->IsCreep())
 			{
-				if (minion != nullptr)
+				Vec3 pos;
+				int hit;
+				GPrediction->FindBestCastPosition(Q->Range(), 100, false, true, false, pos, hit);
+				if (hit >= FarmQhit->GetInteger())
+					Q->CastOnPosition(pos);
+
+			}
+
+		}
+	}
+}
+void _OnOrbwalkPreAttack(IUnit* minion)
+{
+	auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE);
+	for (auto minion : GEntityList->GetAllMinions(false, true, false))
+	{
+		if(FarmETypeChoose->GetInteger() == 0)
+		{
+			if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+			{
+				if (FarmELH->Enabled() && !FarmE->Enabled() && GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
 				{
-					if (!minion->IsDead() && minion->HasBuffOfType(BUFF_Poison) && SimpleLib::SimpleLib::GetDistance(Player, minion) <= E->Range())
+					if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
 					{
-						E->CastOnUnit(minion);
+						if (minion->GetHealth() < EDamage + 100)
+						{
+							if (minion != nullptr && minion->IsCreep())
+							{
+								GOrbwalking->DisableNextAttack();
+							}
+						}
 					}
 				}
 			}
 		}
-		
-		if (FarmQ->Enabled() && Q->IsReady())
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
 		{
-			Vec3 pos;
-			int hit;
-			GPrediction->FindBestCastPosition(Q->Range(), 100, false, true, false, pos, hit);
-			if (hit >= FarmQhit->GetInteger())
-				Q->CastOnPosition(pos);
-
+			if (LastE->Enabled() && GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
+			{
+				if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
+				{
+					if (minion->GetHealth() < EDamage + 100)
+					{
+						if (minion != nullptr && minion->IsCreep())
+						{
+							GOrbwalking->DisableNextAttack();
+						}
+					}
+				}
+			}
 		}
-
 	}
 }
 
@@ -517,7 +566,7 @@ void JungleClear()
 	{
 		if (Jungle->Enabled())
 		{
-			if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget())
+			if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget() && Minion->IsJungleCreep())
 			{
 				if (Jungle && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
 				{
@@ -566,6 +615,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Farm();
 		JungleClear();
+
 	}
 	if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
 	{
@@ -595,6 +645,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	}
 	Auto();
 	Killsteal();
+
 }
 
 
@@ -625,6 +676,11 @@ PLUGIN_EVENT(void) OnRender()
 	}
 }
 
+PLUGIN_EVENTD(void) OnOrbwalkPreAttack(IUnit* Args1)
+{
+	_OnOrbwalkPreAttack(Args1);
+}
+
 
 
 PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
@@ -634,6 +690,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	LoadSpells();
 	Player = GEntityList->Player();
 
+	GEventManager->AddEventHandler(kEventOrbwalkBeforeAttack, OnOrbwalkPreAttack);
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
 
@@ -642,6 +699,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 PLUGIN_API void OnUnload()
 {
 	MainMenu->Remove();
+	GEventManager->RemoveEventHandler(kEventOrbwalkBeforeAttack, OnOrbwalkPreAttack);
 	GEventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->RemoveEventHandler(kEventOnRender, OnRender);
 }
