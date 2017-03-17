@@ -152,11 +152,14 @@ void AutoSmite() // AUTO SMITE PRO BY REMBRANDT
 		auto minions = GEntityList->GetAllMinions(false, false, true);
 		for (IUnit* minion : minions)
 		{
-			if (strstr(minion->GetObjectName(), "Red") || strstr(minion->GetObjectName(), "Blue") || strstr(minion->GetObjectName(), "Dragon") || strstr(minion->GetObjectName(), "Rift") || strstr(minion->GetObjectName(), "Baron"))
+			if ((minion->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= 570)
 			{
-				if (minion != nullptr && !minion->IsDead() && minion->GetHealth() <= GDamage->GetSummonerSpellDamage(GEntityList->Player(), minion, kSummonerSpellSmite))
+				if (strstr(minion->GetObjectName(), "Red") || strstr(minion->GetObjectName(), "Blue") || strstr(minion->GetObjectName(), "Dragon") || strstr(minion->GetObjectName(), "Rift") || strstr(minion->GetObjectName(), "Baron"))
 				{
-					Smite->CastOnUnit(minion);
+					if (minion != nullptr && !minion->IsDead() && minion->GetHealth() <= GDamage->GetSummonerSpellDamage(GEntityList->Player(), minion, kSummonerSpellSmite))
+					{
+						Smite->CastOnUnit(minion);
+					}
 				}
 			}
 		}
