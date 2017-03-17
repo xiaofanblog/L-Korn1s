@@ -400,7 +400,7 @@ void Farm()
 		{
 			for (auto Minion : GEntityList->GetAllMinions(false, true, true))
 			{
-				if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget() && Minion->IsCreep())
+				if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && Minion->IsCreep() || Minion->IsJungleCreep())
 				{
 					if (FarmQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), 400))
 					{
@@ -415,11 +415,11 @@ void Farm()
 					}
 					if (FarmE->Enabled() && E->IsReady() && Minion->IsValidTarget(GEntityList->Player(), E->Range()))
 					{
-						E->CastOnUnit(Minion);
+						E->CastOnTarget(Minion);
 					}
-					if (FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range()))
+					if (FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range() - 10))
 					{
-						W->CastOnUnit(Minion);
+						W->CastOnTarget(Minion);
 					}
 
 				}
@@ -437,7 +437,7 @@ void Farm()
 
 			for (auto Minion : GEntityList->GetAllMinions(false, true, true))
 			{
-				if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget() && Minion->IsCreep())
+				if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && Minion->IsCreep() || Minion->IsJungleCreep())
 				{
 					if (FarmQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), 400))
 					{
@@ -452,11 +452,11 @@ void Farm()
 					}
 					if (FarmE->Enabled() && E->IsReady() && Minion->IsValidTarget(GEntityList->Player(), E->Range()))
 					{
-						E->CastOnUnit(Minion);
+						E->CastOnTarget(Minion);
 					}
-					if (FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range()))
+					if (FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range() - 10))
 					{
-						W->CastOnUnit(Minion);
+						W->CastOnTarget(Minion);
 					}
 
 				}
