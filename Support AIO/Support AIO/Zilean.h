@@ -7,7 +7,7 @@ public:
 
 	void DrawMenu()
 	{
-		MainMenu = GPluginSDK->AddMenu("Zilean by Kornis");
+		MainMenu = GPluginSDK->AddMenu("Zilean :: Support AIO");
 		ComboMenu = MainMenu->AddMenu("Combo");
 		{
 			QSet = ComboMenu->AddMenu("Q settings");
@@ -25,6 +25,7 @@ public:
 			ComboRenable = RSet->CheckBox("Use R", true);
 			//ComboRkills = RSet->CheckBox("Auto R if damage kills Ally", true);
 			ComboRhp = RSet->AddInteger("Use R if HP <", 5, 30, 15);
+			SupportMode = ComboMenu->CheckBox("Support Mode", true);
 
 		}
 		HarassMenu = MainMenu->AddMenu("Harass");
@@ -61,6 +62,59 @@ public:
 
 
 	}
+	int GetAlliesInRange(IUnit* Source, float range)
+	{
+		auto allies = GEntityList->GetAllHeros(true, false);
+		auto AlliesInRange = 0;
+
+		for (auto target : allies)
+		{
+			if (target != GEntityList->Player())
+			{
+				if (target != nullptr && !target->IsDead())
+				{
+					auto flDistance = (target->GetPosition() - Source->GetPosition()).Length();
+					if (flDistance <= range)
+					{
+						AlliesInRange++;
+					}
+				}
+			}
+		}
+		return AlliesInRange;
+	}
+
+	void AAdisable()
+	{
+		if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
+		{
+			if (SupportMode->Enabled() && GetAlliesInRange(GEntityList->Player(), 1000) >= 1)
+			{
+				GOrbwalking->SetAttacksAllowed(false);
+			}
+			else if (!SupportMode->Enabled() || GetAlliesInRange(GEntityList->Player(), 1000) == 0)
+			{
+				GOrbwalking->SetAttacksAllowed(true);
+			}
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			if (SupportMode->Enabled() && GetAlliesInRange(GEntityList->Player(), 1000) >= 1)
+			{
+				GOrbwalking->SetAttacksAllowed(false);
+			}
+			else if (!SupportMode->Enabled() || GetAlliesInRange(GEntityList->Player(), 1000) == 0)
+			{
+				GOrbwalking->SetAttacksAllowed(true);
+			}
+		}
+		else if (GOrbwalking->GetOrbwalkingMode() != kModeLaneClear && GOrbwalking->GetOrbwalkingMode() != kModeMixed)
+		{
+			GOrbwalking->SetAttacksAllowed(true);
+
+		}
+	}
+
 	void Combo()
 	{
 

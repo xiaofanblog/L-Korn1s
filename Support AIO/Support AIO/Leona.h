@@ -7,7 +7,7 @@ public:
 
 	void DrawMenu()
 	{
-		MainMenu = GPluginSDK->AddMenu("Leona by Kornis");
+		MainMenu = GPluginSDK->AddMenu("Leona :: Support AIO");
 		ComboMenu = MainMenu->AddMenu("Combo");
 		{
 			ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
@@ -16,6 +16,7 @@ public:
 			ComboW = ComboMenu->CheckBox("Use W in combo", true);
 			ComboR = ComboMenu->CheckBox("Use R in Combo", true);
 			ComboRmin = ComboMenu->AddInteger("Use R if enemies X >", 1, 5, 2);
+			SupportMode = ComboMenu->CheckBox("Support Mode", true);
 
 		}
 		MiscMenu = MainMenu->AddMenu("Misc.");
@@ -75,6 +76,29 @@ public:
 		}
 		return enemiesInRange;
 	}
+
+	int GetAlliesInRange(IUnit* Source, float range)
+	{
+		auto allies = GEntityList->GetAllHeros(true, false);
+		auto AlliesInRange = 0;
+
+		for (auto target : allies)
+		{
+			if (target != GEntityList->Player())
+			{
+				if (target != nullptr && !target->IsDead())
+				{
+					auto flDistance = (target->GetPosition() - Source->GetPosition()).Length();
+					if (flDistance <= range)
+					{
+						AlliesInRange++;
+					}
+				}
+			}
+		}
+		return AlliesInRange;
+	}
+
 
 	void Combo()
 	{

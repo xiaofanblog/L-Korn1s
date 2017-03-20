@@ -7,7 +7,7 @@ public:
 
 	void DrawMenu()
 	{
-		MainMenu = GPluginSDK->AddMenu("Blitzcrank by Kornis");
+		MainMenu = GPluginSDK->AddMenu("Blitzcrank :: Support AIO");
 		ComboMenu = MainMenu->AddMenu("Combo");
 		{
 			ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
@@ -59,6 +59,29 @@ public:
 
 
 	}
+
+	int GetAlliesInRange(IUnit* Source, float range)
+	{
+		auto allies = GEntityList->GetAllHeros(true, false);
+		auto AlliesInRange = 0;
+
+		for (auto target : allies)
+		{
+			if (target != GEntityList->Player())
+			{
+				if (target != nullptr && !target->IsDead())
+				{
+					auto flDistance = (target->GetPosition() - Source->GetPosition()).Length();
+					if (flDistance <= range)
+					{
+						AlliesInRange++;
+					}
+				}
+			}
+		}
+		return AlliesInRange;
+	}
+
 
 
 	int GetEnemiesInRange(float range)

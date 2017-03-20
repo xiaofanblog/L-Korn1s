@@ -40,7 +40,12 @@ IMenuOption* ComboEinterrupt;
 
 
 
+IMenu* ESettings;
 
+IMenu* FarmMenu;
+IMenuOption* FarmW;
+IMenuOption* FarmWmin;
+IMenuOption* FarmMana;
 
 IMenu* HookMenu;
 IMenuOption* GrabQ;
@@ -105,21 +110,31 @@ IMenuOption* DrawERange;
 IMenuOption* DrawQmin;
 IMenuOption* DrawEmin;
 IMenuOption* DrawWRange;
+IMenuOption* FarmQ;
+IMenuOption* SaveW;
+IMenuOption* SaveKey;
+IMenuOption* SaveE;
+IMenuOption* AntiGapE;
+IMenuOption* LastQ;
 
+int lastw;
 
 std::map<int, IMenuOption*> ChampionUse;
+std::vector<IUnit*> minions;
 
 IMenu* KillstealMenu;
 IMenuOption* KSE;
 IMenuOption* KSR;
 IMenuOption* KSQ;
 IMenuOption* KSW;
+IMenuOption* SupportMode;
 IMenuOption* HarassAA;
 
 ISpell2* Q;
 ISpell2* W;
 ISpell2* E;
 ISpell2* R;
+
 
 ISpell* Flash;
 

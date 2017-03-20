@@ -7,13 +7,14 @@ public:
 
 	void DrawMenu()
 	{
-		MainMenu = GPluginSDK->AddMenu("Soraka by Kornis");
+		MainMenu = GPluginSDK->AddMenu("Soraka :: Support AIO");
 		ComboMenu = MainMenu->AddMenu("Combo");
 		{
 			ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
 			ComboE = ComboMenu->CheckBox("Use E in Combo", true);
 			ComboEinterrupt = ComboMenu->CheckBox("Use E to Interrupt", true);
 			ComboEgapclose = ComboMenu->CheckBox("Use E on Gapclose", true);
+			SupportMode = ComboMenu->CheckBox("Support mode", true);
 
 		}
 
@@ -22,14 +23,12 @@ public:
 			HarassMana = HarassMenu->AddInteger("Mana Percent", 10, 100, 50);
 			HarassQ = HarassMenu->CheckBox("Use Q in Harass", true);
 			HarassE = HarassMenu->CheckBox("Use E in Harass", true);
-			HarassAA = HarassMenu->CheckBox("Disable AA", true);
 
 		}
 		MiscMenu = MainMenu->AddMenu("Healing");
 		{
 			HealW = MiscMenu->CheckBox("Use auto W", true);
 			HealWally = MiscMenu->AddInteger("Ally HP percent(if lower than)", 10, 100, 50);
-			HealWmy = MiscMenu->AddInteger("My HP percent(if higher than)", 10, 100, 30);
 			HealR = MiscMenu->CheckBox("Use auto R", true);
 			HealRhp = MiscMenu->AddInteger("Ally R HP percent (if lower than)", 10, 100, 20);
 		}
@@ -66,6 +65,60 @@ public:
 		R = GPluginSDK->CreateSpell2(kSlotR, kTargetCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 	}
 
+
+	int GetAlliesInRange(IUnit* Source, float range)
+	{
+		auto allies = GEntityList->GetAllHeros(true, false);
+		auto AlliesInRange = 0;
+
+		for (auto target : allies)
+		{
+			if (target != GEntityList->Player())
+			{
+				if (target != nullptr && !target->IsDead())
+				{
+					auto flDistance = (target->GetPosition() - Source->GetPosition()).Length();
+					if (flDistance <= range)
+					{
+						AlliesInRange++;
+					}
+				}
+			}
+		}
+		return AlliesInRange;
+	}
+
+	void AAdisable()
+	{
+		if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
+		{
+			if (SupportMode->Enabled() && GetAlliesInRange(GEntityList->Player(), 1000) >= 1)
+			{
+				GOrbwalking->SetAttacksAllowed(false);
+			}
+			else if (!SupportMode->Enabled() || GetAlliesInRange(GEntityList->Player(), 1000) == 0)
+			{
+				GOrbwalking->SetAttacksAllowed(true);
+			}
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			if (SupportMode->Enabled() && GetAlliesInRange(GEntityList->Player(), 1000) >= 1)
+			{
+				GOrbwalking->SetAttacksAllowed(false);
+			}
+			else if (!SupportMode->Enabled() || GetAlliesInRange(GEntityList->Player(), 1000) == 0)
+			{
+				GOrbwalking->SetAttacksAllowed(true);
+			}
+		}
+		else if (GOrbwalking->GetOrbwalkingMode() != kModeLaneClear && GOrbwalking->GetOrbwalkingMode() != kModeMixed)
+		{
+			GOrbwalking->SetAttacksAllowed(true);
+
+		}
+	}
+
 	void Combo()
 	{
 		if (ComboE->Enabled() && E->IsReady() && E->Range())
@@ -82,6 +135,29 @@ public:
 			if (target != nullptr)
 			{
 				Q->CastOnTarget(target, kHitChanceHigh);
+			}
+		}
+	}
+
+
+	void RHeal()
+	{
+		for (auto Ally : GEntityList->GetAllHeros(true, false))
+		{
+			IMenuOption* temp = BlacklistMenuR->GetOption(Ally->ChampionName());
+			if (Ally != nullptr && Ally != GEntityList->Player())
+			{
+				if (!temp->Enabled() && Ally->HealthPercent() < HealRhp->GetInteger() && !Ally->IsRecalling() && !GUtility->IsPositionInFountain(Ally->GetPosition(), true, false))
+				{
+					R->CastOnPlayer();
+				}
+			}
+			else if (Ally != nullptr)
+			{
+				if (!temp->Enabled() && GEntityList->Player()->HealthPercent() < HealRhp->GetInteger() && !GUtility->IsPositionInFountain(GEntityList->Player()->GetPosition(), true, false))
+				{
+					R->CastOnPlayer();
+				}
 			}
 		}
 	}

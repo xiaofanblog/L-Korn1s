@@ -152,13 +152,17 @@
   <ItemGroup>
     <ClInclude Include="Alistar.h" />
     <ClInclude Include="Blitzcrank.h" />
+    <ClInclude Include="Braum.h" />
+    <ClInclude Include="Extension.h" />
     <ClInclude Include="Leona.h" />
     <ClInclude Include="LPPConstants.h" />
     <ClInclude Include="Menu.h" />
+    <ClInclude Include="Morgana.h" />
     <ClInclude Include="Nami.h" />
     <ClInclude Include="PluginData.h" />
     <ClInclude Include="PluginSDK.h" />
     <ClInclude Include="Soraka.h" />
+    <ClInclude Include="Template.h" />
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="Zilean.h" />
   </ItemGroup>

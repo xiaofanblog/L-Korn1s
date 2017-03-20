@@ -1,7 +1,9 @@
 #include "PluginSDK.h"
 #include "Blitzcrank.h"
 #include "Leona.h"
+#include "Morgana.h"
 #include "Nami.h"
+#include "Braum.h"
 //#include "Alistar.h"
 #include "Zilean.h"
 #include "Soraka.h"
@@ -87,7 +89,7 @@ public:
 private:
 	void PrintMessage()
 	{
-		GGame->PrintChat("<b><font color = \"#f8a101\">Blitzcrank<b><font color=\"#FFFFFF\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
+		GGame->PrintChat("<b><font color = \"#f8a101\">Blitzcrank</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 	}
 };
 
@@ -152,7 +154,7 @@ public:
 private:
 	void PrintMessage()
 	{
-		GGame->PrintChat("<b><font color = \"#f8a101\">Leona<b><font color=\"#FFFFFF\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
+		GGame->PrintChat("<b><font color = \"#f8a101\">Leona</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 	}
 };
 class Soraka : public zHero
@@ -172,7 +174,9 @@ public:
 
 	void OnGameUpdate() override
 	{
+		SorakaBase().RHeal();
 		SorakaBase().Healing();
+		SorakaBase().AAdisable();
 		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
 			SorakaBase().Combo();
@@ -181,19 +185,6 @@ public:
 		if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
 		{
 			SorakaBase().Harass();
-		}
-		if (GetAsyncKeyState('C'))
-		{
-			if (HarassAA->Enabled())
-			{
-				GOrbwalking->SetAttacksAllowed(false);
-			}
-		}
-		if (!GetAsyncKeyState('C'))
-		{
-			{
-				GOrbwalking->SetAttacksAllowed(true);
-			}
 		}
 	}
 
@@ -233,7 +224,7 @@ public:
 private:
 	void PrintMessage()
 	{
-		GGame->PrintChat("<b><font color = \"#f8a101\">Soraka<b><font color=\"#FFFFFF\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
+		GGame->PrintChat("<b><font color = \"#f8a101\">Soraka</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 	}
 };
 
@@ -255,6 +246,7 @@ public:
 	void OnGameUpdate() override
 	{
 		ZileanBase().Auto();
+		ZileanBase().AAdisable();
 		ZileanBase().Killsteal();
 		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
@@ -307,7 +299,7 @@ public:
 private:
 	void PrintMessage()
 	{
-		GGame->PrintChat("<b><font color = \"#f8a101\">Nami<b><font color=\"#FFFFFF\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
+		GGame->PrintChat("<b><font color = \"#f8a101\">Zilean</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 	}
 };
 
@@ -332,6 +324,7 @@ public:
 		NamiBase().AutoQLogic();
 		NamiBase().AutoE();
 		NamiBase().Healing();
+		NamiBase().AAdisable();
 		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
 			NamiBase().Combo();
@@ -382,7 +375,160 @@ public:
 private:
 	void PrintMessage()
 	{
-		GGame->PrintChat("<b><font color = \"#f8a101\">Nami<font color=\"#FFFFFF\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
+		GGame->PrintChat("<b><font color = \"#f8a101\">Nami</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
+class Morgana : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		MorganaBase().DrawMenu();
+		MorganaBase().LoadSpells();
+	}
+
+	void OnRender() override
+	{
+		MorganaBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		MorganaBase().Killsteal();
+		MorganaBase().AAdisable();
+		MorganaBase().AutoLogic();
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			MorganaBase().Combo();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			MorganaBase().Farm();
+		}
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+		MorganaBase().AntiGapclose(Args);
+	}
+
+
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+		MorganaBase().AutoE(Args);
+	}
+
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+	}
+
+	void OnCreateObject(IUnit* Source) override
+	{
+		//none
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Morgana</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
+class Braum : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		BraumBase().DrawMenu();
+		BraumBase().LoadSpells();
+	}
+
+	void OnRender() override
+	{
+		BraumBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			BraumBase().Combo();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			BraumBase().Push();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
+		{
+			BraumBase().LastHit();
+		}
+		if (GetAsyncKeyState(SaveKey->GetInteger()) & 0x8000)
+		{
+			BraumBase().ComboSave();
+		}
+		if (GetAsyncKeyState(ForceR->GetInteger()))
+		{
+			BraumBase().Semi();
+		}
+
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+		BraumBase().AntiGapclose(Args);
+	}
+
+
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+		BraumBase().OnInterruptible(Args);
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+		BraumBase().AutoE(Args);
+	}
+
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+	}
+
+	void OnCreateObject(IUnit* Source) override
+	{
+		//none
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Braum</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 	}
 };
 
@@ -518,6 +664,10 @@ void LoadChampion()
 		yHero = new Zilean;
 	else if (playerHero == "Nami")
 		yHero = new Nami;
+	else if (playerHero == "Morgana")
+		yHero = new Morgana;
+	else if (playerHero == "Braum")
+		yHero = new Braum;
 	else
 	{
 		GGame->PrintChat("<b><font color=\"#FFFFFF\">This champion isn't supported.</b></font>");

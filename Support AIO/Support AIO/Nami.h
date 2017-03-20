@@ -7,7 +7,7 @@ public:
 
 	void DrawMenu()
 	{
-		MainMenu = GPluginSDK->AddMenu("Nami by Kornis");
+		MainMenu = GPluginSDK->AddMenu("Nami :: Support AIO");
 		ComboMenu = MainMenu->AddMenu("Combo");
 		{
 			ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
@@ -17,6 +17,7 @@ public:
 			ComboRmin = ComboMenu->AddInteger("Use R if enemies X >", 1, 5, 2);
 			ComboRally = ComboMenu->AddInteger("Use R if nearby allies X >", 1, 5, 1);
 			ForceR = ComboMenu->AddKey("Force R", 'T');
+			SupportMode = ComboMenu->CheckBox("Support Mode", true);
 
 		}
 		HealMenu = MainMenu->AddMenu("Healing");
@@ -613,6 +614,37 @@ public:
 			}
 		}
 		return AlliesInRange;
+	}
+
+	void AAdisable()
+	{
+		if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
+		{
+			if (SupportMode->Enabled() && GetAlliesInRange(GEntityList->Player(), 1000) >= 1)
+			{
+				GOrbwalking->SetAttacksAllowed(false);
+			}
+			else if (!SupportMode->Enabled() || GetAlliesInRange(GEntityList->Player(), 1000) == 0)
+			{
+				GOrbwalking->SetAttacksAllowed(true);
+			}
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			if (SupportMode->Enabled() && GetAlliesInRange(GEntityList->Player(), 1000) >= 1)
+			{
+				GOrbwalking->SetAttacksAllowed(false);
+			}
+			else if (!SupportMode->Enabled() || GetAlliesInRange(GEntityList->Player(), 1000) == 0)
+			{
+				GOrbwalking->SetAttacksAllowed(true);
+			}
+		}
+		else if (GOrbwalking->GetOrbwalkingMode() != kModeLaneClear && GOrbwalking->GetOrbwalkingMode() != kModeMixed)
+		{
+			GOrbwalking->SetAttacksAllowed(true);
+
+		}
 	}
 
 	void AutoE()
