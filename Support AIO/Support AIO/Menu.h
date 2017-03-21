@@ -25,6 +25,8 @@ IMenuOption* ComboQmin;
 IMenuOption* ComboQmax;
 IMenuOption* ComboRhp;
 IMenuOption* ComboQinterrupt;
+
+IMenuOption* HealRsemi;
 IMenuOption* ComboRenable;
 
 

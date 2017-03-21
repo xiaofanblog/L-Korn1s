@@ -30,6 +30,7 @@ public:
 			HealW = MiscMenu->CheckBox("Use auto W", true);
 			HealWally = MiscMenu->AddInteger("Ally HP percent(if lower than)", 10, 100, 50);
 			HealR = MiscMenu->CheckBox("Use auto R", true);
+			HealRsemi = MiscMenu->CheckBox("Semi-Manual R ", false);
 			HealRhp = MiscMenu->AddInteger("Ally R HP percent (if lower than)", 10, 100, 20);
 		}
 
@@ -144,19 +145,47 @@ public:
 	{
 		for (auto Ally : GEntityList->GetAllHeros(true, false))
 		{
-			IMenuOption* temp = BlacklistMenuR->GetOption(Ally->ChampionName());
-			if (Ally != nullptr && Ally != GEntityList->Player() && !Ally->IsDead())
+			if (HealR->Enabled() && !HealRsemi->Enabled() && R->IsReady())
 			{
-				if (!temp->Enabled() && Ally->HealthPercent() < HealRhp->GetInteger() && !Ally->IsRecalling() && !GUtility->IsPositionInFountain(Ally->GetPosition(), true, false))
+				IMenuOption* temp = BlacklistMenuR->GetOption(Ally->ChampionName());
+				if (Ally != nullptr && Ally != GEntityList->Player() && !Ally->IsDead())
 				{
-					R->CastOnPlayer();
+					if (!temp->Enabled() && Ally->HealthPercent() <= HealRhp->GetInteger() && !Ally->IsRecalling() && !GUtility->IsPositionInFountain(Ally->GetPosition(), true, false))
+					{
+						R->CastOnPlayer();
+					}
+				}
+				else if (Ally != nullptr && Ally == GEntityList->Player() && !GEntityList->Player()->IsDead())
+				{
+					if (!temp->Enabled() && GEntityList->Player()->HealthPercent() <= HealRhp->GetInteger() && !GUtility->IsPositionInFountain(GEntityList->Player()->GetPosition(), true, false))
+					{
+						R->CastOnPlayer();
+					}
 				}
 			}
-			else if (Ally != nullptr)
+		}
+	}
+
+	void semikey()
+	{
+		for (auto Ally : GEntityList->GetAllHeros(true, false))
+		{
+			if (!HealR->Enabled() && HealRsemi->Enabled())
 			{
-				if (!temp->Enabled() && GEntityList->Player()->HealthPercent() < HealRhp->GetInteger() && !GUtility->IsPositionInFountain(GEntityList->Player()->GetPosition(), true, false))
+				IMenuOption* temp = BlacklistMenuR->GetOption(Ally->ChampionName());
+				if (Ally != nullptr && Ally != GEntityList->Player() && !Ally->IsDead())
 				{
-					R->CastOnPlayer();
+					if (!temp->Enabled() && Ally->HealthPercent() <= HealRhp->GetInteger() && !Ally->IsRecalling() && !GUtility->IsPositionInFountain(Ally->GetPosition(), true, false))
+					{
+						R->CastOnPlayer();
+					}
+				}
+				else if (Ally != nullptr && Ally == GEntityList->Player() && !GEntityList->Player()->IsDead())
+				{
+					if (!temp->Enabled() && GEntityList->Player()->HealthPercent() <= HealRhp->GetInteger() && !GUtility->IsPositionInFountain(GEntityList->Player()->GetPosition(), true, false))
+					{
+						R->CastOnPlayer();
+					}
 				}
 			}
 		}
@@ -554,5 +583,36 @@ public:
 		if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
 		if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range()); }
 		if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()); }
+		if (!HealR->Enabled() && HealRsemi->Enabled() && R->IsReady())
+		{
+			for (auto Ally : GEntityList->GetAllHeros(true, false))
+			{
+				if (Ally != nullptr && Ally != GEntityList->Player() && !Ally->IsDead())
+				{
+					if (Ally->HealthPercent() <= HealRhp->GetInteger() && !Ally->IsRecalling() && !GUtility->IsPositionInFountain(Ally->GetPosition(), true, false))
+					{
+						static IFont* pFont = nullptr;
+
+						if (pFont == nullptr)
+						{
+							pFont = GRender->CreateFont("Arial", 30.f, kFontWeightBold);
+							pFont->SetLocationFlags(kFontLocationCenter);
+						}
+						Vec2 pos;
+						Vec3 vecPosition = GEntityList->Player()->GetPosition();
+						Vec2 vecScreen;
+
+						if (GGame->Projection(vecPosition, &vecScreen))
+						{
+							std::string text = std::string("ALLY LOW PRESS R");
+							Vec4 clr = Vec4(255, 0, 0, 200);
+							pFont->SetColor(clr);
+							pFont->Render(pos.x + 900, pos.y + 400, text.c_str());
+						}
+					}
+				}
+			}
+		}
 	}
+
 };
