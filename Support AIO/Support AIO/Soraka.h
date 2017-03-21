@@ -166,31 +166,6 @@ public:
 		}
 	}
 
-	void semikey()
-	{
-		for (auto Ally : GEntityList->GetAllHeros(true, false))
-		{
-			if (!HealR->Enabled() && HealRsemi->Enabled())
-			{
-				IMenuOption* temp = BlacklistMenuR->GetOption(Ally->ChampionName());
-				if (Ally != nullptr && Ally != GEntityList->Player() && !Ally->IsDead())
-				{
-					if (!temp->Enabled() && Ally->HealthPercent() <= HealRhp->GetInteger() && !Ally->IsRecalling() && !GUtility->IsPositionInFountain(Ally->GetPosition(), true, false))
-					{
-						R->CastOnPlayer();
-					}
-				}
-				else if (Ally != nullptr && Ally == GEntityList->Player() && !GEntityList->Player()->IsDead())
-				{
-					if (!temp->Enabled() && GEntityList->Player()->HealthPercent() <= HealRhp->GetInteger() && !GUtility->IsPositionInFountain(GEntityList->Player()->GetPosition(), true, false))
-					{
-						R->CastOnPlayer();
-					}
-				}
-			}
-		}
-	}
-
 	void Healing()
 	{
 		for (auto Ally : GEntityList->GetAllHeros(true, false))
