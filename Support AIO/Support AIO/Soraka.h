@@ -145,7 +145,7 @@ public:
 		for (auto Ally : GEntityList->GetAllHeros(true, false))
 		{
 			IMenuOption* temp = BlacklistMenuR->GetOption(Ally->ChampionName());
-			if (Ally != nullptr && Ally != GEntityList->Player())
+			if (Ally != nullptr && Ally != GEntityList->Player() && !Ally->IsDead())
 			{
 				if (!temp->Enabled() && Ally->HealthPercent() < HealRhp->GetInteger() && !Ally->IsRecalling() && !GUtility->IsPositionInFountain(Ally->GetPosition(), true, false))
 				{
