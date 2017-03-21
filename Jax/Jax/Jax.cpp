@@ -13,6 +13,8 @@ IMenuOption* ComboWAA;
 IMenuOption* ComboE;
 IMenuOption* ComboR;
 IMenuOption* ComboR1v1;
+IMenu* FleeMenu;
+IMenuOption* FleeKey;
 IMenuOption* ComboRMin;
 IMenuOption* ComboQMode;
 IMenuOption* ComboRmin;
@@ -24,6 +26,7 @@ IMenuOption* HarassQ;
 IMenuOption* HarassModeQ;
 IMenuOption* HarassE;
 IMenuOption* HarassWAA;
+
 IMenuOption* FarmMana;
 
 IMenu* QSettings;
@@ -37,6 +40,7 @@ IMenu* DrawingMenu;
 IMenuOption* DrawQRange;
 IMenuOption* DrawERange;
 IMenuOption* DrawQmin;
+IMenuOption* DrawWard;
 
 IMenu* FarmMenu;
 IMenuOption* FarmQ;
@@ -54,6 +58,23 @@ IUnit* target;
 int laste; 
 int lastedel;
 
+ISpell2* jump;
+
+
+boolean ButtonDown = false;
+boolean doJump = false;
+Vec3 location;
+
+IInventoryItem *sight_stone;
+IInventoryItem *red_stone;
+IInventoryItem *pink_ward;
+IInventoryItem *yellow_trinket;
+IInventoryItem *t_knife;
+IInventoryItem *t_knifeA;
+IInventoryItem *t_knifeB;
+IInventoryItem *t_knifeC;
+IInventoryItem *t_knifeD;
+
 std::vector<std::string> ComboMode = { "Q>E", "E>Q"};
 std::vector<std::string> HarassMode = { "Q>E", "E>Q"};
 std::vector<std::string> ComboEMode = { "Instant", "Delay" };
@@ -66,6 +87,83 @@ void LoadSpells()
 	E = GPluginSDK->CreateSpell2(kSlotE, kCircleCast, false, false, kCollidesWithNothing);
 	R = GPluginSDK->CreateSpell2(kSlotR, kTargetCast, false, false, kCollidesWithNothing);
 }
+
+IInventoryItem* GetAvaliableItem() {
+
+	if (sight_stone->IsOwned() && sight_stone->IsReady()) {
+		return sight_stone;
+	}
+	else if (t_knife->IsOwned() && t_knife->IsReady()) {
+		return t_knife;
+	}
+	else if (t_knifeA->IsOwned() && t_knifeA->IsReady()) {
+		return t_knifeA;
+	}
+	else if (t_knifeB->IsOwned() && t_knifeB->IsReady()) {
+		return t_knifeB;
+	}
+	else if (t_knifeC->IsOwned() && t_knifeC->IsReady()) {
+		return t_knifeC;
+	}
+	else if (t_knifeD->IsOwned() && t_knifeD->IsReady()) {
+		return t_knifeD;
+	}
+	else if (red_stone->IsOwned() && red_stone->IsReady()) {
+		return red_stone;
+	}
+	else if (yellow_trinket->IsOwned() && yellow_trinket->IsReady()) {
+		return yellow_trinket;
+	}
+
+	else if (pink_ward->IsOwned() && pink_ward->IsReady()) {
+		return pink_ward;
+	}
+
+
+
+}
+
+void DoWardJump() {
+
+	if (!jump->IsReady()) {
+		return;
+	}
+
+	auto item = GetAvaliableItem();
+	if (item == nullptr) {
+		GGame->PrintChat("No wards");
+		return;
+	}
+
+	location = GGame->CursorPosition();
+	item->CastOnPosition(location);
+	doJump = true;
+}
+
+
+static bool IsKeyDown(IMenuOption *menuOption)
+{
+	return GetAsyncKeyState(menuOption->GetInteger()) & 0x8000;
+}
+
+
+void KeyPressEvent() {
+
+	if (IsKeyDown(FleeKey) && ButtonDown == false) {
+		ButtonDown = true;
+		DoWardJump();
+
+	}
+
+	else if (IsKeyDown(FleeKey)) {
+		return;
+	}
+	else {
+		ButtonDown = false;
+	}
+
+}
+
 
 void Menu()
 {
@@ -103,12 +201,16 @@ void Menu()
 		DrawQRange = DrawingMenu->CheckBox("Draw Q Range", true);
 		DrawERange = DrawingMenu->CheckBox("Draw E Range", true);
 		DrawQmin = DrawingMenu->CheckBox("Draw Q min Range", true);
+		DrawWard = DrawingMenu->CheckBox("Draw Wardjump Range", true);
 	}
 	FarmMenu = MainMenu->AddMenu("Farming");
 	FarmMana = FarmMenu->AddInteger("Mana percent for Clear", 10, 100, 50);
 	FarmQ = FarmMenu->CheckBox("Farm Q", true);
 	FarmW = FarmMenu->CheckBox("Farm W", true);
 	FarmE = FarmMenu->CheckBox("Farm E", true);
+
+	FleeMenu = MainMenu->AddMenu("Wardjump");
+	FleeKey = FleeMenu->AddKey("Wardjump", 'G');
 }
 
 int GetEnemiesInRange(float range)
@@ -129,6 +231,7 @@ int GetEnemiesInRange(float range)
 	}
 	return enemiesInRange;
 }
+
 
 void Combo()
 
@@ -342,7 +445,7 @@ void Mixed()
 			}
 			if (GGame->CurrentTick() - laste > 100)
 			{
-				if (Q->IsReady() && ComboQ->Enabled() && target->IsValidTarget(GEntityList->Player(), Q->Range()))
+				if (Q->IsReady() && HarassQ->Enabled() && target->IsValidTarget(GEntityList->Player(), Q->Range()))
 				{
 					if ((target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() > ComboQAA->GetInteger())
 					{
@@ -382,8 +485,80 @@ void Farm()
 
 
 
+PLUGIN_EVENT(void) OnCreateObject(IUnit* Source)
+{
+
+
+	if (!doJump) {
+		return;
+	}
+
+	if (Source == nullptr) {
+		return;
+	}
+
+	//GGame->PrintChat("Created Object1");
+	float flDistance = (Source->GetPosition() - location).Length();
+	//char array[30];
+	//sprintf_s(array, "%f", flDistance);
+	//GGame->PrintChat(array);
+
+	if (flDistance < 100) {
+
+		std::string itemName = Source->GetObjectName();
+		if (itemName.find("Ward") != std::string::npos || itemName.find("ward") != std::string::npos) {
+			jump->CastOnUnit(Source);
+			doJump = false;
+		}
+
+	}
+
+}
+
+boolean InitSpells()
+{
+
+	auto champion = GEntityList->Player();
+
+	if (champion == nullptr) {
+		return false;
+	}
+
+	auto name = champion->ChampionName();
+	//GGame->PrintChat(name);
+
+
+	if (strcmp(name, "LeeSin") == 0) {
+		GGame->PrintChat("Loaded Lee Jump!");
+
+		jump = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, kCollidesWithNothing);
+
+	}
+	else if ((strcmp(name, "Jax")) == 0) {
+		GGame->PrintChat("Loaded Jax Jump!");
+		jump = GPluginSDK->CreateSpell2(kSlotQ, kTargetCast, false, false, kCollidesWithNothing);
+	}
+
+	sight_stone = GPluginSDK->CreateItemForId(2049, 625);
+	red_stone = GPluginSDK->CreateItemForId(2045, 625);
+	yellow_trinket = GPluginSDK->CreateItemForId(3340, 625);
+	pink_ward = GPluginSDK->CreateItemForId(2055, 625);
+	t_knife = GPluginSDK->CreateItemForId(3711, 625);
+	t_knifeA = GPluginSDK->CreateItemForId(1408, 625);
+	t_knifeB = GPluginSDK->CreateItemForId(1409, 625);
+	t_knifeC = GPluginSDK->CreateItemForId(1410, 625);
+	t_knifeD = GPluginSDK->CreateItemForId(1418, 625);
+
+
+	return true;
+
+
+
+}
+
 PLUGIN_EVENT(void) OnGameUpdate()
 {
+	KeyPressEvent();
 	if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 	{
 		Combo();
@@ -443,7 +618,7 @@ PLUGIN_EVENT(void) OnRender()
 	if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range()); }
 	if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
 	if (DrawQmin->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), ComboQAA->GetInteger()); }
-
+	if (DrawWard->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), 630); }
 }
 
 
@@ -453,10 +628,14 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	Menu();
 	LoadSpells();
 	Player = GEntityList->Player();
+	if (!InitSpells()) {
+		return;
+	}
 
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
 	GEventManager->AddEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
+	GEventManager->AddEventHandler(kEventOnCreateObject, OnCreateObject);
 
 }
 
@@ -466,4 +645,5 @@ PLUGIN_API void OnUnload()
 	GEventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->RemoveEventHandler(kEventOnRender, OnRender);
 	GEventManager->RemoveEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
+	GEventManager->RemoveEventHandler(kEventOnCreateObject, OnCreateObject);
 }
