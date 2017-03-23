@@ -21,6 +21,11 @@ IMenuOption* ComboEonlyPoison;
 IMenuOption* ComboRMin;
 IMenuOption* ComboREnable; 
 IMenuOption* ComboRflash;
+IMenu* QSettings;
+IMenuOption* ComboRylais;
+IMenu* WSettings;
+IMenu* ESettings;
+IMenuOption* SemiR;
 IMenuOption* ComboRFacing;
 
 
@@ -102,20 +107,26 @@ void Menu()
 	MainMenu = GPluginSDK->AddMenu("Kornis Cassiopeia");
 	ComboMenu = MainMenu->AddMenu("Combo");
 	{
-		ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
-		ComboQnotpoison = ComboMenu->CheckBox("Only Q if NOT POISONED", false);
-		ComboW = ComboMenu->CheckBox("Use W in Combo", true);
-		ComboWstart = ComboMenu->CheckBox("Start combo with W", true);
-		ComboE = ComboMenu->CheckBox("Use E in Combo", true);
-		ComboEonlyPoison = ComboMenu->CheckBox("Only E if POISONED", false);
-		ComboRflash = ComboMenu->AddKey("R Flash", 'T');
-		ComboREnable = ComboMenu->CheckBox("Use R in Combo", true);
+		QSettings = ComboMenu->AddMenu("Q Settings");
+		ComboQ = QSettings->CheckBox("Use Q in Combo", true);
+		ComboQnotpoison = QSettings->CheckBox("Only Q if NOT POISONED", false);
+		WSettings = ComboMenu->AddMenu("W Settings");
+		ComboW = WSettings->CheckBox("Use W in Combo", true);
+		ComboWstart = WSettings->CheckBox("Start combo with W", true);
+		ESettings = ComboMenu->AddMenu("E Settings");
+		ComboE = ESettings->CheckBox("Use E in Combo", true);
+		ComboEonlyPoison = ESettings->CheckBox("Only E if POISONED", false);
 		RMenu = ComboMenu->AddMenu("R Settings");
+		ComboREnable = RMenu->CheckBox("Use R in Combo", true);
 		ComboRkillable = RMenu->CheckBox("Only R if Killabe with Combo", true);
 		ComboRMin = RMenu->AddInteger("R if X enemies >=", 1, 5, 1);
 		ComboRHealth = RMenu->AddInteger("R if Target has Health % > ", 10, 100, 60);
 		ComboRRANGE = RMenu->AddInteger("R Range for usage", 125, 825, 750);
 		ComboRFacing = RMenu->CheckBox("Only R if FACING", true);
+		ComboRflash = ComboMenu->AddKey("R Flash", 'T');
+		ComboRylais = ComboMenu->CheckBox("Rylais Combo(Starts with E)", false);
+		SemiR = ComboMenu->AddKey("Semi-Manual R", 'G');
+		
 
 	}
 	HarassMenu = MainMenu->AddMenu("Harass");
@@ -167,6 +178,22 @@ void Menu()
 		ComboAAkey = MiscMenu->AddKey("Disable key", 32);
 	}
 
+}
+
+void Semi()
+{
+	{
+		if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
+		{
+			for (auto Enemy : GEntityList->GetAllHeros(false, true))
+			{
+				if (!Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), ComboRRANGE->GetInteger()) && !Enemy->IsDead())
+				{
+					R->CastOnTarget(Enemy, kHitChanceHigh);
+				}
+			}
+		}
+	}
 }
 
 int GetEnemiesInRange(float range)
@@ -236,7 +263,7 @@ void Combo()
 
 			auto Qtarget = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
 			auto Wtarget = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
-			if (!ComboWstart->Enabled())
+			if (!ComboWstart->Enabled() && !ComboRylais->Enabled())
 			{
 				if (!ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
 				{
@@ -282,7 +309,7 @@ void Combo()
 					}
 				}
 			}
-			if (ComboWstart->Enabled())
+			if (ComboWstart->Enabled() && !ComboRylais->Enabled())
 			{
 				if (ComboW->Enabled() && W->IsReady() && W->Range())
 				{
@@ -328,6 +355,53 @@ void Combo()
 						}
 					}
 				}
+			}
+			if (ComboRylais->Enabled())
+			{
+				if (ComboE->Enabled())
+				{
+					if (E->IsReady())
+					{
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+						if (target != nullptr)
+						{
+							if (!(ComboEonlyPoison->Enabled()) || target->HasBuffOfType(BUFF_Poison))
+								E->CastOnTarget(target);
+						}
+					}
+
+					if (!ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
+					{
+						if (Qtarget != nullptr)
+						{
+							{
+								Q->CastOnTarget(Qtarget);
+							}
+						}
+					}
+					if (ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
+					{
+						if (Qtarget != nullptr)
+						{
+							if (!Qtarget->HasBuffOfType(BUFF_Poison))
+							{
+								Q->CastOnTarget(Qtarget);
+							}
+						}
+					}
+					if (ComboW->Enabled() && W->IsReady() && W->Range())
+					{
+						if (Wtarget != nullptr)
+						{
+							auto distance = (Player->GetPosition() - Wtarget->GetPosition()).Length();
+							if (distance >= 400)
+							{
+								W->CastOnTarget(Wtarget, kHitChanceHigh);
+							}
+						}
+					}
+				}
+
 			}
 		}
 		if (ComboRkillable->Enabled())
@@ -530,7 +604,7 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 				{
 					if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
 					{
-						if (minion->GetHealth() < EDamage + 100)
+						if (minion->GetHealth() < EDamage + 100 && Player->GetMana() > E->ManaCost())
 						{
 							if (minion != nullptr && minion->IsCreep())
 							{
@@ -547,7 +621,7 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 			{
 				if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
 				{
-					if (minion->GetHealth() < EDamage + 100)
+					if (minion->GetHealth() < EDamage + 100 && Player->GetMana() > E->ManaCost())
 					{
 						if (minion != nullptr && minion->IsCreep())
 						{
@@ -642,6 +716,10 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	if (GetAsyncKeyState(ComboRflash->GetInteger()))
 	{
 		Rflash();
+	}
+	if (GetAsyncKeyState(SemiR->GetInteger()))
+	{
+		Semi();
 	}
 	Auto();
 	Killsteal();
