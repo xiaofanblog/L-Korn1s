@@ -7,7 +7,7 @@ public:
 
 	void DrawMenu()
 	{
-		MainMenu = GPluginSDK->AddMenu("Zilean :: Support AIO");
+		MainMenu = GPluginSDK->AddMenu("Zilean - Support AIO");
 		ComboMenu = MainMenu->AddMenu("Combo");
 		{
 			QSet = ComboMenu->AddMenu("Q settings");
@@ -25,6 +25,7 @@ public:
 			ComboRenable = RSet->CheckBox("Use R", true);
 			//ComboRkills = RSet->CheckBox("Auto R if damage kills Ally", true);
 			ComboRhp = RSet->AddInteger("Use R if HP <", 5, 30, 15);
+			QWQMouse = ComboMenu->AddKey("QWQ to Mouse", 'T');
 			SupportMode = ComboMenu->CheckBox("Support Mode", true);
 
 		}
@@ -212,6 +213,26 @@ public:
 			}
 		}
 	}
+
+	void QWQ()
+	{
+		if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
+		{
+			if (Q->IsReady())
+			{
+				Q->CastOnPosition(GGame->CursorPosition());
+			}
+			if (W->IsReady() && !Q->IsReady())
+			{
+				W->CastOnPlayer();
+			}
+			if (Q->IsReady())
+			{
+				Q->CastOnPosition(GGame->CursorPosition());
+			}
+		}
+	}
+	
 
 
 	void Auto()

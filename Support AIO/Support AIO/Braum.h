@@ -7,7 +7,7 @@ public:
 
 	void DrawMenu()
 	{
-		MainMenu = GPluginSDK->AddMenu("Braum :: Support AIO");
+		MainMenu = GPluginSDK->AddMenu("Braum - Support AIO");
 		ComboMenu = MainMenu->AddMenu("Combo Menu");
 		FarmMenu = MainMenu->AddMenu("Lane Clear Menu");
 		DrawingMenu = MainMenu->AddMenu("Drawings");

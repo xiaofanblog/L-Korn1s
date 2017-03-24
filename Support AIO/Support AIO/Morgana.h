@@ -9,7 +9,7 @@ public:
 
 	void DrawMenu()
 	{
-		MainMenu = GPluginSDK->AddMenu("Morgana :: Support AIO");
+		MainMenu = GPluginSDK->AddMenu("Morgana - Support AIO");
 		ComboMenu = MainMenu->AddMenu("Combo");
 		{
 			ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);

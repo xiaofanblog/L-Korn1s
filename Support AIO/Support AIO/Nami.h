@@ -7,7 +7,7 @@ public:
 
 	void DrawMenu()
 	{
-		MainMenu = GPluginSDK->AddMenu("Nami :: Support AIO");
+		MainMenu = GPluginSDK->AddMenu("Nami - Support AIO");
 		ComboMenu = MainMenu->AddMenu("Combo");
 		{
 			ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);

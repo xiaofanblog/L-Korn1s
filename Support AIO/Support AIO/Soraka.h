@@ -7,7 +7,7 @@ public:
 
 	void DrawMenu()
 	{
-		MainMenu = GPluginSDK->AddMenu("Soraka :: Support AIO");
+		MainMenu = GPluginSDK->AddMenu("Soraka - Support AIO");
 		ComboMenu = MainMenu->AddMenu("Combo");
 		{
 			ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
@@ -93,11 +93,15 @@ public:
 	{
 		if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
 		{
+			auto target = GOrbwalking->GetLastTarget();
 			if (SupportMode->Enabled() && GetAlliesInRange(GEntityList->Player(), 1000) >= 1)
 			{
-				GOrbwalking->SetAttacksAllowed(false);
+				if (target != nullptr && target->IsValidTarget() && (target->IsCreep() || target->IsJungleCreep()))
+				{
+					GOrbwalking->SetAttacksAllowed(false);
+				}
 			}
-			else if (!SupportMode->Enabled() || GetAlliesInRange(GEntityList->Player(), 1000) == 0)
+			else if (target != nullptr && target->IsValidTarget() && target->IsHero())
 			{
 				GOrbwalking->SetAttacksAllowed(true);
 			}

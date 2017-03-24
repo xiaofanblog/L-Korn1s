@@ -2,11 +2,14 @@
 #include "Blitzcrank.h"
 #include "Leona.h"
 #include "Morgana.h"
+#include "Sona.h"
 #include "Nami.h"
 #include "Braum.h"
-//#include "Alistar.h"
+#include "Alistar.h"
+//#include "Janna.h"
 #include "Zilean.h"
 #include "Soraka.h"
+#include "EventManager.h"
 PluginSetup("Support AIO by Kornis");
 
 class zHero
@@ -259,6 +262,10 @@ public:
 		if (GetAsyncKeyState(ComboEflee->GetInteger()) & 0x8000)
 		{
 			ZileanBase().Flee();
+		}
+		if (GetAsyncKeyState(QWQMouse->GetInteger()) & 0x8000)
+		{
+			ZileanBase().QWQ();
 		}
 	}
 
@@ -532,7 +539,80 @@ private:
 	}
 };
 
-/*class Alistar : public zHero
+class Sona : public zHero
+	{
+	public:
+		void OnLoad() override
+		{
+			PrintMessage();
+			SonaBase().DrawMenu();
+			SonaBase().LoadSpells();
+		}
+
+		void OnRender() override
+		{
+			SonaBase().Draw();
+		}
+
+		void OnGameUpdate() override
+		{
+			SonaBase().AAdisable();
+			SonaBase().Healing();
+			SonaBase().Auto();
+			if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+			{
+				SonaBase().Combo();
+			}
+			if (GetAsyncKeyState(ForceR->GetInteger()))
+			{
+				SonaBase().Semi();
+			}
+
+		}
+
+		void OnGapCloser(GapCloserSpell const& Args) override
+		{
+			SonaBase().AntiGapclose(Args);
+		}
+
+
+
+		void OnInterruptible(InterruptibleSpell const& Args) override
+		{
+			SonaBase().Interrupt(Args);
+		}
+		void OnSpellCast(CastedSpell const& Args) override
+		{
+		}
+
+		void OnAfterAttack(IUnit* Source, IUnit* Target) override
+		{
+		}
+
+		void OnCreateObject(IUnit* Source) override
+		{
+			//none
+		}
+		void OnLevelUp(IUnit* Source, int NewLevel) override
+		{
+
+		}
+		void OnPauseAnimation(IUnit* Source) override
+		{
+			//none
+		}
+		bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+		{
+			return true;
+		}
+	private:
+		void PrintMessage()
+		{
+			GGame->PrintChat("<b><font color = \"#f8a101\">Sona</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+		}
+};
+
+class Alistar : public zHero
 {
 public:
 	void OnLoad() override
@@ -549,8 +629,6 @@ public:
 
 	void OnGameUpdate() override
 	{
-		
-		AlistarBase().Healing();
 		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
 			AlistarBase().Combo();
@@ -566,14 +644,20 @@ public:
 		AlistarBase().AntiGapclose(Args);
 	}
 
+
+
 	void OnInterruptible(InterruptibleSpell const& Args) override
 	{
 		AlistarBase().Interrupt(Args);
 	}
 	void OnSpellCast(CastedSpell const& Args) override
 	{
-		//none
 	}
+
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+	}
+
 	void OnCreateObject(IUnit* Source) override
 	{
 		//none
@@ -593,9 +677,73 @@ public:
 private:
 	void PrintMessage()
 	{
-		GGame->PrintChat("<b><font color = \"#f8a101\">Alistar<b><font color=\"#FFFFFF\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
+		GGame->PrintChat("<b><font color = \"#f8a101\">Alistar</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
+/*class Janna : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		JannaBase().DrawMenu();
+		JannaBase().LoadSpells();
+	}
+
+	void OnRender() override
+	{
+		JannaBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		JannaBase().AutoE();
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			JannaBase().Combo();
+		}
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+	}
+
+
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+	}
+
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+	}
+
+	void OnCreateObject(IUnit* Source) override
+	{
+		//none
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Janna</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 	}
 };*/
+
 
 zHero* yHero = nullptr;
 
@@ -658,8 +806,8 @@ void LoadChampion()
 		yHero = new Blitzcrank;
 	else if (playerHero == "Soraka")
 		yHero = new Soraka;
-	/*else if (playerHero == "Alistar")
-		yHero = new Alistar;*/
+	else if (playerHero == "Alistar")
+		yHero = new Alistar;
 	else if (playerHero == "Zilean")
 		yHero = new Zilean;
 	else if (playerHero == "Nami")
@@ -668,6 +816,10 @@ void LoadChampion()
 		yHero = new Morgana;
 	else if (playerHero == "Braum")
 		yHero = new Braum;
+	else if (playerHero == "Sona")
+		yHero = new Sona;
+	/*else if (playerHero == "Janna")
+		yHero = new Janna;*/
 	else
 	{
 		GGame->PrintChat("<b><font color=\"#FFFFFF\">This champion isn't supported.</b></font>");
@@ -682,6 +834,17 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 
 	LoadChampion();
 	yHero->OnLoad();
+	std::string playerHero = GEntityList->Player()->ChampionName();
+	/*if (playerHero == "Janna")
+	{
+		eventManager = PluginSDK->GetEventManager();
+		eventmanager::RegisterEvents(eventManager);
+		eventmanager::GameEventManager::RegisterUpdateEvent([&](event_id_t id) -> void
+		{
+			JannaBase().AutoE();
+		});
+	}*/
+
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->AddEventHandler(kEventOnGapCloser, OnGapCloser);
@@ -700,6 +863,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 PLUGIN_API void OnUnload()
 {
 	MainMenu->Remove();
+	//eventmanager::UnregisterEvents(eventManager);
 	GEventManager->RemoveEventHandler(kEventOnRender, OnRender);
 	GEventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->RemoveEventHandler(kEventOnGapCloser, OnGapCloser);
