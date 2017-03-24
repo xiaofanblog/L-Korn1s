@@ -9,6 +9,7 @@ IMenu* MainMenu;
 IMenu* ComboMenu;
 IMenuOption* ComboQ;
 IMenuOption* ComboW;
+IMenuOption* ComboWAA;
 IMenuOption* ComboE;
 IMenuOption* ComboR;
 
@@ -59,6 +60,7 @@ void LoadSpells()
 	W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, kCollidesWithNothing);
 	E = GPluginSDK->CreateSpell2(kSlotE, kConeCast, false, false, kCollidesWithNothing);
 	R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, false, false, kCollidesWithNothing);
+	E->SetOverrideRange(580);
 }
 
 void Menu()
@@ -67,7 +69,8 @@ void Menu()
 	ComboMenu = MainMenu->AddMenu("Combo");
 	{
 		ComboQ = ComboMenu->CheckBox("Use Q", true);
-		ComboW = ComboMenu->CheckBox("Use W", true);
+		ComboW = ComboMenu->CheckBox("Use W Always", false);
+		ComboWAA = ComboMenu->CheckBox("Use W AA Reset", true);
 		ComboE = ComboMenu->CheckBox("Use E", true);
 		ComboR = ComboMenu->CheckBox("Use R", true);
 
@@ -116,6 +119,7 @@ void Menu()
 void Combo()
 {
 	{
+
 		bool hasIgnite = GEntityList->Player()->GetSpellState(GEntityList->Player()->GetSpellSlot("SummonerDot")) == Ready;
 		if (ComboQ->Enabled() && Q->IsReady())
 		{
@@ -134,7 +138,7 @@ void Combo()
 			}
 		}
 
-		if (ComboW->Enabled() && W->IsReady())
+		if (ComboW->Enabled() && W->IsReady() && !ComboWAA->Enabled())
 		{
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 250);
 			if (target != nullptr)
@@ -264,6 +268,24 @@ void Farm()
 	}
 }
 
+PLUGIN_EVENT(void) OnAfterAttack(IUnit* source, IUnit* target)
+{
+	if (source != Player || target == nullptr || !target->IsHero())
+		return;
+
+	switch (GOrbwalking->GetOrbwalkingMode())
+	{
+	case kModeCombo:
+		for (auto hero : GEntityList->GetAllHeros(false, true)) {
+			if (!ComboW->Enabled() && ComboWAA->Enabled() && W->IsReady() && (hero->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 300)
+			{
+				W->CastOnPlayer();
+			}
+		}
+		break;
+	}
+}
+
 
 PLUGIN_EVENT(void) OnGameUpdate()
 {
@@ -308,6 +330,8 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
+	GEventManager->AddEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
+
 
 }
 
@@ -316,4 +340,5 @@ PLUGIN_API void OnUnload()
 	MainMenu->Remove();
 	GEventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->RemoveEventHandler(kEventOnRender, OnRender);
+	GEventManager->RemoveEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
 }
