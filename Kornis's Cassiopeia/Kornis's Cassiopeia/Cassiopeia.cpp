@@ -40,6 +40,8 @@ IMenuOption* ComboAA;
 IMenuOption* ComboAAkey;
 IMenuOption* ComboAALevel;
 
+IMenuOption* DrawPred;
+
 IMenu* DrawingMenu;
 IMenuOption* DrawQRange;
 IMenuOption* DrawWRange;
@@ -147,6 +149,7 @@ void Menu()
 		DrawFill = DrawingMenu->CheckBox("Draw damage", true);
 		DrawRFlash = DrawingMenu->CheckBox("Draw RFlash range", true);
 		DrawEkill = DrawingMenu->CheckBox("Draw Minions Killable With Q", true);
+		DrawPred = DrawingMenu->CheckBox("Draw Prediction", true);
 	}
 	FarmMenu = MainMenu->AddMenu("Farming");
 	{
@@ -270,7 +273,9 @@ void Combo()
 					if (Qtarget != nullptr)
 					{
 						{
-							Q->CastOnTarget(Qtarget);
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(Qtarget, 0.2f, true, pred);
+							Q->CastOnPosition(pred);
 						}
 					}
 				}
@@ -280,7 +285,9 @@ void Combo()
 					{
 						if (!Qtarget->HasBuffOfType(BUFF_Poison))
 						{
-							Q->CastOnTarget(Qtarget);
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(Qtarget, 0.2f, true, pred);
+							Q->CastOnPosition(pred);
 						}
 					}
 				}
@@ -329,7 +336,9 @@ void Combo()
 					if (Qtarget != nullptr)
 					{
 						{
-							Q->CastOnTarget(Qtarget);
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(Qtarget, 0.2f, true, pred);
+							Q->CastOnPosition(pred);
 						}
 					}
 				}
@@ -339,7 +348,9 @@ void Combo()
 					{
 						if (!Qtarget->HasBuffOfType(BUFF_Poison))
 						{
-							Q->CastOnTarget(Qtarget);
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(Qtarget, 0.2f, true, pred);
+							Q->CastOnPosition(pred);
 						}
 					}
 				}
@@ -375,7 +386,9 @@ void Combo()
 						if (Qtarget != nullptr)
 						{
 							{
-								Q->CastOnTarget(Qtarget);
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(Qtarget, 0.2f, true, pred);
+								Q->CastOnPosition(pred);
 							}
 						}
 					}
@@ -385,7 +398,9 @@ void Combo()
 						{
 							if (!Qtarget->HasBuffOfType(BUFF_Poison))
 							{
-								Q->CastOnTarget(Qtarget);
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(Qtarget, 0.2f, true, pred);
+								Q->CastOnPosition(pred);
 							}
 						}
 					}
@@ -502,7 +517,9 @@ void Mixed()
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
 			if (target != nullptr)
 			{
-				Q->CastOnTarget(target);
+				Vec3 pred;
+				GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+				Q->CastOnPosition(pred);
 			}
 		}
 	}
@@ -520,7 +537,9 @@ void Killsteal()
 		{
 			if (KSQ->Enabled() && Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && QDamage > Enemy->GetHealth())
 			{
-				Q->CastOnTarget(Enemy);
+				Vec3 pred;
+				GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+				Q->CastOnPosition(pred);
 			}
 			if (KSE->Enabled() && E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && EDamage > Enemy->GetHealth())
 			{
@@ -670,7 +689,9 @@ void Auto()
 			{
 				if (Q->IsReady())
 				{
-					Q->CastOnTarget(target);
+					Vec3 pred;
+					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+					Q->CastOnPosition(pred);
 				}
 			}
 
@@ -726,6 +747,22 @@ PLUGIN_EVENT(void) OnGameUpdate()
 
 }
 
+void drawpred()
+{
+	if (DrawPred->Enabled())
+	{
+		for (auto hero : GEntityList->GetAllHeros(false, true))
+		{
+			if (!hero->IsDead() && hero->IsValidTarget())
+			{
+				Vec3 pred;
+				GPrediction->GetFutureUnitPosition(hero, 0.2f, true, pred);
+				GRender->DrawOutlinedCircle(pred, Vec4(255, 255, 255, 255), Q->Radius());
+			}
+		}
+	}
+}
+
 
 PLUGIN_EVENT(void) OnRender()
 {
@@ -752,6 +789,7 @@ PLUGIN_EVENT(void) OnRender()
 
 		}
 	}
+	drawpred();
 }
 
 PLUGIN_EVENTD(void) OnOrbwalkPreAttack(IUnit* Args1)
