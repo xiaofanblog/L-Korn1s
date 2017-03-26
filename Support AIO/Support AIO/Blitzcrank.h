@@ -53,7 +53,7 @@ public:
 		Q = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall, kCollidesWithMinions));
 		Q->SetOverrideDelay(0.25);
 		Q->SetOverrideRadius(50);
-		Q->SetOverrideSpeed(10000000000);
+		Q->SetOverrideSpeed(2000);
 		Q->SetOverrideRange(950);
 		E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, false, true, static_cast<eCollisionFlags>(kCollidesWithNothing));
@@ -114,7 +114,7 @@ public:
 			IMenuOption * temp = BlacklistMenu->GetOption(Enemy->ChampionName());
 			if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && !temp->Enabled() && Enemy->IsValidTarget())
 			{
-				if (!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity) && Enemy != nullptr && (Enemy->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (Enemy->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
+				if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy != nullptr && (Enemy->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (Enemy->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
 				{
 					Vec3 pred;
 					GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
@@ -169,7 +169,10 @@ public:
 					if (Enemy != nullptr)
 					{
 
-						Q->CastOnTarget(Enemy);
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+						if (InSpellRange(Q, pred))
+							Q->CastOnPosition(pred);
 					}
 				}
 			}
@@ -187,7 +190,10 @@ public:
 				if (Enemy != nullptr)
 				{
 
-					Q->CastOnTarget(Enemy);
+					Vec3 pred;
+					GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+					if (InSpellRange(Q, pred))
+						Q->CastOnPosition(pred);
 				}
 			}
 		}
@@ -208,7 +214,10 @@ public:
 				}
 				if (KSQ->Enabled() && Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && QDamage > Enemy->GetHealth())
 				{
-					Q->CastOnTarget(Enemy);
+					Vec3 pred;
+					GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+					if (InSpellRange(Q, pred))
+						Q->CastOnPosition(pred);
 				}
 
 			}
@@ -232,12 +241,23 @@ public:
 		{
 			for (auto hero : GEntityList->GetAllHeros(false, true))
 			{
-				if (!hero->IsDead() && hero->IsValidTarget())
+				if (!hero->IsDead() && hero->IsValidTarget() && hero->IsValidTarget(GEntityList->Player(), Q->Range()))
 				{
 					Vec3 pred;
 					GPrediction->GetFutureUnitPosition(hero, 0.2f, true, pred);
-					GRender->DrawOutlinedCircle(pred, Vec4(255, 255, 255, 255), Q->Radius());
+					Vec2 vecMyPosition;
+					Vec2 vecProjectedPosition;
+					if (GGame->Projection(GEntityList->Player()->GetPosition(), &vecMyPosition))
+					{
+						GGame->Projection(pred, &vecProjectedPosition);
+						GRender->DrawOutlinedCircle(pred, Vec4(25, 255, 0, 200), Q->Radius());
+						if (GNavMesh->IsPointWall(pred))
+							GRender->DrawLine(vecMyPosition, vecProjectedPosition, Vec4(25, 255, 0, 200));
+						else
+							GRender->DrawLine(vecMyPosition, vecProjectedPosition, Vec4(25, 255, 0, 200));
+					}
 				}
+				
 			}
 		}
 	}

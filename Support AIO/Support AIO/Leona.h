@@ -260,11 +260,21 @@ public:
 		{
 			for (auto hero : GEntityList->GetAllHeros(false, true))
 			{
-				if (!hero->IsDead() && hero->IsValidTarget())
+				if (!hero->IsDead() && hero->IsValidTarget() && hero->IsValidTarget(GEntityList->Player(), E->Range()))
 				{
 					Vec3 pred;
 					GPrediction->GetFutureUnitPosition(hero, 0.2f, true, pred);
-					GRender->DrawOutlinedCircle(pred, Vec4(255, 255, 255, 255), E->Radius());
+					Vec2 vecMyPosition;
+					Vec2 vecProjectedPosition;
+					if (GGame->Projection(GEntityList->Player()->GetPosition(), &vecMyPosition))
+					{
+						GGame->Projection(pred, &vecProjectedPosition);
+						GRender->DrawOutlinedCircle(pred, Vec4(25, 255, 0, 200), E->Radius());
+						if (GNavMesh->IsPointWall(pred))
+							GRender->DrawLine(vecMyPosition, vecProjectedPosition, Vec4(25, 255, 0, 200));
+						else
+							GRender->DrawLine(vecMyPosition, vecProjectedPosition, Vec4(25, 255, 0, 200));
+					}
 				}
 			}
 		}
