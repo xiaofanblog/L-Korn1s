@@ -2,7 +2,7 @@
 #include "PluginSDK.h"
 #include "Template.h"
 #include "cmath"
-#define PI 3.14159265
+#define PI 3.14159265f
 using namespace std;
 
 #pragma region extension
@@ -128,6 +128,10 @@ T MaxOrDefault(vector<T> vec, function<T2(T)> max_function)
 	}
 	return returnelem;
 }
+inline string SpellSlotToString (eSpellSlot slot)
+{
+	return slot == kSlotQ ? "Q" : slot == kSlotW ? "W" : slot == kSlotE ? "E" : slot == kSlotR ? "R" : "UnKnown";
+}
 // keydown
 inline bool IsKeyDown(IMenuOption* menuOption)
 {
@@ -154,10 +158,10 @@ inline string ToLower(string StringToLower)
 	return Lowered;
 }
 // string bao gom string khac
-inline bool Contains(string Container, string Contained)
+inline bool Contains(string Container, string Contained, bool Lower = true)
 {
-	auto LoweredContainer = ToLower(Container);
-	auto LoweredContained = ToLower(Contained);
+	auto LoweredContainer = Lower ?  ToLower(Container) : Container;
+	auto LoweredContained = Lower?  ToLower(Contained) : Contained;
 	if (LoweredContainer.find(LoweredContained) != string::npos) return true;
 	else return false;
 }
@@ -211,7 +215,27 @@ inline float AngleBetween(Vec3 a, Vec3 center, Vec3 c)
 		return acos((a1 * a1 + c1 * c1 - b1 * b1) / (2 * a1 * c1)) * (180 / PI);
 	}
 }
+inline float AngleToRadian(float Angle)
+{
+	return Angle * PI / 180.f;
+}
+inline Vec3 RotateAround(Vec3 pointToRotate3D, Vec3 centerPoint3D, float angleInDegree)
+{
+	auto angleInRadians = AngleToRadian(angleInDegree);
+	double cosTheta = cos(angleInRadians);
+	double sinTheta = cos(angleInRadians);
+	Vec2 pointToRotate = ToVec2(pointToRotate3D);
+	Vec2 centerPoint = ToVec2(centerPoint3D);
+	Vec2 vec2Return
+	(
+		(cosTheta * (pointToRotate.x - centerPoint.x) -
+		sinTheta * (pointToRotate.y - centerPoint.y) + centerPoint.x),
 
+		(sinTheta * (pointToRotate.x - centerPoint.x) +
+			cosTheta * (pointToRotate.y - centerPoint.y) + centerPoint.y)
+	);
+	return ToVec3(vec2Return);
+}
 inline bool InTheCone(Vec3 pos, Vec3 centerconePolar, Vec3 centerconeEnd, float coneAngle)
 
 {
@@ -254,7 +278,26 @@ inline Vec3 Extend(Vec3 from, Vec3 to, float distance)
 	auto direction = (to - from).VectorNormalize();
 	return from + direction * realDistance;
 }
+inline SArray<Vec3> GetCircleCircleIntersections(Vec3 center1, Vec3 center2, float radius1, float radius2)
+{
+	SArray<Vec3> result;
+	float D = Distance(center2, center1);
+	//The Circles dont intersect:
+	if (D > radius1 + radius2 || (D <= abs(radius1 - radius2)))
+	{
+		return result;
+	}
 
+	float A = (radius1 * radius1 - radius2 * radius2 + D * D) / (2 * D);
+	float H = sqrt(radius1 * radius1 - A * A);
+	Vec3 Direction = (center2 - center1).VectorNormalize();
+	Vec3 PA = ToVec3(ToVec2(center1) + A * ToVec2(Direction));
+	Vec3 S1 = ToVec3(ToVec2(PA) + H * ToVec2(Pendicular(Direction)));
+	Vec3 S2 = ToVec3((ToVec2(PA) - H * ToVec2(Pendicular(Direction))));
+	result.Add(S1);
+	result.Add(S2);
+	return result;
+}
 inline SArray<IUnit*> ValidTargets(vector<IUnit*> input)
 {
 	SArray<IUnit*> targets = SArray<IUnit*>(input);
@@ -373,6 +416,10 @@ inline bool IsCCed (IUnit * hero)
 {
 	return hero->HasBuffOfType(BUFF_Stun) || hero->HasBuffOfType(BUFF_Snare) || hero->HasBuffOfType(BUFF_Suppression) || hero->HasBuffOfType(BUFF_Charm) || hero->HasBuffOfType(BUFF_Snare);
 }
+inline bool IsEnoughMana(IMenuOption* Slider)
+{
+	return GEntityList->Player()->ManaPercent() >= Slider->GetInteger();
+}
 void FindBestLineCastPosition(vector<Vec3> RangeCheckFroms, float range, float radius, bool Minions, bool Heroes, Vec3& CastPosition , int& HitCounts, Vec3& CastPositionFrom)
 {
 	HitCounts = 0;
@@ -417,6 +464,16 @@ inline bool IsWallBetween (Vec3 start, Vec3 end)
 	}
 	auto endflag = GNavMesh->GetCollisionFlagsForPoint(end);
 	if (endflag&kWallMesh || endflag&kBuildingMesh)
+	{
+		return true;
+	}
+	return false;
+}
+inline bool IsGoingToWard(IUnit* ThisUnit, IUnit* ToUnit)
+{
+	Vec3 pred;
+	GPrediction->GetFutureUnitPosition(ThisUnit, 0.2f, false, pred);
+	if (Distance(ToUnit, pred) < Distance(ToUnit, ThisUnit))
 	{
 		return true;
 	}

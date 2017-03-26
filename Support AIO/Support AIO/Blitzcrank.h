@@ -32,6 +32,7 @@ public:
 			DrawQRange = DrawingMenu->CheckBox("Draw Q max", true);
 			DrawQmin = DrawingMenu->CheckBox("Draw Q minimum", true);
 			DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
+			DrawPred = DrawingMenu->CheckBox("Draw Prediction", true);
 		}
 
 		KillstealMenu = MainMenu->AddMenu("Killsteal");
@@ -52,7 +53,7 @@ public:
 		Q = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall, kCollidesWithMinions));
 		Q->SetOverrideDelay(0.25);
 		Q->SetOverrideRadius(50);
-		Q->SetOverrideSpeed(2000);
+		Q->SetOverrideSpeed(10000000000);
 		Q->SetOverrideRange(950);
 		E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, false, true, static_cast<eCollisionFlags>(kCollidesWithNothing));
@@ -111,11 +112,14 @@ public:
 		for (auto Enemy : GEntityList->GetAllHeros(false, true))
 		{
 			IMenuOption * temp = BlacklistMenu->GetOption(Enemy->ChampionName());
-			if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && !temp->Enabled())
+			if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && !temp->Enabled() && Enemy->IsValidTarget())
 			{
 				if (!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity) && Enemy != nullptr && (Enemy->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (Enemy->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
 				{
-					Q->CastOnTarget(Enemy);
+					Vec3 pred;
+					GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+					if (InSpellRange(Q, pred))
+						Q->CastOnPosition(pred);
 
 				}
 
@@ -172,6 +176,7 @@ public:
 		}
 	}
 
+
 	void ManQ()
 	{
 		for (auto Enemy : GEntityList->GetAllHeros(false, true))
@@ -223,5 +228,17 @@ public:
 		if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), ComboQmax->GetInteger()); }
 		if (DrawQmin->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), ComboQmin->GetInteger()); }
 		if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 255, 255), R->Range()); }
+		if (DrawPred->Enabled())
+		{
+			for (auto hero : GEntityList->GetAllHeros(false, true))
+			{
+				if (!hero->IsDead() && hero->IsValidTarget())
+				{
+					Vec3 pred;
+					GPrediction->GetFutureUnitPosition(hero, 0.2f, true, pred);
+					GRender->DrawOutlinedCircle(pred, Vec4(255, 255, 255, 255), Q->Radius());
+				}
+			}
+		}
 	}
 };

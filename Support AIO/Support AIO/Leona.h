@@ -31,6 +31,7 @@ public:
 		{
 			DrawERange = DrawingMenu->CheckBox("Draw E range", true);
 			DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
+			DrawPred = DrawingMenu->CheckBox("Draw Prediction", true);
 		}
 
 		BlacklistMenu = MainMenu->AddMenu("Blacklist");
@@ -47,7 +48,7 @@ public:
 		E = GPluginSDK->CreateSpell2(kSlotE, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		E->SetOverrideDelay(0.25);
 		E->SetOverrideRadius(50);
-		E->SetOverrideSpeed(5000);
+		E->SetOverrideSpeed(1000000000000000);
 		E->SetOverrideRange(860);
 		R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		R->SetOverrideDelay(0.25);
@@ -118,9 +119,14 @@ public:
 								{
 									if (target != nullptr)
 									{
-										if (E->CastOnTarget(target))
+										Vec3 pred;
+										GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+										if (InSpellRange(E, pred))
 										{
-											Q->CastOnPlayer();
+											if (E->CastOnPosition(pred))
+											{
+												Q->CastOnPlayer();
+											}
 										}
 									}
 								}
@@ -131,7 +137,10 @@ public:
 									{
 										if (target != nullptr)
 										{
-											E->CastOnTarget(target);
+											Vec3 pred;
+											GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+											if (InSpellRange(E, pred))
+												E->CastOnPosition(pred);
 											if (target->HasBuff("leonazenithblade"))
 											{
 												Q->CastOnPlayer();
@@ -144,7 +153,10 @@ public:
 										if (target != nullptr)
 										{
 											{
-												E->CastOnTarget(target);
+												Vec3 pred;
+												GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+												if (InSpellRange(E, pred))
+													E->CastOnPosition(pred);
 											}
 										}
 									}
@@ -244,5 +256,18 @@ public:
 	{
 		if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
 		if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 255, 255), R->Range()); }
+		if (DrawPred->Enabled())
+		{
+			for (auto hero : GEntityList->GetAllHeros(false, true))
+			{
+				if (!hero->IsDead() && hero->IsValidTarget())
+				{
+					Vec3 pred;
+					GPrediction->GetFutureUnitPosition(hero, 0.2f, true, pred);
+					GRender->DrawOutlinedCircle(pred, Vec4(255, 255, 255, 255), E->Radius());
+				}
+			}
+		}
 	}
+
 };

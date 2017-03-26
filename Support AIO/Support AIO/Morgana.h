@@ -56,9 +56,9 @@ public:
 	{
 		Q = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall, kCollidesWithMinions));
 		Q->SetOverrideDelay(0.25);
-		Q->SetOverrideSpeed(2000);
+		Q->SetOverrideSpeed(1000000000000000);
 		Q->SetOverrideRange(1100);
-		Q->SetOverrideRadius(60);
+		Q->SetOverrideRadius(80);
 		W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
@@ -227,7 +227,10 @@ public:
 		{
 			if (ComboQ->Enabled() && GEntityList->Player()->IsValidTarget(target, Q->Range()) && Q->IsReady())
 			{
-				Q->CastOnTarget(target, kHitChanceHigh);
+				Vec3 pred;
+				GPrediction->GetFutureUnitPosition(target, 0.4f, true, pred);
+				if (InSpellRange(Q, pred))
+					Q->CastOnPosition(pred);
 			}
 			if (ComboW->Enabled() && !ComboWenable->Enabled() && GEntityList->Player()->IsValidTarget(target, W->Range()) && W->IsReady())
 			{

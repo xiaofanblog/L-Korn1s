@@ -1,6 +1,7 @@
 #pragma once
 #include "PluginSDK.h"
 #include <map>
+#include "Extension.h"
 #include "EventManager.h"
 
 IMenu* MainMenu;
@@ -19,6 +20,7 @@ IMenuOption* ComboE;
 IMenuOption* QWQMouse;
 IMenuOption* ComboElanded;
 IMenuOption* ComboEQ;
+IMenuOption* DrawPred;
 IMenuOption* ComboEmin;
 IMenuOption* ComboR;
 IMenuOption* ComboRinterrupt;
@@ -137,6 +139,8 @@ ISpell2* Q;
 ISpell2* W;
 ISpell2* E;
 ISpell2* R;
+
+
 
 
 ISpell* Flash;

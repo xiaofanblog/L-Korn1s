@@ -85,8 +85,8 @@ public:
 		Q = GPluginSDK->CreateSpell2(kSlotQ, kCircleCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		E = GPluginSDK->CreateSpell2(kSlotE, kCircleCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
-		R = GPluginSDK->CreateSpell2(kSlotR, kLineCast, false, true, static_cast<eCollisionFlags>(kCollidesWithYasuoWall));
-		R->SetSkillshot(0.25f, 160, 1000.f, 1200.f);
+		R = GPluginSDK->CreateSpell2(kSlotR, kLineCast, true, true, (kCollidesWithYasuoWall));
+		R->SetSkillshot(0.25f, 140.f, 2400.f, 1000.f);
 	}
 
 
@@ -205,16 +205,12 @@ public:
 				}
 				if (ComboR->Enabled() && R->IsReady())
 				{
-					auto RPlugin = ComboRmin->GetInteger();
 					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
 					if (GEntityList->Player()->IsValidTarget(target, R->Range()))
 					{
-						R->CastOnTargetAoE(target, ComboRmin->GetInteger(), kHitChanceMedium);
-
+						R->CastOnTargetAoE(target, ComboRmin->GetInteger(), kHitChanceHigh);
 					}
 				}
-
-
 			}
 		}
 	}
@@ -246,6 +242,6 @@ public:
 		if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range()); }
 		if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()); }
 		if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
-		if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 255, 255), 860); }
+		if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 255, 255), R->Range()); }
 	}
 };
