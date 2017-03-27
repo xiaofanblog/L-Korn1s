@@ -237,14 +237,14 @@ public:
 
 	void Draw() const
 	{
-		if (DrawQRange->Enabled())
+		if (DrawQmin->Enabled())
 		{
 			Vec4 color;
 			QColor->GetColor(&color);
 
 			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, ComboQmin->GetInteger());
 		}
-		if (DrawWRange->Enabled())
+		if (DrawQRange->Enabled())
 		{
 			Vec4 color;
 			WColor->GetColor(&color);

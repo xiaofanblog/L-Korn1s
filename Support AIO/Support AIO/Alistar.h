@@ -221,13 +221,6 @@ public:
 
 			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, E->Range());
 		}
-		if (DrawRRange->Enabled())
-		{
-			Vec4 color;
-			RColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, R->Range());
-		}
 		if (DrawQFRange->Enabled())
 		{
 			Vec4 color;
