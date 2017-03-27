@@ -10,6 +10,7 @@
 #include "Zilean.h"
 #include "Soraka.h"
 #include "EventManager.h"
+#include "Brand.h"
 PluginSetup("Support AIO by Kornis");
 
 class zHero
@@ -743,6 +744,75 @@ private:
 		GGame->PrintChat("<b><font color = \"#f8a101\">Janna</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 	}
 };*/
+class Brand : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		BrandBase().DrawMenu();
+		BrandBase().LoadSpells();
+	}
+
+	void OnRender() override
+	{
+		BrandBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		BrandBase().Killsteal();
+		BrandBase().AAdisable();
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			BrandBase().Combo();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
+		{
+			BrandBase().Harass();
+		}
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+	}
+
+
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+	}
+
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+	}
+
+	void OnCreateObject(IUnit* Source) override
+	{
+		//none
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Brand</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
+
 
 
 zHero* yHero = nullptr;
@@ -820,6 +890,8 @@ void LoadChampion()
 		yHero = new Sona;
 	/*else if (playerHero == "Janna")
 		yHero = new Janna;*/
+	else if (playerHero == "Brand")
+		yHero = new Brand;
 	else
 	{
 		GGame->PrintChat("<b><font color=\"#FFFFFF\">This champion isn't supported.</b></font>");

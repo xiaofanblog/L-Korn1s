@@ -39,8 +39,11 @@ public:
 		DrawingMenu = MainMenu->AddMenu("Drawings");
 		{
 			DrawQRange = DrawingMenu->CheckBox("Draw Q Range", true);
+			QColor = DrawingMenu->AddColor("Q Range Color", 0.f, 0.f, 255.f, 255.f);
 			DrawERange = DrawingMenu->CheckBox("Draw E Range", true);
+			EColor = DrawingMenu->AddColor("Q Range Color", 0.f, 0.f, 255.f, 255.f);
 			DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
+			RColor = DrawingMenu->AddColor("Q Range Color", 0.f, 0.f, 255.f, 255.f);
 		}
 
 		KillstealMenu = MainMenu->AddMenu("Killsteal");
@@ -321,8 +324,26 @@ public:
 
 	void Draw() const
 	{
-		if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range()); }
-		if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), R->Range()); }
-		if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
+		if (DrawQRange->Enabled())
+		{
+			Vec4 color;
+			QColor->GetColor(&color);
+
+			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, Q->Range());
+		}
+		if (DrawERange->Enabled())
+		{
+			Vec4 color;
+			EColor->GetColor(&color);
+
+			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, E->Range());
+		}
+		if (DrawRRange->Enabled())
+		{
+			Vec4 color;
+			RColor->GetColor(&color);
+
+			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, R->Range());
+		}
 	}
 };
