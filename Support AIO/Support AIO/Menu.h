@@ -21,6 +21,14 @@ IMenuOption* QWQMouse;
 IMenuOption* ComboElanded;
 IMenuOption* ComboEQ;
 IMenuOption* DrawPred;
+IMenuOption* QColor;
+IMenuOption* WColor;
+IMenuOption* EColor;
+IMenuOption* RColor;
+IMenuOption* ComboQMode;
+IMenuOption* ComboMode;
+IMenuOption* HarassQMode;
+IMenuOption* HarassMode;
 IMenuOption* ComboEmin;
 IMenuOption* ComboR;
 IMenuOption* ComboRinterrupt;
@@ -120,6 +128,7 @@ IMenuOption* SaveW;
 IMenuOption* SaveKey;
 IMenuOption* SaveE;
 IMenuOption* AntiGapE;
+IMenuOption* DrawDamage;
 IMenuOption* LastQ;
 
 int lastw;
@@ -134,13 +143,14 @@ IMenuOption* KSQ;
 IMenuOption* KSW;
 IMenuOption* SupportMode;
 IMenuOption* HarassAA;
+IMenuOption* KSRmin;
 
 ISpell2* Q;
 ISpell2* W;
 ISpell2* E;
 ISpell2* R;
 
-
+IUnit* Enemy;
 
 
 ISpell* Flash;

@@ -277,7 +277,7 @@ public:
 		{
 			auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotQ);
 
-			if (Enemy != nullptr && !Enemy->IsDead())
+			if (Enemy != nullptr && !Enemy->IsDead() && Enemy->IsValidTarget())
 			{
 				if (KSQ->Enabled() && Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && QDamage > Enemy->GetHealth())
 				{
