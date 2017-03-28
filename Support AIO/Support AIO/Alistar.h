@@ -24,13 +24,9 @@ public:
 		DrawingMenu = MainMenu->AddMenu("Drawings");
 		{
 			DrawQRange = DrawingMenu->CheckBox("Draw Q Range", true);
-			QColor = DrawingMenu->AddColor("Q Range Color", 0.f, 0.f, 255.f, 255.f);
 			DrawWRange = DrawingMenu->CheckBox("Draw W Range", true);
-			WColor = DrawingMenu->AddColor("W Range Color", 0.f, 0.f, 255.f, 255.f);
 			DrawERange = DrawingMenu->CheckBox("Draw E Range", true);
-			EColor = DrawingMenu->AddColor("E Range Color", 0.f, 0.f, 255.f, 255.f);
 			DrawQFRange = DrawingMenu->CheckBox("Draw Q Flash Range", true);
-			RColor = DrawingMenu->AddColor("QFlash Range Color", 0.f, 0.f, 255.f, 255.f);
 
 		}
 
@@ -179,55 +175,9 @@ public:
 
 	void Draw() const
 	{
-		if (DrawQRange->Enabled())
-		{
-			Vec4 color;
-			QColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, Q->Range());
-		}
-		if (DrawWRange->Enabled())
-		{
-			Vec4 color;
-			WColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, W->Range());
-		}
-		if (DrawERange->Enabled())
-		{
-			Vec4 color;
-			EColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, E->Range());
-		}
-		if (DrawQRange->Enabled())
-		{
-			Vec4 color;
-			QColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, Q->Range());
-		}
-		if (DrawWRange->Enabled())
-		{
-			Vec4 color;
-			WColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, W->Range());
-		}
-		if (DrawERange->Enabled())
-		{
-			Vec4 color;
-			EColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, E->Range());
-		}
-		if (DrawQFRange->Enabled())
-		{
-			Vec4 color;
-			RColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, Q->Range()+380);
-		}
-	
+		if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range()); }
+		if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()); }
+		if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
+		if (DrawQFRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range() + 380); }	
 	}
 };

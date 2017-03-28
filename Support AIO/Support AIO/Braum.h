@@ -25,11 +25,8 @@ public:
 		LastQ = FarmMenu->CheckBox("Q last hit", false);
 		FarmMana = FarmMenu->AddFloat("Save spells if mana% is", 1, 100, 50);
 		DrawQRange = DrawingMenu->CheckBox("Draw Q", true);
-		QColor = DrawingMenu->AddColor("Q Range Color", 0.f, 0.f, 255.f, 255.f);
 		DrawWRange = DrawingMenu->CheckBox("Draw W", false);
-		WColor = DrawingMenu->AddColor("W Range Color", 0.f, 0.f, 255.f, 255.f);
 		DrawRRange = DrawingMenu->CheckBox("Draw R", true);
-		RColor = DrawingMenu->AddColor("R Range Color", 0.f, 0.f, 255.f, 255.f);
 		AntiGapW = MiscMenu->CheckBox("Auto W Gapclose", true);
 		AntiGapE = MiscMenu->CheckBox("Auto E Gapclose", true);
 		InterruptR = MiscMenu->CheckBox("R to interrupt", true);
@@ -398,27 +395,9 @@ public:
 
 	void Draw() const
 	{
-		if (DrawQRange->Enabled())
-		{
-			Vec4 color;
-			QColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, Q->Range());
-		}
-		if (DrawWRange->Enabled())
-		{
-			Vec4 color;
-			WColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, W->Range());
-		}
-		if (DrawRRange->Enabled())
-		{
-			Vec4 color;
-			RColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, R->Range());
-		}
+		if (DrawQRange->Enabled()) { GRender->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range()); }
 		
+		if (DrawWRange->Enabled()) { GRender->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()); }
+		if (DrawRRange->Enabled()) { GRender->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), 1150); }
 	}
 };

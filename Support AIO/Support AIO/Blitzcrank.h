@@ -30,11 +30,8 @@ public:
 		DrawingMenu = MainMenu->AddMenu("Drawings");
 		{
 			DrawQRange = DrawingMenu->CheckBox("Draw Q max", true);
-			QColor = DrawingMenu->AddColor("Q max Range Color", 0.f, 0.f, 255.f, 255.f);
 			DrawQmin = DrawingMenu->CheckBox("Draw Q minimum", true);
-			WColor = DrawingMenu->AddColor("Q min Range Color", 0.f, 0.f, 255.f, 255.f);
 			DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
-			RColor = DrawingMenu->AddColor("R Range Color", 0.f, 0.f, 255.f, 255.f);
 			DrawPred = DrawingMenu->CheckBox("Draw Prediction", true);
 		}
 
@@ -237,27 +234,9 @@ public:
 
 	void Draw() const
 	{
-		if (DrawQmin->Enabled())
-		{
-			Vec4 color;
-			QColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, ComboQmin->GetInteger());
-		}
-		if (DrawQRange->Enabled())
-		{
-			Vec4 color;
-			WColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, ComboQmax->GetInteger());
-		}
-		if (DrawRRange->Enabled())
-		{
-			Vec4 color;
-			EColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, R->Range());
-		}
+		if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), ComboQmax->GetInteger()); }
+		if (DrawQmin->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), ComboQmin->GetInteger()); }
+		if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 255, 255), R->Range()); }
 		if (DrawPred->Enabled())
 		{
 			for (auto hero : GEntityList->GetAllHeros(false, true))

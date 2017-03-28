@@ -54,18 +54,28 @@ IMenuOption* ComboEinterrupt;
 
 IMenu* ESettings;
 
+IMenuOption* LastHitMana;
+IMenuOption* TearQ;
+IMenuOption* TearW;
+IMenuOption* ManaTear;
 
 IMenu* FarmMenu;
 IMenuOption* FarmW;
 IMenuOption* FarmWmin;
 IMenuOption* FarmMana;
+IMenuOption* FarmQmin;
+IMenuOption* FarmE;
+IMenuOption* FarmEmin;
+IMenuOption* AA;
+IMenu* LastHitMenu;
 
 IMenu* HookMenu;
 IMenuOption* GrabQ;
 IMenuOption* GrabQA;
 IMenuOption* GrabQB;
 IMenuOption* AutoQ;
-
+IMenuOption* LastW;
+IMenuOption* LastE;
 IMenu* BlacklistMenu;
 IMenu* BlacklistMenuR; 
 IMenu* BlacklistMenuW;
@@ -131,10 +141,13 @@ IMenuOption* AntiGapE;
 IMenuOption* DrawDamage;
 IMenuOption* LastQ;
 
+
+IUnit* minion;
+std::vector<IUnit*> minions;
+
 int lastw;
 
 std::map<int, IMenuOption*> ChampionUse;
-std::vector<IUnit*> minions;
 
 IMenu* KillstealMenu;
 IMenuOption* KSE;

@@ -1,47 +1,58 @@
 #pragma once
 #include "Menu.h"
 #include <string>
-class SonaBase
+class MalzaharBase
 {
 public:
 
 	void DrawMenu()
 	{
-		MainMenu = GPluginSDK->AddMenu("Sona :: Support AIO");
-		ComboMenu = MainMenu->AddMenu("Combo");
-		{
-			ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
-			ComboE = ComboMenu->CheckBox("Use E in Combo", true);
-			ComboR = ComboMenu->CheckBox("Use R in Combo", true);
-			ComboRmin = ComboMenu->AddInteger("Use R if enemies X >", 1, 5, 2);
-			ForceR = ComboMenu->AddKey("Force R", 'T');
-			SupportMode = ComboMenu->CheckBox("Support Mode", true);
 
-		}
-		MiscMenu = MainMenu->AddMenu("Misc.");
-		{
-			AntiGapE = MiscMenu->CheckBox("Anti-Gapclose E", true);
-			ComboEslow = MiscMenu->CheckBox("Auto E if slowed", true);
-			InterruptR = MiscMenu->CheckBox("Interrupt R", true);
-		}
-
-
+		MainMenu = GPluginSDK->AddMenu("Malzahar - Support AIO");
+		ComboMenu = MainMenu->AddMenu("Combo Menu)");
+		HarassMenu = MainMenu->AddMenu("Harass");
+		LastHitMenu = MainMenu->AddMenu("LastHit");
+		FarmMenu = MainMenu->AddMenu("LaneClear");
 		DrawingMenu = MainMenu->AddMenu("Drawings");
-		{
-			DrawQRange = DrawingMenu->CheckBox("Draw Q range", true);
-			DrawWRange = DrawingMenu->CheckBox("Draw W range", true);
-			DrawERange = DrawingMenu->CheckBox("Draw E range", true);
-			DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
+		MiscMenu = MainMenu->AddMenu("Misc.");
 
-		}
+		ComboMode = ComboMenu->AddSelection("Select combo", 0, { "Q>W>E>R", "Q>W>R>E", "Q>E>W>R", "Q>E>R>W", "Q>R>W>E", "W>R>Q>E", "R>W>Q>E", "R>Q>W>E", "E>W>Q>R", "W>E>Q>E>R" });
+		AA = ComboMenu->CheckBox("Enable AutoAttacks in combo mode", true);
+		SupportMode = ComboMenu->CheckBox("Support Mode", true);
 
-		HealMenu = MainMenu->AddMenu("Healing");
-		{
-			HealW = HealMenu->CheckBox("Use auto W", true);
-			HealWally = HealMenu->AddInteger("Ally HP percent(if lower than)", 10, 100, 50);
-			HealWmyself = HealMenu->AddInteger("My HP percent(if lower than)", 10, 100, 50);
-			HealWenemy = HealMenu->AddInteger("Heal if X Allies =>", 1, 5, 1);
-		}
+
+		FarmQ = FarmMenu->CheckBox("Q creeps/monsters", false);
+		FarmQmin = FarmMenu->AddInteger("Minimum to use Q", 0, 10, 3);
+		FarmW = FarmMenu->CheckBox("W creeps/monsters", false);
+		FarmWmin = FarmMenu->AddInteger("Minimum to use W", 0, 10, 3);
+		FarmE = FarmMenu->CheckBox("E creeps/monsters", false);
+		FarmEmin = FarmMenu->AddInteger("Minimum to use E", 0, 10, 3);
+
+
+
+		HarassMana = MiscMenu->AddFloat("Mana Percent", 1, 100, 75);
+		HarassQ = HarassMenu->CheckBox("Q harass", false);
+		HarassW = HarassMenu->CheckBox("W harass", false);
+		HarassE = HarassMenu->CheckBox("E harrass", false);
+
+
+
+		LastHitMana = MiscMenu->AddFloat("Mana Percent", 1, 100, 75);
+		LastQ = LastHitMenu->CheckBox("Q lasthit", false);
+		LastW = LastHitMenu->CheckBox("W lasthit", false);
+		LastE = LastHitMenu->CheckBox("E lasthit", false);
+
+
+
+		MiscMana = MiscMenu->AddFloat("Mana Percent", 1, 100, 75);
+		ManaTear = MiscMenu->AddFloat("Min. mana% for tear stacks", 1, 100, 75);
+		TearQ = MiscMenu->CheckBox("Cast Q for stacks", false);
+		TearW = MiscMenu->CheckBox("Cast W for stacks", false);
+
+		DrawQRange = DrawingMenu->CheckBox("Draw Q Range", true);
+		DrawWRange = DrawingMenu->CheckBox("Draw W Range", false);
+		DrawERange = DrawingMenu->CheckBox("Draw E Range", true);
+		DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
 	}
 
 
@@ -167,7 +178,7 @@ public:
 		{
 			if (HealW->Enabled() && W->IsReady())
 			{
-				if (!Ally->IsRecalling() && Ally != nullptr && Ally->HealthPercent() <= HealWally->GetInteger() &&  Ally != GEntityList->Player() && !Ally->IsDead() && GetAlliesInRange(GEntityList->Player(), W->Range()) >= HealWenemy->GetInteger())
+				if (!Ally->IsRecalling() && Ally != nullptr && Ally->HealthPercent() <= HealWally->GetInteger() && Ally != GEntityList->Player() && !Ally->IsDead() && GetAlliesInRange(GEntityList->Player(), W->Range()) >= HealWenemy->GetInteger())
 				{
 					W->CastOnTarget(Ally);
 				}
@@ -239,9 +250,33 @@ public:
 
 	void Draw() const
 	{
-		if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range()); }
-		if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()); }
-		if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
-		if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 255, 255), R->Range()); }
+		if (DrawQRange->Enabled())
+		{
+			Vec4 color;
+			QColor->GetColor(&color);
+
+			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, Q->Range());
+		}
+		if (DrawWRange->Enabled())
+		{
+			Vec4 color;
+			WColor->GetColor(&color);
+
+			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, W->Range());
+		}
+		if (DrawERange->Enabled())
+		{
+			Vec4 color;
+			EColor->GetColor(&color);
+
+			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, E->Range());
+		}
+		if (DrawRRange->Enabled())
+		{
+			Vec4 color;
+			RColor->GetColor(&color);
+
+			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, R->Range());
+		}
 	}
 };
