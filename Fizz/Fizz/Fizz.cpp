@@ -84,7 +84,8 @@ void LoadSpells()
 	Q = GPluginSDK->CreateSpell2(kSlotQ, kTargetCast, false, false, kCollidesWithYasuoWall);
 	W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, kCollidesWithNothing);
 	E = GPluginSDK->CreateSpell2(kSlotE, kCircleCast, false, false, kCollidesWithNothing);
-	R = GPluginSDK->CreateSpell2(kSlotR, kTargetCast, false, false, kCollidesWithYasuoWall);
+	R = GPluginSDK->CreateSpell2(kSlotR, kLineCast, true, false, kCollidesWithYasuoWall);
+	R->SetSkillshot(0.25f, 80.f, 5000.f, 1100.f);
 	if (GEntityList->Player()->GetSpellSlot("SummonerFlash") != kSlotUnknown)
 		Flash = GPluginSDK->CreateSpell(GEntityList->Player()->GetSpellSlot("SummonerFlash"), 425);
 
@@ -169,7 +170,7 @@ void EFlash()
 				{
 					Flash->CastOnPosition(Enemy->ServerPosition());
 				}
-				if (R->IsReady() && !Flash->IsReady() && !Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), R->Range() - 150))
+				if (R->IsReady() && !Flash->IsReady() && !Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), R->Range()))
 				{
 					R->CastOnTarget(Enemy);
 				}
@@ -209,6 +210,18 @@ void CastE(IUnit* hit)
 	Hithere.y = futurePos.y;
 	Hithere.z = hitpos.y;
 	E->CastOnPosition(Hithere);
+}
+void CastR(IUnit* hit)
+{
+	auto time = 0.25f + GetDistance(Player, hit) / 1550;
+	Vec3 futurePos;
+	GPrediction->GetFutureUnitPosition(hit, time, true, futurePos);
+	Vec2 hitpos = futurePos.To2D().Extend(Player->GetPosition().To2D(), -40);
+	Vec3 Hithere;
+	Hithere.x = hitpos.x;
+	Hithere.y = futurePos.y;
+	Hithere.z = hitpos.y;
+	R->CastOnPosition(Hithere);
 }
 
 
@@ -339,7 +352,7 @@ void Combo()
 					R->CastOnTarget(target, kHitChanceHigh);
 				}
 			}
-			if (!Q->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range() - 150))
+			if (!Q->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
 			{
 				auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotQ);
 				auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotE);
@@ -352,7 +365,7 @@ void Combo()
 			}
 			if (ComboRmode->GetInteger() == 0)
 			{
-				if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range() - 150) && ComboRhp->GetInteger() > target->HealthPercent() && !ComboRkill->Enabled())
+				if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range()) && ComboRhp->GetInteger() > target->HealthPercent() && !ComboRkill->Enabled())
 				{
 					R->CastOnTarget(target, kHitChanceHigh);
 				}
@@ -361,14 +374,14 @@ void Combo()
 				auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotR);
 				auto WDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotW);
 
-				if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range() - 150) && ComboRkill->Enabled())
+				if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range()) && ComboRkill->Enabled())
 				{
 					if (QDamage + EDamage + RDamage + WDamage > target->GetHealth())
 					{
 						R->CastOnTarget(target, kHitChanceHigh);
 					}
 				}
-				if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range() - 50) && !ComboRkill->Enabled() && ComboRalways->Enabled() && !ComboRkill->Enabled())
+				if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range()) && !ComboRkill->Enabled() && ComboRalways->Enabled() && !ComboRkill->Enabled())
 				{
 					R->CastOnTarget(target, kHitChanceHigh);
 				}
@@ -413,7 +426,7 @@ void Combo()
 				{
 					if (Q->CastOnTarget(target))
 					{
-						if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range() - 150) && ComboRhp->GetInteger() > target->HealthPercent() && !ComboRkill->Enabled())
+						if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range()) && ComboRhp->GetInteger() > target->HealthPercent() && !ComboRkill->Enabled())
 						{
 							R->CastOnTarget(target);
 						}
@@ -422,14 +435,14 @@ void Combo()
 						auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotR);
 						auto WDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotW);
 
-						if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range() - 150) && ComboRkill->Enabled())
+						if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range()) && ComboRkill->Enabled())
 						{
 							if (QDamage + EDamage + RDamage + WDamage > target->GetHealth())
 							{
 								R->CastOnTarget(target);
 							}
 						}
-						if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range() - 150) && !ComboRkill->Enabled() && ComboRalways->Enabled() && !ComboRkill->Enabled())
+						if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range()) && !ComboRkill->Enabled() && ComboRalways->Enabled() && !ComboRkill->Enabled())
 						{
 							R->CastOnTarget(target, kHitChanceHigh);
 						}
@@ -475,7 +488,7 @@ void Combo()
 				{
 					if (Q->CastOnTarget(target))
 					{
-						if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range() - 150) && ComboRhp->GetInteger() > target->HealthPercent() && !ComboRkill->Enabled())
+						if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range()) && ComboRhp->GetInteger() > target->HealthPercent() && !ComboRkill->Enabled())
 						{
 							R->CastOnTarget(target, kHitChanceHigh);
 						}
@@ -484,7 +497,7 @@ void Combo()
 						auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotR);
 						auto WDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotW);
 
-						if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range() - 150) && ComboRkill->Enabled())
+						if (ComboRenable->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range()) && ComboRkill->Enabled())
 						{
 							if (QDamage + EDamage + RDamage + WDamage > target->GetHealth())
 							{
@@ -693,7 +706,7 @@ void Semi()
 	{
 		if (!Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), R->Range() - 150) && R->Range() - 150 && !Enemy->IsDead())
 		{
-			R->CastOnTarget(Enemy, kHitChanceHigh);
+			CastR(Enemy);
 		}
 	}
 }
