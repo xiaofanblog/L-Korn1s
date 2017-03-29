@@ -633,12 +633,12 @@ void Mixed()
 				auto targetEa = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 800);
 				if (targetEa != nullptr)
 				{
-					if (E->IsReady() && Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, 800) && ComboEenable->Enabled())
+					if (E->IsReady() && Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, 800) && HarassE->Enabled())
 					{
 						E->CastOnPosition(targetEa->ServerPosition());
 					}
 
-					if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()) && ComboEenable->Enabled())
+					if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()) && HarassE->Enabled())
 					{
 
 						CastE(targetEa);
@@ -663,7 +663,7 @@ void Mixed()
 
 				}
 			}
-			if (!E->IsReady())
+			if (!E->IsReady() && HarassE->Enabled())
 			{
 				if (HarassW->Enabled() && targetEa->IsValidTarget(GEntityList->Player(), Q->Range() + 10))
 				{
