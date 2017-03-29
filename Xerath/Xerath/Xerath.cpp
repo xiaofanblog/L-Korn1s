@@ -36,6 +36,12 @@ IMenu* MiscMenu;
 IMenuOption* AntiGap;
 IMenuOption* IntSpells;
 IMenuOption* AutoELogica;
+IMenu* FarmMenu;
+IMenuOption* FarmMana;
+IMenuOption* FarmQ;
+IMenuOption* FarmW;
+IMenuOption* FarmQmin;
+IMenuOption* FarmWmin;
 
 IMenuOption* pingonks;
 
@@ -45,7 +51,7 @@ ISpell2* E;
 ISpell2* R;
 
 IUnit* Player;
-//Target Selector Common
+
 IUnit* rTargetLast;
 IUnit* Enemy;
 IUnit* enemy;
@@ -114,6 +120,13 @@ void Menu()
 		AutoELogica = MiscMenu->CheckBox("Use E on CC", true);
 
 	}
+	FarmMenu = MainMenu->AddMenu("Farm.");
+	{
+		FarmMana = FarmMenu->AddInteger("Mana Percent", 10, 100, 50);
+		FarmW = FarmMenu->CheckBox("Use W", true);
+		FarmWmin = FarmMenu->AddInteger("Min minions for W", 1, 6, 3);
+
+	}
 	Tip = MainMenu->AddMenu("USE G FOR FORCE Q");
 	{
 		ForceQ = Tip->CheckBox("FORCE Q", true);
@@ -133,10 +146,8 @@ void PingKS()
 				{
 					if (Enemy->GetHealth() < RDamage * 3)
 					{
-						if (GGame->Time() - LastPingTime2 >= 10)
+						if (GGame->Time() - LastPingTime2 >= 3)
 						{
-							GGame->ShowPing(2, Enemy->GetPosition(), true);
-							GGame->ShowPing(2, Enemy->GetPosition(), true);
 							GGame->ShowPing(2, Enemy->GetPosition(), true);
 							LastPingTime2 = GGame->Time();
 
@@ -145,6 +156,30 @@ void PingKS()
 
 					}
 				}
+			}
+		}
+	}
+}
+
+void Farm()
+{
+	if (FarmMana->GetInteger() <= GEntityList->Player()->ManaPercent())
+	{
+		for (auto Minion : GEntityList->GetAllMinions(false, true, false))
+		{
+			if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && Minion->IsCreep())
+			{
+				if (FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range()))
+				{
+					
+					Vec3 pos;
+					int hit;
+					GPrediction->FindBestCastPosition(W->Range(), 200, false, true, false, pos, hit);
+					if (hit >= FarmWmin->GetInteger())
+						W->CastOnPosition(pos);
+					
+				}
+				
 			}
 		}
 	}
@@ -524,7 +559,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	}
 	if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
 	{
-	
+		Farm();
 	}
 	if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
 	{
