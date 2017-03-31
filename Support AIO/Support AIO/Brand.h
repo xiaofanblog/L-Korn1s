@@ -61,7 +61,7 @@ public:
 		E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		R = GPluginSDK->CreateSpell2(kSlotR, kTargetCast, false, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall));
 		Q->SetOverrideDelay(0.25);
-		Q->SetOverrideRadius(50);
+		Q->SetOverrideRadius(70);
 		Q->SetOverrideSpeed(100000000000);
 		Q->SetOverrideRange(1000);
 		W->SetOverrideDelay(0.25);
@@ -355,19 +355,16 @@ public:
 						if (ComboQMode->GetInteger() == 0)
 						{
 
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
+							Q->CastOnTarget(Enemy);
+							/*GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
 							if (InSpellRange(Q, pred))
-								Q->CastOnPosition(pred);
+								Q->CastOnPosition(pred);*/
 						}
 						if (ComboQMode->GetInteger() == 1)
 						{
 							if (Enemy->HasBuff("brandablaze"))
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-								if (InSpellRange(Q, pred))
-									Q->CastOnPosition(pred);
+								Q->CastOnTarget(Enemy);
 							}
 						}
 					}

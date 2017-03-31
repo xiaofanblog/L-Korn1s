@@ -35,11 +35,11 @@ public:
 
 	void LoadSpells()
 	{
-		Q = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, true, true, kCollidesWithMinions);
+		Q = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, true, false, kCollidesWithMinions);
 		W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, kCollidesWithNothing);
 		E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, kCollidesWithNothing);
 		R = GPluginSDK->CreateSpell2(kSlotR, kLineCast, true, true, static_cast<eCollisionFlags>(kCollidesWithNothing));
-		Q->SetSkillshot(0.25f, 50.f, 1400.f, 1000.f);
+		Q->SetSkillshot(0.25f, 80.f, 1000000000000.f, 1000.f);
 		W->SetOverrideRange(650);
 		E->SetOverrideRange(25000);
 		R->SetSkillshot(0.25f, 160, 1000.f, 1200.f);
@@ -172,7 +172,7 @@ public:
 				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
 				if (GEntityList->Player()->IsValidTarget(target, Q->Range()))
 				{
-					Q->CastOnTarget(target, kHitChanceHigh);
+					Q->CastOnTarget(target, kHitChanceVeryHigh);
 				}
 			}
 			if (SaveW->Enabled() && W->IsReady())

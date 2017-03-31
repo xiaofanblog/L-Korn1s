@@ -54,8 +54,8 @@ public:
 	{
 		Q = GPluginSDK->CreateSpell2(kSlotQ, kCircleCast, true, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		Q->SetOverrideDelay(0.25);
-		Q->SetOverrideRadius(80);
-		Q->SetOverrideSpeed(3800);
+		Q->SetOverrideRadius(100);
+		Q->SetOverrideSpeed(100000000000);
 		Q->SetOverrideRange(810);
 		W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, kCollidesWithNothing);
 		E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, kCollidesWithNothing);
@@ -138,7 +138,10 @@ public:
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
 			if (target != nullptr)
 			{
-				Q->CastOnTarget(target, kHitChanceHigh);
+				Vec3 pred;
+				GPrediction->GetFutureUnitPosition(target, 0.15f, true, pred);
+				if (InSpellRange(Q, pred))
+					Q->CastOnPosition(pred);
 			}
 		}
 		if (ComboWenable->Enabled() && W->IsReady() && Q->Range())
@@ -149,7 +152,10 @@ public:
 				if (target != nullptr)
 				{
 					W->CastOnPlayer();
-					Q->CastOnTarget(target, kHitChanceHigh);
+					Vec3 pred;
+					GPrediction->GetFutureUnitPosition(target, 0.15f, true, pred);
+					if (InSpellRange(Q, pred))
+						Q->CastOnPosition(pred);
 				}
 			}
 

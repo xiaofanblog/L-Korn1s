@@ -65,7 +65,7 @@ public:
 	void LoadSpells()
 	{
 		Q = GPluginSDK->CreateSpell2(kSlotQ, kCircleCast, true, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
-		Q->SetSkillshot(0.25f, 100, std::numeric_limits<float>::infinity(), 865);
+		Q->SetSkillshot(0.15f, 100, 4000, 865);
 		W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		R = GPluginSDK->CreateSpell2(kSlotR, kLineCast, false, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall));
@@ -196,9 +196,7 @@ public:
 		{
 			if (ComboQ->Enabled() && GEntityList->Player()->IsValidTarget(target, Q->Range()) && Q->IsReady())
 			{
-				Vec3 pred;
-				GPrediction->GetFutureUnitPosition(target, 0.50f, true, pred);
-				Q->CastOnPosition(pred);
+				Q->CastOnTarget(target);
 			}
 			if (!ComboW->Enabled() && GEntityList->Player()->IsValidTarget(target, W->Range()) && W->IsReady())
 			{

@@ -6,7 +6,9 @@
 #include "Nami.h"
 #include "Braum.h"
 #include "Alistar.h"
-//#include "Janna.h"
+#include "Janna.h"
+#include "Malzahar.h"
+#include "Karma.h"
 #include "Zilean.h"
 #include "Soraka.h"
 #include "EventManager.h"
@@ -813,6 +815,165 @@ private:
 	}
 };
 
+class Malzahar : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		MalzaharBase().DrawMenu();
+		MalzaharBase().LoadSpells();
+		MalzaharBase().RMove();
+	}
+
+	void OnRender() override
+	{
+		MalzaharBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		MalzaharBase().AAdisable();
+		MalzaharBase().tear();
+		MalzaharBase().RMove();
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			MalzaharBase().Combo();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
+		{
+			MalzaharBase().Harras();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			MalzaharBase().Push();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
+		{
+			MalzaharBase().LastHit();
+		}
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+		MalzaharBase().AntiGapclose(Args);
+	}
+
+
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+		MalzaharBase().Interrupt(Args);
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+	}
+
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+	}
+
+	void OnCreateObject(IUnit* Source) override
+	{
+		//none
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Malzahar</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
+class Karma : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		KarmaBase().DrawMenu();
+		KarmaBase().LoadSpells();
+	}
+
+	void OnRender() override
+	{
+		KarmaBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		KarmaBase().AAdisable();
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			KarmaBase().Combo();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			KarmaBase().Farm();
+		}
+		if (GetAsyncKeyState(Chase->GetInteger()) & 0x8000)
+		{
+			KarmaBase().ComboChase();
+		}
+		if (GetAsyncKeyState(QWQMouse->GetInteger()) & 0x8000)
+		{
+			KarmaBase().RQ();
+		}
+
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+		KarmaBase().AntiGapclose(Args);
+	}
+
+
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+		
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+	}
+
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+	}
+
+	void OnCreateObject(IUnit* Source) override
+	{
+		//none
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Karma</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
+
 
 
 zHero* yHero = nullptr;
@@ -888,10 +1049,14 @@ void LoadChampion()
 		yHero = new Braum;
 	else if (playerHero == "Sona")
 		yHero = new Sona;
-	/*else if (playerHero == "Janna")
-		yHero = new Janna;*/
+	//else if (playerHero == "Janna")
+		//yHero = new Janna;
 	else if (playerHero == "Brand")
 		yHero = new Brand;
+	else if (playerHero == "Malzahar")
+		yHero = new Malzahar;
+	else if (playerHero == "Karma")
+		yHero = new Karma;
 	else
 	{
 		GGame->PrintChat("<b><font color=\"#FFFFFF\">This champion isn't supported.</b></font>");

@@ -9,18 +9,21 @@ public:
 	{
 
 		MainMenu = GPluginSDK->AddMenu("Malzahar - Support AIO");
-		ComboMenu = MainMenu->AddMenu("Combo Menu)");
+		ComboMenu = MainMenu->AddMenu("Combo");
 		HarassMenu = MainMenu->AddMenu("Harass");
 		LastHitMenu = MainMenu->AddMenu("LastHit");
 		FarmMenu = MainMenu->AddMenu("LaneClear");
 		DrawingMenu = MainMenu->AddMenu("Drawings");
 		MiscMenu = MainMenu->AddMenu("Misc.");
 
-		ComboMode = ComboMenu->AddSelection("Select combo", 0, { "Q>W>E>R", "Q>W>R>E", "Q>E>W>R", "Q>E>R>W", "Q>R>W>E", "W>R>Q>E", "R>W>Q>E", "R>Q>W>E", "E>W>Q>R", "W>E>Q>E>R" });
-		AA = ComboMenu->CheckBox("Enable AutoAttacks in combo mode", true);
+		ComboMode = ComboMenu->AddSelection("Select combo", 0, { "Q>W>E>R", "Q>E>W>R", "R>W>Q>E", "E>W>Q>R"});
+		ComboQ = ComboMenu->CheckBox("Use Q", true);
+		ComboW = ComboMenu->CheckBox("Use W", true);
+		ComboE = ComboMenu->CheckBox("Use E", true);
+		ComboR = ComboMenu->CheckBox("Use R", true);
 		SupportMode = ComboMenu->CheckBox("Support Mode", true);
 
-
+		FarmMana = FarmMenu->AddFloat("Mana Percent", 1, 100, 75);
 		FarmQ = FarmMenu->CheckBox("Q creeps/monsters", false);
 		FarmQmin = FarmMenu->AddInteger("Minimum to use Q", 0, 10, 3);
 		FarmW = FarmMenu->CheckBox("W creeps/monsters", false);
@@ -30,24 +33,25 @@ public:
 
 
 
-		HarassMana = MiscMenu->AddFloat("Mana Percent", 1, 100, 75);
+		HarassMana = HarassMenu->AddFloat("Mana Percent", 1, 100, 75);
 		HarassQ = HarassMenu->CheckBox("Q harass", false);
 		HarassW = HarassMenu->CheckBox("W harass", false);
 		HarassE = HarassMenu->CheckBox("E harrass", false);
 
 
 
-		LastHitMana = MiscMenu->AddFloat("Mana Percent", 1, 100, 75);
+		LastHitMana = LastHitMenu->AddFloat("Mana Percent", 1, 100, 75);
 		LastQ = LastHitMenu->CheckBox("Q lasthit", false);
 		LastW = LastHitMenu->CheckBox("W lasthit", false);
 		LastE = LastHitMenu->CheckBox("E lasthit", false);
 
 
 
-		MiscMana = MiscMenu->AddFloat("Mana Percent", 1, 100, 75);
 		ManaTear = MiscMenu->AddFloat("Min. mana% for tear stacks", 1, 100, 75);
 		TearQ = MiscMenu->CheckBox("Cast Q for stacks", false);
 		TearW = MiscMenu->CheckBox("Cast W for stacks", false);
+		InterruptR = MiscMenu->CheckBox("Interrupt R", true);
+		AntiGapR = MiscMenu->CheckBox("AntiGap R", true);
 
 		DrawQRange = DrawingMenu->CheckBox("Draw Q Range", true);
 		DrawWRange = DrawingMenu->CheckBox("Draw W Range", false);
@@ -55,6 +59,14 @@ public:
 		DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
 	}
 
+
+	bool RBuff(IUnit* target)
+	{
+		if (target == nullptr)
+			return false;
+
+		return target->HasBuff("MalzaharR");
+	}
 
 	void AAdisable()
 	{
@@ -93,11 +105,14 @@ public:
 
 	void LoadSpells()
 	{
-		Q = GPluginSDK->CreateSpell2(kSlotQ, kCircleCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
-		W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
-		E = GPluginSDK->CreateSpell2(kSlotE, kCircleCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
-		R = GPluginSDK->CreateSpell2(kSlotR, kLineCast, true, true, (kCollidesWithYasuoWall));
-		R->SetSkillshot(0.25f, 140.f, 2400.f, 1000.f);
+		Q = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, true, false, (kCollidesWithNothing));
+		Q->SetSkillshot(0.25f, 70.f, 3200.f, 900.f);
+		W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, false, false, (kCollidesWithNothing));
+		W->SetSkillshot(0.25f, 250.f, 1000.f, 800.f);
+		E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, (kCollidesWithNothing));
+		E->SetSkillshot(0.25f, 0.f, 3200.f, 650.f);
+		R = GPluginSDK->CreateSpell2(kSlotR, kTargetCast, false, false, (kCollidesWithNothing));
+		R->SetSkillshot(0.25f, 0.f, 3200.f, 700.f);
 	}
 
 
@@ -143,140 +158,433 @@ public:
 		return AlliesInRange;
 	}
 
-	void Semi()
+	static int CountMinionsNearMe(IPluginSDK *sdk, float range)
 	{
-		if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
+		static auto entityList = sdk->GetEntityList();
+		static auto player = entityList->Player();
+
+		auto count = 0;
+
+		for (auto unit : entityList->GetAllMinions(false, true, true))
 		{
-			for (auto Enemy : GEntityList->GetAllHeros(false, true))
+			if (player->IsValidTarget(unit, range))
 			{
-				if (!Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), 860) && !Enemy->IsDead())
-				{
-					R->CastOnTarget(Enemy, kHitChanceHigh);
-				}
+				count++;
 			}
 		}
+
+		return count;
 	}
 
-	void Auto()
+	static int CountEnemiesNearMe(IPluginSDK *sdk, float range)
 	{
-		for (auto Ally : GEntityList->GetAllHeros(true, false))
+		static auto entityList = sdk->GetEntityList();
+		static auto player = entityList->Player();
+
+		auto count = 0;
+
+		for (auto unit : entityList->GetAllHeros(false, true))
 		{
-			if (Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), E->Range()) && Ally->HasBuffOfType(BUFF_Slow))
+			if (player->IsValidTarget(unit, range))
 			{
-				if (ComboEslow->Enabled() && E->Range() && E->IsReady())
-				{
-					E->CastOnTarget(Ally);
-				}
+				count++;
 			}
 		}
+
+		return count;
 	}
-
-
-	void Healing()
+	bool EBuff(IUnit* target)
 	{
-		for (auto Ally : GEntityList->GetAllHeros(true, false))
+		if (target == nullptr)
+			return false;
+
+		return target->HasBuff("MalzaharE");
+	}
+	bool QBuff(IUnit* target)
+	{
+		if (target == nullptr)
+			return false;
+
+		return target->HasBuff("MalzaharQMissile");
+	}
+	/*bool RBuff(IUnit* target)
+	{
+	if (target == nullptr)
+	return false;
+
+	return target->HasBuff("MalzaharR");
+	}*/
+	void RMove()
+	{
+
+		if (GEntityList->Player()->HasBuff("malzaharrsound") && GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
-			if (HealW->Enabled() && W->IsReady())
-			{
-				if (!Ally->IsRecalling() && Ally != nullptr && Ally->HealthPercent() <= HealWally->GetInteger() && Ally != GEntityList->Player() && !Ally->IsDead() && GetAlliesInRange(GEntityList->Player(), W->Range()) >= HealWenemy->GetInteger())
-				{
-					W->CastOnTarget(Ally);
-				}
-				else if (Ally != nullptr && Ally == GEntityList->Player() && !GEntityList->Player()->IsDead())
-				{
-					if (!GEntityList->Player()->IsRecalling() && GEntityList->Player()->HealthPercent() <= HealWmyself->GetInteger() && !GUtility->IsPositionInFountain(GEntityList->Player()->GetPosition(), true, false))
-					{
-						W->CastOnPlayer();
-					}
-				}
-			}
+			GOrbwalking->SetMovementAllowed(false);
+		}
+		else
+		{
+			GOrbwalking->SetMovementAllowed(true);
 		}
 	}
-
 	void Combo()
+{
+	auto myhero = GEntityList->Player();
+	int combomode = ComboMode->GetInteger();
+	switch (combomode)
+	
 	{
-		for (auto Enemy : GEntityList->GetAllHeros(false, true)) {
-			if (Enemy != nullptr && Enemy->IsValidTarget() && Enemy->IsHero() && !Enemy->IsDead())
+	case 0:
+		{
+			if (ComboQ->Enabled() && Q->IsReady() && !myhero->HasBuff("malzaharrsound"))
 			{
-				if (ComboQ->Enabled() && Q->IsReady())
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
 				{
-					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
-					if (GEntityList->Player()->IsValidTarget(target, Q->Range()))
+					if (GEntityList->Player()->IsValidTarget(Target, Q->Range()))
 					{
-						Q->CastOnTarget(target);
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(Target, 0.25f, true, pred);
+						if (InSpellRange(Q, pred))
+							Q->CastOnPosition(pred);
 					}
 				}
-				if (ComboE->Enabled() && E->IsReady())
+			}
+
+			if (ComboW->Enabled() && W->IsReady() && !myhero->HasBuff("malzaharrsound"))
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
 				{
-					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
-					if (GEntityList->Player()->IsValidTarget(target, E->Range()))
+					if (GEntityList->Player()->IsValidTarget(Target, Q->Range()))
 					{
-						E->CastOnTarget(target);
+						W->CastOnPosition(Target->ServerPosition());
 					}
 				}
-				if (ComboR->Enabled() && R->IsReady())
+			}
+			if (ComboE->Enabled() && E->IsReady() && !myhero->HasBuff("malzaharrsound"))
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
 				{
-					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
-					if (GEntityList->Player()->IsValidTarget(target, R->Range()))
+					if (GEntityList->Player()->IsValidTarget(Target, E->Range()))
 					{
-						R->CastOnTargetAoE(target, ComboRmin->GetInteger(), kHitChanceHigh);
+						E->CastOnTarget(Target);
+					}
+				}
+			}
+			if (ComboR->Enabled() && R->IsReady())
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+				{
+					if (GEntityList->Player()->IsValidTarget(Target, R->Range()))
+					{
+						R->CastOnTarget(Target);
 					}
 				}
 			}
 		}
+		break;
+	case 1:
+		{
+			if (ComboQ->Enabled() && Q->IsReady() && !myhero->HasBuff("malzaharrsound"))
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+				{
+					if (GEntityList->Player()->IsValidTarget(Target, Q->Range()))
+					{
+						Q->CastOnTarget(Target);
+					}
+				}
+			}
+			if (ComboE->Enabled() && E->IsReady() && !myhero->HasBuff("malzaharrsound"))
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+				{
+					if (GEntityList->Player()->IsValidTarget(Target, E->Range()))
+					{
+						E->CastOnTarget(Target);
+					}
+				}
+			}
+			if (ComboW->Enabled() && W->IsReady() && !myhero->HasBuff("malzaharrsound"))
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+				{
+					if (GEntityList->Player()->IsValidTarget(Target, Q->Range()))
+					{
+						W->CastOnPosition(Target->ServerPosition());
+					}
+				}
+			}
+			if (ComboR->Enabled() && R->IsReady())
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+				{
+					if (GEntityList->Player()->IsValidTarget(Target, R->Range()))
+					{
+						R->CastOnTarget(Target);
+					}
+				}
+			}
+		}
+		break;
+	case 2:
+		{
+			if (R->IsReady() && ComboR->Enabled())
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+				{
+					if (GEntityList->Player()->IsValidTarget(Target, R->Range()))
+					{
+						R->CastOnTarget(Target);
+					}
+				}
+				
+			}
+
+			if (ComboW->Enabled() && W->IsReady() && !myhero->HasBuff("malzaharrsound"))
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+				{
+					if (GEntityList->Player()->IsValidTarget(Target, Q->Range()))
+					{
+						W->CastOnPosition(Target->ServerPosition());
+					}
+				}
+			}
+			if (ComboQ->Enabled() && Q->IsReady() && !myhero->HasBuff("malzaharrsound"))
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+				{
+					if (GEntityList->Player()->IsValidTarget(Target, Q->Range()))
+					{
+						Q->CastOnTarget(Target);
+					}
+				}
+			}
+			if (ComboE->Enabled() && E->IsReady() && !myhero->HasBuff("malzaharrsound"))
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+				{
+					if (GEntityList->Player()->IsValidTarget(Target, E->Range()))
+					{
+						E->CastOnTarget(Target);
+					}
+				}
+			}
+
+
+		}
+		break;
+	case 3:
+		{
+
+			if (ComboE->Enabled() && E->IsReady() && !myhero->HasBuff("malzaharrsound"))
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+				{
+					if (GEntityList->Player()->IsValidTarget(Target, E->Range()))
+					{
+						E->CastOnTarget(Target);
+					}
+				}
+			}
+			if (ComboW->Enabled() && W->IsReady() && !myhero->HasBuff("malzaharrsound"))
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+				{
+					if (GEntityList->Player()->IsValidTarget(Target, Q->Range()))
+					{
+						W->CastOnPosition(Target->ServerPosition());
+					}
+				}
+			}
+
+			if (ComboQ->Enabled() && Q->IsReady() && !myhero->HasBuff("malzaharrsound"))
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+				{
+					if (GEntityList->Player()->IsValidTarget(Target, Q->Range()))
+					{
+						Q->CastOnTarget(Target);
+					}
+				}
+			}
+			if (ComboR->Enabled() && R->IsReady())
+			{
+				auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+				{
+					if (GEntityList->Player()->IsValidTarget(Target, R->Range()))
+					{
+						R->CastOnTarget(Target);
+					}
+				}
+				
+			}
+		}
+		break;
+	}
+}
+	void Push()
+	{
+		minions = GEntityList->GetAllMinions(false, true, true);
+		for (IUnit* minion : minions)
+			if (GEntityList->Player()->ManaPercent() >= FarmMana->GetFloat())
+			{
+				{
+					if (FarmE->Enabled() && E->IsReady() && CountMinionsNearMe(GPluginSDK, E->Range()) >= FarmEmin->GetInteger() && minion->HealthPercent() <= 45 && minion->IsValidTarget(minion, E->Range()) && GEntityList->Player()->IsValidTarget(minion, E->Range()) && (!(minion->IsDead())))
+
+					{
+						if (minion != nullptr)
+						{
+							if (E->CastOnUnit(minion)) { return; }
+						}
+					}
+
+					if (FarmW->Enabled() && W->IsReady() && CountMinionsNearMe(GPluginSDK, E->Range()) >= FarmWmin->GetInteger() && minion->IsValidTarget(minion, W->Range()) && GEntityList->Player()->IsValidTarget(minion, W->Range()) && (!(minion->IsDead())))
+
+					{
+						if (minion != nullptr && EBuff(minion))
+						{
+							if (W->CastOnUnit(minion)) { return; }
+						}
+					}
+
+					if (FarmQ->Enabled() && Q->IsReady() && (!(minion->IsDead())) && minion != nullptr)
+
+					{
+						int creeps;
+						Vec3 pos;
+						Q->FindBestCastPosition(true, true, pos, creeps);
+						minions = GEntityList->GetAllMinions(false, true, true);
+						for (IUnit* minion : minions)
+							if (CountMinionsNearMe(GPluginSDK, Q->Range()) >= FarmQmin->GetInteger() && FarmQmin->GetInteger() > 1)
+							{
+								Q->CastOnPosition(pos);
+							}
+					}
+
+					if (FarmQ->Enabled() && Q->IsReady() && (!(minion->IsDead())) && minion != nullptr && FarmQmin->GetInteger() <= 1)
+					{
+						if (Q->CastOnUnit(minion)) { return; }
+					}
+
+				}
+			}
+	}
+
+	void LastHit()
+	{
+		for (auto Minion : GEntityList->GetAllMinions(false, true, true))
+		{
+			if (!Minion->IsDead() && Minion != nullptr)
+			{
+				if (LastQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()) && GDamage->GetSpellDamage(GEntityList->Player(), Minion, kSlotQ) >= Minion->GetHealth())
+				{
+					Q->CastOnUnit(Minion);
+				}
+				if (LastW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), E->Range()) && GDamage->GetSpellDamage(GEntityList->Player(), Minion, kSlotW) >= Minion->GetHealth())
+				{
+					W->CastOnUnit(Minion);
+				}
+				if (LastE->Enabled() && E->IsReady() && Minion->IsValidTarget(GEntityList->Player(), E->Range()) && Minion->HealthPercent() <= 30)
+				{
+					E->CastOnUnit(Minion);
+				}
+			}
+
+		}
+	}
+
+
+	void Harras()
+	{
+		if (HarassQ->Enabled() && Q->IsReady())
+		{
+			auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+			{
+				Q->CastOnTarget(Target, kHitChanceHigh);
+			}
+		}
+
+		if (HarassW->Enabled() && W->IsReady())
+		{
+			auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
+			{
+				W->CastOnTarget(Target);
+			}
+		}
+
+		if (HarassE->Enabled() && E->IsReady())
+		{
+			auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+			{
+				E->CastOnTarget(Target);
+			}
+		}
+
 	}
 
 	void AntiGapclose(GapCloserSpell const& Args)
 	{
-		if (Args.Sender != GEntityList->Player() && Args.Sender->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Sender, 200 + Args.Sender->BoundingRadius()) && AntiGapE->Enabled() && E->IsReady())
+		if (Args.Sender != GEntityList->Player()
+			&& Args.Sender->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Sender, R->Range() + Args.Sender->BoundingRadius())
+			&& AntiGapR->Enabled() && R->IsReady())
 		{
-			E->CastOnPlayer();
+			R->CastOnTarget(Args.Sender);
+		}
+	}
+	void Interrupt(InterruptibleSpell const& Args)
+	{
+		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, E->Range()) && Args.DangerLevel == kHighDanger && InterruptR->Enabled() && R->IsReady())
+		{
+			R->CastOnTarget(Args.Target);
 		}
 	}
 
-
-	void Interrupt(InterruptibleSpell const& Args)
+	void tear()
 	{
-		float endtime;
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, 860) && InterruptR->Enabled() && R->IsReady())
 		{
-			if (Args.Target->IsCastingImportantSpell(&endtime))
+			if (GEntityList->Player()->ManaPercent() >= ManaTear->GetFloat())
 			{
-				R->CastOnTarget(Args.Target, kHitChanceHigh);
-			}
+				if (TearQ->Enabled() && Q->IsReady() && (CountEnemiesNearMe(GPluginSDK, 1500) == 0) && (CountMinionsNearMe(GPluginSDK, 1000) == 0))
+				{
+					Q->CastOnPosition(GGame->CursorPosition());
 
+				}
+				if (TearW->Enabled() && W->IsReady() && (CountEnemiesNearMe(GPluginSDK, 1500) == 0) && (CountMinionsNearMe(GPluginSDK, 1000) == 0))
+				{
+					W->CastOnPosition(GGame->CursorPosition());
+
+				}
+			}
 		}
 	}
 
 	void Draw() const
 	{
-		if (DrawQRange->Enabled())
 		{
-			Vec4 color;
-			QColor->GetColor(&color);
+			if (DrawQRange->Enabled()) { GRender->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range()); }
 
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, Q->Range());
-		}
-		if (DrawWRange->Enabled())
-		{
-			Vec4 color;
-			WColor->GetColor(&color);
+			if (DrawWRange->Enabled()) { GRender->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()); }
 
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, W->Range());
-		}
-		if (DrawERange->Enabled())
-		{
-			Vec4 color;
-			EColor->GetColor(&color);
+			if (DrawERange->Enabled()) { GRender->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
 
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, E->Range());
-		}
-		if (DrawRRange->Enabled())
-		{
-			Vec4 color;
-			RColor->GetColor(&color);
-
-			GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), color, R->Range());
+			if (DrawRRange->Enabled()) { GRender->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), R->Range()); }
 		}
 	}
 };

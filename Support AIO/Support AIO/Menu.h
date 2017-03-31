@@ -13,6 +13,8 @@ IMenu* ESet;
 IMenu* RSet;
 
 IMenu* ComboMenu;
+IMenuOption* Survival;
+IMenuOption* Chase;
 IMenuOption* ComboQ;
 IMenuOption* ComboQflash;
 IMenuOption* ComboW;
@@ -94,6 +96,7 @@ IMenuOption* HealRhp;
 IMenuOption* MiscMana;
 IMenuOption* HealEMe;
 IMenuOption* InterruptW;
+IMenuOption* AAlevel;
 IMenuOption* AntiGapQ;
 IMenuOption* AntiGapW;
 IMenuOption* HealWenemy;
@@ -131,6 +134,7 @@ IMenuOption* DrawQFRange;
 IMenuOption* DrawRRange;
 IMenuOption* DrawERange;
 IMenuOption* DrawQmin;
+IMenuOption* AntiGapR;
 IMenuOption* DrawEmin;
 IMenuOption* DrawWRange;
 IMenuOption* FarmQ;
@@ -139,6 +143,7 @@ IMenuOption* SaveKey;
 IMenuOption* SaveE;
 IMenuOption* AntiGapE;
 IMenuOption* DrawDamage;
+IMenuOption* ComboPred;
 IMenuOption* LastQ;
 
 
@@ -152,6 +157,7 @@ std::map<int, IMenuOption*> ChampionUse;
 IMenu* KillstealMenu;
 IMenuOption* KSE;
 IMenuOption* KSR;
+IMenuOption* AAkey;
 IMenuOption* KSQ;
 IMenuOption* KSW;
 IMenuOption* SupportMode;
@@ -167,6 +173,8 @@ IUnit* Enemy;
 
 
 ISpell* Flash;
+
+int lastwcast;
 
 IEventManager* eventManager = nullptr;
 
