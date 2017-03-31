@@ -196,15 +196,35 @@ public:
 			if (AutoQ->Enabled())
 			{
 				IMenuOption * temp = BlacklistMenu->GetOption(Enemy->ChampionName());
-				if (Q->IsReady() && !temp->Enabled() && Q->Range())
+				if (ComboPred->GetInteger() == 0)
 				{
 					if (Enemy != nullptr)
 					{
+						if (Q->IsReady() && !temp->Enabled() && Enemy->IsValidTarget())
+						{
+							if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+								if (InSpellRange(Q, pred))
+									Q->CastOnPosition(pred);
+							}
+						}
 
-						Vec3 pred;
-						GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
-						if (InSpellRange(Q, pred))
-							Q->CastOnPosition(pred);
+					}
+				}
+				if (ComboPred->GetInteger() == 1)
+				{
+					if (Enemy != nullptr)
+					{
+						if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && !temp->Enabled() && Enemy->IsValidTarget())
+						{
+							if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+							{
+								Q->CastOnTarget(Enemy);
+							}
+						}
+
 					}
 				}
 			}
@@ -217,15 +237,35 @@ public:
 		for (auto Enemy : GEntityList->GetAllHeros(false, true))
 		{
 			IMenuOption * temp = BlacklistMenu->GetOption(Enemy->ChampionName());
-			if (Q->IsReady() && !temp->Enabled() && Q->Range())
+			if (ComboPred->GetInteger() == 0)
 			{
 				if (Enemy != nullptr)
 				{
+					if (Q->IsReady() && !temp->Enabled() && Enemy->IsValidTarget())
+					{
+						if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+							if (InSpellRange(Q, pred))
+								Q->CastOnPosition(pred);
+						}
+					}
 
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
-					if (InSpellRange(Q, pred))
-						Q->CastOnPosition(pred);
+				}
+			}
+			if (ComboPred->GetInteger() == 1)
+			{
+				if (Enemy != nullptr)
+				{
+					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && !temp->Enabled() && Enemy->IsValidTarget())
+					{
+						if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+						{
+							Q->CastOnTarget(Enemy);
+						}
+					}
+
 				}
 			}
 		}
@@ -246,10 +286,37 @@ public:
 				}
 				if (KSQ->Enabled() && Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && QDamage > Enemy->GetHealth())
 				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
-					if (InSpellRange(Q, pred))
-						Q->CastOnPosition(pred);
+					if (ComboPred->GetInteger() == 0)
+					{
+						if (Enemy != nullptr)
+						{
+							if (Q->IsReady() && Enemy->IsValidTarget())
+							{
+								if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+									if (InSpellRange(Q, pred))
+										Q->CastOnPosition(pred);
+								}
+							}
+
+						}
+					}
+					if (ComboPred->GetInteger() == 1)
+					{
+						if (Enemy != nullptr)
+						{
+							if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && Enemy->IsValidTarget())
+							{
+								if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+								{
+									Q->CastOnTarget(Enemy);
+								}
+							}
+
+						}
+					}
 				}
 
 			}

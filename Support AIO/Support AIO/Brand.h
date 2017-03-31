@@ -193,19 +193,13 @@ public:
 						{
 							if (HarassQMode->GetInteger() == 0)
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-								if (InSpellRange(Q, pred))
-									Q->CastOnPosition(pred);
+								Q->CastOnTarget(Enemy);
 							}
 							if (HarassQMode->GetInteger() == 1)
 							{
 								if (Enemy->HasBuff("brandablaze"))
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-									if (InSpellRange(Q, pred))
-										Q->CastOnPosition(pred);
+									Q->CastOnTarget(Enemy);
 								}
 							}
 						}
@@ -238,19 +232,13 @@ public:
 				{
 					if (HarassQMode->GetInteger() == 0)
 					{
-						Vec3 pred;
-						GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-						if (InSpellRange(Q, pred))
-							Q->CastOnPosition(pred);
+						Q->CastOnTarget(Enemy);
 					}
 					if (HarassQMode->GetInteger() == 1)
 					{
 						if (Enemy->HasBuff("brandablaze"))
 						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-							if (InSpellRange(Q, pred))
-								Q->CastOnPosition(pred);
+							Q->CastOnTarget(Enemy);
 						}
 					}
 				}
@@ -275,19 +263,13 @@ public:
 				{
 					if (HarassQMode->GetInteger() == 0)
 					{
-						Vec3 pred;
-						GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-						if (InSpellRange(Q, pred))
-							Q->CastOnPosition(pred);
+						Q->CastOnTarget(Enemy);
 					}
 					if (HarassQMode->GetInteger() == 1)
 					{
 						if (Enemy->HasBuff("brandablaze"))
 						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-							if (InSpellRange(Q, pred))
-								Q->CastOnPosition(pred);
+							Q->CastOnTarget(Enemy);
 						}
 					}
 				}
@@ -306,19 +288,13 @@ public:
 				{
 					if (HarassQMode->GetInteger() == 0)
 					{
-						Vec3 pred;
-						GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-						if (InSpellRange(Q, pred))
-							Q->CastOnPosition(pred);
+						Q->CastOnTarget(Enemy);
 					}
 					if (HarassQMode->GetInteger() == 1)
 					{
 						if (Enemy->HasBuff("brandablaze"))
 						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-							if (InSpellRange(Q, pred))
-								Q->CastOnPosition(pred);
+							Q->CastOnTarget(Enemy);
 						}
 					}
 				}
@@ -395,19 +371,13 @@ public:
 					{
 						if (ComboQMode->GetInteger() == 0)
 						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-							if (InSpellRange(Q, pred))
-								Q->CastOnPosition(pred);
+							Q->CastOnTarget(Enemy);
 						}
 						if (ComboQMode->GetInteger() == 1)
 						{
 							if (Enemy->HasBuff("brandablaze"))
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-								if (InSpellRange(Q, pred))
-									Q->CastOnPosition(pred);
+								Q->CastOnTarget(Enemy);
 							}
 						}
 
@@ -430,19 +400,13 @@ public:
 					{
 						if (ComboQMode->GetInteger() == 0)
 						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-							if (InSpellRange(Q, pred))
-								Q->CastOnPosition(pred);
+							Q->CastOnTarget(Enemy);
 						}
 						if (ComboQMode->GetInteger() == 1)
 						{
 							if (Enemy->HasBuff("brandablaze"))
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-								if (InSpellRange(Q, pred))
-									Q->CastOnPosition(pred);
+								Q->CastOnTarget(Enemy);
 							}
 						}
 					}
@@ -462,19 +426,13 @@ public:
 					{
 						if (ComboQMode->GetInteger() == 0)
 						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-							if (InSpellRange(Q, pred))
-								Q->CastOnPosition(pred);
+							Q->CastOnTarget(Enemy);
 						}
 						if (ComboQMode->GetInteger() == 1)
 						{
 							if (Enemy->HasBuff("brandablaze"))
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-								if (InSpellRange(Q, pred))
-									Q->CastOnPosition(pred);
+								Q->CastOnTarget(Enemy);
 							}
 						}
 					}
@@ -554,11 +512,7 @@ public:
 				{
 					if (KSQ->Enabled() && Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && QDamage > Enemy->GetHealth())
 					{
-
-						Vec3 pred;
-						GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-						if (InSpellRange(Q, pred))
-							Q->CastOnPosition(pred);
+						Q->CastOnTarget(Enemy);
 					}
 					if (KSW->Enabled() && W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()) && WDamage > Enemy->GetHealth())
 					{
