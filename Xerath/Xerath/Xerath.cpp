@@ -70,13 +70,13 @@ void LoadSpells()
 {
 	Q = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, false, false, kCollidesWithNothing);
 	Q->SetSkillshot(0.6f, 100.f, 1000000000000000000.f, 1550.f);
-	Q->SetCharged(750, 1450, 1.5);
+	Q->SetCharged(800, 1440, 1.6);
 	W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, true, false, kCollidesWithNothing);
 	W->SetSkillshot(0.2f, 100, FLT_MAX, 1100);
 	E = GPluginSDK->CreateSpell2(kSlotE, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall | kCollidesWithMinions));
-	E->SetSkillshot(0.25, 50, 5000, 1050);
-	R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, false, false, kCollidesWithNothing);
-	R->SetOverrideDelay(0.1);
+	E->SetSkillshot(0.25f, 90, 5000, 1000);
+	R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, true, false, kCollidesWithNothing);
+	R->SetOverrideDelay(0.6);
 	R->SetOverrideRadius(80);
 	R->SetOverrideSpeed(FLT_MAX);
 }
@@ -229,7 +229,7 @@ void RCastAuto()
 				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 				{
 					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.1f, true, pred);
+					GPrediction->GetFutureUnitPosition(target, 0.15f, true, pred);
 					R->CastOnPosition(pred);
 				}
 			}
@@ -245,7 +245,7 @@ void RCastAuto()
 				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 				{
 					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.1f, true, pred);
+					GPrediction->GetFutureUnitPosition(target, 0.15f, true, pred);
 					R->CastOnPosition(pred);
 				}
 			}
@@ -258,7 +258,7 @@ void RCastAuto()
 				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 				{
 					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.1f, true, pred);
+					GPrediction->GetFutureUnitPosition(target, 0.15f, true, pred);
 					R->CastOnPosition(pred);
 				}
 			}
@@ -279,7 +279,7 @@ void RCastTapo()
 				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 				{
 					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.1f, true, pred);
+					GPrediction->GetFutureUnitPosition(target, 0.15f, true, pred);
 					R->CastOnPosition(pred);
 				}
 			}
@@ -296,7 +296,7 @@ void RCastTapo()
 				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 				{
 					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.1f, true, pred);
+					GPrediction->GetFutureUnitPosition(target, 0.15f, true, pred);
 					R->CastOnPosition(pred);
 				}
 			}
@@ -313,7 +313,7 @@ void RCastTapo()
 				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 				{
 					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.1f, true, pred);
+					GPrediction->GetFutureUnitPosition(target, 0.15f, true, pred);
 					R->CastOnPosition(pred);
 				}
 			}
@@ -399,7 +399,7 @@ void Combo()
 			if (W->IsReady() && W->Range())
 			{
 				Vec3 EstimatedEnemyPos;
-				GPrediction->GetFutureUnitPosition(target, 0.2f, true, EstimatedEnemyPos);
+				GPrediction->GetFutureUnitPosition(target, 0.15f, true, EstimatedEnemyPos);
 				W->CastOnPosition(EstimatedEnemyPos);
 
 			}
@@ -620,6 +620,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
 	GEventManager->AddEventHandler(kEventOnGapCloser, OnGapCloser);
+	GEventManager->AddEventHandler(kEventOnInterruptible, OnInterruptible);
 	GGame->PrintChat("<b><font color=\"#FFFFFF\">Xerath<b><font color=\"#f8a101\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
 
 }
@@ -630,5 +631,6 @@ PLUGIN_API void OnUnload()
 	GEventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->RemoveEventHandler(kEventOnRender, OnRender);
 	GEventManager->RemoveEventHandler(kEventOnGapCloser, OnGapCloser);
+	GEventManager->RemoveEventHandler(kEventOnInterruptible, OnInterruptible);
 	GGame->PrintChat("<b><font color=\"#FFFFFF\">Xerath<b><font color=\"#f8a101\"> by</font></b> Kornis<font color=\"#FF0000\"> - Unloaded</font></b>");
 }
