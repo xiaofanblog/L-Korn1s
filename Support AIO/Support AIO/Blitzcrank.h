@@ -210,13 +210,6 @@ public:
 								{
 									Q->CastOnTarget(Enemy, kHitChanceDashing);
 								}
-								Vec3 pred;
-								if (outputfam.HitChance >= kHitChanceHigh)
-								{
-									GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
-									if (InSpellRange(Q, pred))
-										Q->CastOnPosition(pred);
-								}
 							}
 						}
 
