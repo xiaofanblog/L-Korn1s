@@ -42,7 +42,12 @@ public:
 			KSRmin = KillstealMenu->AddInteger("R Only if Bounces on", 1, 5, 2);
 		}
 
-
+		FarmMenu = MainMenu->AddMenu("Farm");
+		{
+			FarmMana = FarmMenu->AddInteger("Mana Percent", 10, 100, 50);
+			FarmW = FarmMenu->CheckBox("Use W", true);
+			FarmWmin = FarmMenu->AddInteger("Min Minions for W", 1, 6, 3);
+		}
 		DrawingMenu = MainMenu->AddMenu("Drawings");
 		{
 
@@ -492,6 +497,28 @@ public:
 						}
 					}
 
+				}
+			}
+		}
+	}
+	void Farm()
+	{
+		if (!SupportMode->Enabled() && FarmW->Enabled() && GEntityList->Player()->ManaPercent() >= FarmMana->GetInteger())
+		{
+			for (auto minion : GEntityList->GetAllMinions(false, true, false))
+			{
+				if (minion != nullptr && minion->IsEnemy(GEntityList->Player()) && !minion->IsDead())
+				{
+					if (W->IsReady() && GEntityList->Player()->IsValidTarget(minion, W->Range()))
+					{
+						Vec3 pos;
+						int Whit;
+						GPrediction->FindBestCastPosition(W->Range(), 240, false, true, false, pos, Whit, W->GetDelay());
+						if (Whit >= FarmWmin->GetInteger())
+						{
+							W->CastOnPosition(pos);
+						}
+					}
 				}
 			}
 		}

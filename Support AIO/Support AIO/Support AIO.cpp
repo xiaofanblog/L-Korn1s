@@ -775,6 +775,10 @@ public:
 		{
 			BrandBase().Harass();
 		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			BrandBase().Farm();
+		}
 	}
 
 	void OnGapCloser(GapCloserSpell const& Args) override
@@ -930,6 +934,10 @@ public:
 		if (GetAsyncKeyState(QWQMouse->GetInteger()) & 0x8000)
 		{
 			KarmaBase().RQ();
+		}
+		if (GetAsyncKeyState(Survival->GetInteger()) & 0x8000)
+		{
+			KarmaBase().ComboSurvive();
 		}
 
 	}

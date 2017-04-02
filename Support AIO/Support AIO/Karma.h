@@ -29,6 +29,7 @@ public:
 		DrawWRange = DrawingMenu->CheckBox("Draw W", false);
 		DrawERange = DrawingMenu->CheckBox("Draw E", false);
 		Chase = MainMenu->AddKey("Chase Combo", 'T');
+		Survival = MainMenu->AddKey("Survive Combo", 'Z');
 		QWQMouse = MainMenu->AddKey("RQ to Mouse", 'G');
 	}
 	int GetAlliesInRange(IUnit* Source, float range)
@@ -52,6 +53,7 @@ public:
 		}
 		return AlliesInRange;
 	}
+
 
 	void AAdisable()
 	{
@@ -105,6 +107,57 @@ public:
 		return target->HasBuff("KarmaMantra");
 	}
 
+	void ComboSurvive()
+	{
+		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		if (R->IsReady())
+		{
+			auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
+			if (Target != nullptr && Target->IsValidTarget() && Target->IsHero() && Target->IsValidTarget(GEntityList->Player(), W->Range()))
+			{
+				if (GEntityList->Player()->IsValidTarget(Target, W->Range()))
+				{
+					R->CastOnPlayer();
+				}
+			}
+		}
+		if (W->IsReady())
+		{
+			auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
+			if (Target != nullptr && Target->IsValidTarget() && Target->IsHero() && Target->IsValidTarget(GEntityList->Player(), W->Range()))
+			{
+				if (GEntityList->Player()->IsValidTarget(Target, W->Range()))
+				{
+					W->CastOnTarget(Target);
+				}
+			}
+		}
+		if (E->IsReady() && !GEntityList->Player()->HasBuff("KarmaMantra"))
+		{
+			auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
+			{
+				if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+				{
+					if (GEntityList->Player()->IsValidTarget(Target, W->Range()))
+					{
+						E->CastOnPlayer();
+					}
+				}
+			}
+		}
+		if (Q->IsReady() && !GEntityList->Player()->HasBuff("KarmaMantra"))
+		{
+			auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+			if (Target != nullptr && Target->IsValidTarget() && Target->IsHero())
+			{
+				if (GEntityList->Player()->IsValidTarget(Target, Q->Range()))
+				{
+					Q->CastOnTarget(Target);
+				}
+			}
+		}
+
+	}
 	void ComboChase()
 	{
 		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
@@ -159,9 +212,6 @@ public:
 				}
 			}
 		}
-
-
-
 	}
 	void Combo()
 	{
