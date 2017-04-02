@@ -204,10 +204,19 @@ public:
 						{
 							if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
 							{
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+								if (outputfam.HitChance == kHitChanceDashing)
+								{
+									Q->CastOnTarget(Enemy, kHitChanceDashing);
+								}
 								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
-								if (InSpellRange(Q, pred))
-									Q->CastOnPosition(pred);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+									if (InSpellRange(Q, pred))
+										Q->CastOnPosition(pred);
+								}
 							}
 						}
 
@@ -221,7 +230,19 @@ public:
 						{
 							if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
 							{
-								Q->CastOnTarget(Enemy);
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+								if (outputfam.HitChance == kHitChanceDashing)
+								{
+									Q->CastOnTarget(Enemy, kHitChanceDashing);
+								}
+								Vec3 pred;
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+									if (InSpellRange(Q, pred))
+										Q->CastOnPosition(pred);
+								}
 							}
 						}
 

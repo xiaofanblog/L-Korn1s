@@ -146,6 +146,10 @@ IMenuOption* DrawDamage;
 IMenuOption* ComboPred;
 IMenuOption* LastQ;
 
+IMenu* ShieldMenu;
+IMenuOption* ShieldE;
+IMenuOption* ShieldKill;
+IMenuOption* ShieldHP;
 
 IUnit* minion;
 std::vector<IUnit*> minions;
@@ -159,10 +163,12 @@ IMenuOption* KSE;
 IMenuOption* KSR;
 IMenuOption* AAkey;
 IMenuOption* KSQ;
+IMenuOption* ComboQdash;
 IMenuOption* KSW;
 IMenuOption* SupportMode;
 IMenuOption* HarassAA;
 IMenuOption* KSRmin;
+IMenuOption* ShieldAA;
 
 ISpell2* Q;
 ISpell2* W;

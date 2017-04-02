@@ -13,6 +13,7 @@ public:
 		ComboMenu = MainMenu->AddMenu("Combo");
 		{
 			ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
+			ComboQdash = ComboMenu->CheckBox("Auto Q on dash", true);
 			ComboW = ComboMenu->CheckBox("Use W in Combo", true);
 			ComboWenable = ComboMenu->CheckBox("W Only if Immobile", true);
 			ComboR = ComboMenu->CheckBox("Use R in Combo", true);
@@ -87,6 +88,32 @@ public:
 			}
 		}
 		return AlliesInRange;
+	}
+	void AutoQd()
+	{
+		for (auto Enemy : GEntityList->GetAllHeros(false, true))
+		{
+			if (ComboQdash->Enabled())
+			{
+				if (Enemy != nullptr)
+				{
+					if (Q->IsReady() && Enemy->IsValidTarget())
+					{
+						if (Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+						{
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance == kHitChanceDashing)
+							{
+								Q->CastOnTarget(Enemy, kHitChanceDashing);
+							}
+						}
+					}
+
+				}
+			}
+
+		}
 	}
 
 	void AAdisable()

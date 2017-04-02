@@ -335,6 +335,7 @@ public:
 		NamiBase().AutoE();
 		NamiBase().Healing();
 		NamiBase().AAdisable();
+		NamiBase().AutoQd();
 		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
 			NamiBase().Combo();
@@ -408,6 +409,7 @@ public:
 		MorganaBase().Killsteal();
 		MorganaBase().AAdisable();
 		MorganaBase().AutoLogic();
+		MorganaBase().AutoQd();
 		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
 			MorganaBase().Combo();
@@ -683,7 +685,7 @@ private:
 		GGame->PrintChat("<b><font color = \"#f8a101\">Alistar</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 	}
 };
-/*class Janna : public zHero
+class Janna : public zHero
 {
 public:
 	void OnLoad() override
@@ -745,7 +747,7 @@ private:
 	{
 		GGame->PrintChat("<b><font color = \"#f8a101\">Janna</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 	}
-};*/
+};
 class Brand : public zHero
 {
 public:
@@ -1049,8 +1051,8 @@ void LoadChampion()
 		yHero = new Braum;
 	else if (playerHero == "Sona")
 		yHero = new Sona;
-	//else if (playerHero == "Janna")
-		//yHero = new Janna;
+	else if (playerHero == "Janna")
+		yHero = new Janna;
 	else if (playerHero == "Brand")
 		yHero = new Brand;
 	else if (playerHero == "Malzahar")
@@ -1072,7 +1074,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	LoadChampion();
 	yHero->OnLoad();
 	std::string playerHero = GEntityList->Player()->ChampionName();
-	/*if (playerHero == "Janna")
+	if (playerHero == "Janna")
 	{
 		eventManager = PluginSDK->GetEventManager();
 		eventmanager::RegisterEvents(eventManager);
@@ -1080,7 +1082,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 		{
 			JannaBase().AutoE();
 		});
-	}*/
+	}
 
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
@@ -1092,7 +1094,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnPauseAnimation, OnPauseAnimation);
 	GEventManager->AddEventHandler(kEventOnPreCast, OnPreCast);
 	GEventManager->AddEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
-
+	
 
 }
 
@@ -1100,7 +1102,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 PLUGIN_API void OnUnload()
 {
 	MainMenu->Remove();
-	//eventmanager::UnregisterEvents(eventManager);
+	eventmanager::UnregisterEvents(eventManager);
 	GEventManager->RemoveEventHandler(kEventOnRender, OnRender);
 	GEventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->RemoveEventHandler(kEventOnGapCloser, OnGapCloser);
