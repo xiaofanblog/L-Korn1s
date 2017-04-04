@@ -70,14 +70,14 @@ void LoadSpells()
 {
 	Q = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, false, false, kCollidesWithNothing);
 	Q->SetSkillshot(0.6f, 100.f, 1000000000000000000.f, 1550.f);
-	Q->SetCharged(800, 1440, 1.6);
+	Q->SetCharged(700, 1440, 1.5);
 	W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, true, false, kCollidesWithNothing);
 	W->SetSkillshot(0.2f, 100, FLT_MAX, 1100);
 	E = GPluginSDK->CreateSpell2(kSlotE, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall | kCollidesWithMinions));
-	E->SetSkillshot(0.25f, 90, 5000, 1000);
+	E->SetSkillshot(0.f, 60, 1400, 950);
 	R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, true, false, kCollidesWithNothing);
-	R->SetOverrideDelay(0.6);
-	R->SetOverrideRadius(80);
+	R->SetOverrideDelay(0.2);
+	R->SetOverrideRadius(130);
 	R->SetOverrideSpeed(FLT_MAX);
 }
 void Menu()
@@ -127,9 +127,9 @@ void Menu()
 		FarmWmin = FarmMenu->AddInteger("Min minions for W", 1, 6, 3);
 
 	}
-	Tip = MainMenu->AddMenu("USE G FOR FORCE Q");
+	Tip = MainMenu->AddMenu("Semi Q");
 	{
-		ForceQ = Tip->CheckBox("FORCE Q", true);
+		ForceQ = Tip->CheckBox("Use Semi Q", true);
 	}
 }
 
@@ -229,8 +229,10 @@ void RCastAuto()
 				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 				{
 					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.15f, true, pred);
+					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
 					R->CastOnPosition(pred);
+					
+
 				}
 			}
 		}
@@ -245,7 +247,7 @@ void RCastAuto()
 				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 				{
 					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.15f, true, pred);
+					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
 					R->CastOnPosition(pred);
 				}
 			}
@@ -258,7 +260,7 @@ void RCastAuto()
 				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 				{
 					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.15f, true, pred);
+					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
 					R->CastOnPosition(pred);
 				}
 			}
@@ -279,7 +281,7 @@ void RCastTapo()
 				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 				{
 					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.15f, true, pred);
+					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
 					R->CastOnPosition(pred);
 				}
 			}
@@ -296,7 +298,7 @@ void RCastTapo()
 				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 				{
 					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.15f, true, pred);
+					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
 					R->CastOnPosition(pred);
 				}
 			}
@@ -313,7 +315,7 @@ void RCastTapo()
 				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 				{
 					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.15f, true, pred);
+					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
 					R->CastOnPosition(pred);
 				}
 			}
@@ -324,7 +326,7 @@ void RCastTapo()
 
 void ForcingQ()
 {
-	if (!GGame->IsChatOpen())
+	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
 	{
 		GGame->IssueOrder(Player, kMoveTo, GGame->CursorPosition());
 		if (ForceQ->Enabled())
@@ -336,9 +338,9 @@ void ForcingQ()
 				{
 					if (GetEnemiesInRange(Q->Range()) >= 1)
 					{
-						Vec3 EstimatedEnemyPos;
-						GPrediction->GetFutureUnitPosition(target, 0.15f, true, EstimatedEnemyPos);
-						Q->CastOnPosition(EstimatedEnemyPos);
+							Vec3 EstimatedEnemyPos;
+							GPrediction->GetFutureUnitPosition(target, 0.15f, true, EstimatedEnemyPos);
+							Q->CastOnPosition(EstimatedEnemyPos);
 							
 					}
 				}
@@ -354,6 +356,16 @@ void ForcingQ()
 	}
 }
 
+bool CanMove(IUnit* target)
+{
+	if (target->HasBuffOfType(BUFF_Stun) || target->HasBuffOfType(BUFF_Snare) || target->HasBuffOfType(BUFF_Fear) || target->HasBuffOfType(BUFF_Knockup) ||
+		target->HasBuff("Recall") || target->HasBuffOfType(BUFF_Knockback) || target->HasBuffOfType(BUFF_Charm) || target->HasBuffOfType(BUFF_Taunt) || target->HasBuffOfType(BUFF_Suppression))
+	{
+		return true;
+	}
+	else
+		return false;
+}
 
 void Combo()
 {
@@ -374,21 +386,53 @@ void Combo()
 	std::string sc = std::to_string(E->Range());
 	char const *pcharc = sc.c_str();
 	GGame->PrintChat(pcharc);*/
+	if (ComboQ->Enabled())
+	{
+		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+		if (!CanMove(GEntityList->Player()) && target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead() && !target->IsDashing())
+		{
 
+			if (Player->HasBuff("XerathArcanopulseChargeUp"))
+			{
+				lastqcast = 0;
+				if (GetEnemiesInRange(Q->Range()) >= 1)
+				{
+					Vec3 EstimatedEnemyPos;
+					GPrediction->GetFutureUnitPosition(target, 0.15f, true, EstimatedEnemyPos);
+					Q->CastOnPosition(EstimatedEnemyPos);
+					lastqcast = 0;
+				}
+
+			}
+			if (!Player->HasBuff("XerathArcanopulseChargeUp"))
+			{
+				if (GetEnemiesInRange(Q->Range()) >= 1)
+				{
+					Q->StartCharging();
+				}
+			}
+		}
+	}
 	if (ComboE->Enabled())
 	{
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
-		if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead() && !target->IsDashing())
+		if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 		{
-			if (E->IsReady() && E->Range())
+			if (E->IsReady())
 			{
-				E->CastOnTarget(target);
+				AdvPredictionOutput outputfam;
+				E->RunPrediction(target, false, kCollidesWithMinions, &outputfam);
+				if (outputfam.HitChance >= kHitChanceHigh)
+				{
+					E->CastOnTarget(target, kHitChanceHigh);
+				}
+			}
 				//Vec3 EstimatedEnemyPos;
 				//GPrediction->GetFutureUnitPosition(target, 0.2f, true, EstimatedEnemyPos);
 				//GPrediction->SimulateMissile(GEntityList->Player()->ServerPosition(), target, 100000000000, 60.f, 1050, 0.25f, kCollidesWithMinions, EstimatedEnemyPos);
 				//E->CastOnPosition(EstimatedEnemyPos);
 
-			}
+			
 		}
 	}
 	if (ComboW->Enabled())
@@ -406,62 +450,6 @@ void Combo()
 		}
 	}
 		
-	if (ComboQ->Enabled())
-	{
-		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
-		if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead() && !target->IsDashing())
-		{
-			if (Player->HasBuff("XerathArcanopulseChargeUp"))
-			{
-				lastqcast = 0;
-				if (GetEnemiesInRange(Q->Range()) >= 1)
-				{
-					Vec3 EstimatedEnemyPos;
-					GPrediction->GetFutureUnitPosition(target, 0.15f, true, EstimatedEnemyPos);
-					Q->CastOnPosition(EstimatedEnemyPos);
-					lastqcast = 0;
-				}
-
-			}
-			if (!Player->HasBuff("XerathArcanopulseChargeUp"))
-			{
-				lastqcast = 0;
-				if (Q->IsReady() && !W->IsReady())
-				{
-					if (lastqcast == 0)
-					{
-						lastqcast = GGame->TickCount() + 600;
-					}
-					if (lastqcast != 0 && GGame->TickCount() > lastqcast)
-					{
-						Q->StartCharging();
-						lastqcast = 0;
-					}
-				}
-				
-				else if (Q->IsReady() && !E->IsReady() && !W->IsReady() || W->IsReady())
-				{
-					if (lastqcast == 0)
-					{
-						lastqcast = GGame->TickCount() + 600;
-					}
-					if (lastqcast != 0 && GGame->TickCount() > lastqcast)
-					{
-						Q->StartCharging();
-						lastqcast = 0;
-					}
-				}
-				if (Q->IsReady() && !W->IsReady() && !E->IsReady())
-				{
-					Q->StartCharging();
-				}
-				if (Q->IsReady() && (target->GetPosition() - Player->GetPosition()).Length() > W->Range())
-				{
-					Q->StartCharging();
-				}
-			}
-		}
-	}
 }
 
 void Mixed()
@@ -475,9 +463,9 @@ void Mixed()
 			{
 				if (GetEnemiesInRange(Q->Range()) >= 1)
 				{
-					Vec3 EstimatedEnemyPos;
-					GPrediction->GetFutureUnitPosition(target, 0.15f, true, EstimatedEnemyPos);
-					Q->CastOnPosition(EstimatedEnemyPos);
+						Vec3 EstimatedEnemyPos;
+						GPrediction->GetFutureUnitPosition(target, 0.15f, true, EstimatedEnemyPos);
+						Q->CastOnPosition(EstimatedEnemyPos);
 				}
 			}
 			if (!Player->HasBuff("XerathArcanopulseChargeUp"))
@@ -509,17 +497,6 @@ int GetMinionsInRange(float range)
 		}
 	}
 	return minionsinrange;
-}
-
-bool CanMove(IUnit* target)
-{
-	if (target->HasBuffOfType(BUFF_Stun) || target->HasBuffOfType(BUFF_Snare) || target->HasBuffOfType(BUFF_Fear) || target->HasBuffOfType(BUFF_Knockup) ||
-		target->HasBuff("Recall") || target->HasBuffOfType(BUFF_Knockback) || target->HasBuffOfType(BUFF_Charm) || target->HasBuffOfType(BUFF_Taunt) || target->HasBuffOfType(BUFF_Suppression))
-	{
-		return true;
-	}
-	else
-		return false;
 }
 
 void AutoELogic()
@@ -622,6 +599,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnGapCloser, OnGapCloser);
 	GEventManager->AddEventHandler(kEventOnInterruptible, OnInterruptible);
 	GGame->PrintChat("<b><font color=\"#FFFFFF\">Xerath<b><font color=\"#f8a101\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
+	GGame->PrintChat("<b><font color=\"#7FFF00\">Use SPred for Best Experience!</font></b>");
 
 }
 
