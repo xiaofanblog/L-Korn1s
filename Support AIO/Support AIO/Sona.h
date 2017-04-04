@@ -7,7 +7,7 @@ public:
 
 	void DrawMenu()
 	{
-		MainMenu = GPluginSDK->AddMenu("Sona :: Support AIO");
+		MainMenu = GPluginSDK->AddMenu("Sona - Support AIO");
 		ComboMenu = MainMenu->AddMenu("Combo");
 		{
 			ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);

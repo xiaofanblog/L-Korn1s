@@ -1,6 +1,7 @@
 #include "PluginSDK.h"
 #include "Blitzcrank.h"
 #include "Leona.h"
+#include "Tahm Kench.h"
 #include "Morgana.h"
 #include "Sona.h"
 #include "Nami.h"
@@ -983,6 +984,81 @@ private:
 		GGame->PrintChat("<b><font color = \"#f8a101\">Karma</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 	}
 };
+class TahmKench : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		TahmBase().DrawMenu();
+		TahmBase().LoadSpells();
+	}
+
+	void OnRender() override
+	{
+		TahmBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		TahmBase().Auto();
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			TahmBase().Combo();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			TahmBase().Push();
+		}
+
+		if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
+		{
+			TahmBase().Harass();
+		}
+		TahmBase().AutoSmth();
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+		TahmBase().AntiGapclose(Args);
+	}
+
+
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+		TahmBase().Interrupt(Args);
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+	}
+
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+	}
+
+	void OnCreateObject(IUnit* Source) override
+	{
+		//none
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Tahm Kench</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
 
 
 
@@ -1067,6 +1143,8 @@ void LoadChampion()
 		yHero = new Malzahar;
 	else if (playerHero == "Karma")
 		yHero = new Karma;
+	else if (playerHero == "TahmKench")
+		yHero = new TahmKench;
 	else
 	{
 		GGame->PrintChat("<b><font color=\"#FFFFFF\">This champion isn't supported.</b></font>");
@@ -1091,7 +1169,15 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 			JannaBase().AutoE();
 		});
 	}
-
+	if (playerHero == "TahmKench")
+	{
+		eventManager = PluginSDK->GetEventManager();
+		eventmanager::RegisterEvents(eventManager);
+		eventmanager::GameEventManager::RegisterUpdateEvent([&](event_id_t id) -> void
+		{
+			TahmBase().AutoSmth();
+		});
+	}
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->AddEventHandler(kEventOnGapCloser, OnGapCloser);
@@ -1110,7 +1196,6 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 PLUGIN_API void OnUnload()
 {
 	MainMenu->Remove();
-	eventmanager::UnregisterEvents(eventManager);
 	GEventManager->RemoveEventHandler(kEventOnRender, OnRender);
 	GEventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->RemoveEventHandler(kEventOnGapCloser, OnGapCloser);
@@ -1121,4 +1206,5 @@ PLUGIN_API void OnUnload()
 	GEventManager->RemoveEventHandler(kEventOnPauseAnimation, OnPauseAnimation);
 	GEventManager->RemoveEventHandler(kEventOnPreCast, OnPreCast);
 	GEventManager->RemoveEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
+	eventmanager::UnregisterEvents(eventManager);
 }
