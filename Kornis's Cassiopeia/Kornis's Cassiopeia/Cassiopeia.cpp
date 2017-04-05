@@ -276,13 +276,13 @@ void Combo()
 						{
 							AdvPredictionOutput outputfam;
 							Q->RunPrediction(Qtarget, true, kCollidesWithNothing, &outputfam);
-							if (outputfam.HitChance >= kHitChanceHigh && outputfam.HitChance != kHitChanceDashing)
+							if (outputfam.HitChance >= kHitChanceHigh)
 							{
 								Vec3 pred;
 								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
 								Q->CastOnPosition(pred);
 							}
-							if (outputfam.HitChance == kHitChanceDashing)
+							else if (outputfam.HitChance == kHitChanceDashing)
 							{
 								Vec3 pred;
 								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
@@ -300,13 +300,13 @@ void Combo()
 						{
 							AdvPredictionOutput outputfam;
 							Q->RunPrediction(Qtarget, false, kCollidesWithNothing, &outputfam);
-							if (outputfam.HitChance >= kHitChanceHigh && outputfam.HitChance != kHitChanceDashing)
+							if (outputfam.HitChance >= kHitChanceHigh)
 							{
 								Vec3 pred;
 								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
 								Q->CastOnPosition(pred);
 							}
-							if (outputfam.HitChance == kHitChanceDashing)
+							else if (outputfam.HitChance == kHitChanceDashing)
 							{
 								Vec3 pred;
 								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
@@ -362,13 +362,13 @@ void Combo()
 						{
 							AdvPredictionOutput outputfam;
 							Q->RunPrediction(Qtarget, false, kCollidesWithNothing, &outputfam);
-							if (outputfam.HitChance >= kHitChanceHigh && outputfam.HitChance != kHitChanceDashing)
+							if (outputfam.HitChance >= kHitChanceHigh)
 							{
 								Vec3 pred;
 								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
 								Q->CastOnPosition(pred);
 							}
-							if (outputfam.HitChance == kHitChanceDashing)
+							else if (outputfam.HitChance == kHitChanceDashing)
 							{
 								Vec3 pred;
 								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
@@ -385,13 +385,13 @@ void Combo()
 						{
 							AdvPredictionOutput outputfam;
 							Q->RunPrediction(Qtarget, false, kCollidesWithNothing, &outputfam);
-							if (outputfam.HitChance >= kHitChanceHigh && outputfam.HitChance != kHitChanceDashing)
+							if (outputfam.HitChance >= kHitChanceHigh)
 							{
 								Vec3 pred;
 								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
 								Q->CastOnPosition(pred);
 							}
-							if (outputfam.HitChance == kHitChanceDashing)
+							else if (outputfam.HitChance == kHitChanceDashing)
 							{
 								Vec3 pred;
 								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
@@ -435,13 +435,13 @@ void Combo()
 						{
 							AdvPredictionOutput outputfam;
 							Q->RunPrediction(Qtarget, false, kCollidesWithNothing, &outputfam);
-							if (outputfam.HitChance >= kHitChanceHigh && outputfam.HitChance != kHitChanceDashing)
+							if (outputfam.HitChance >= kHitChanceHigh)
 							{
 								Vec3 pred;
 								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
 								Q->CastOnPosition(pred);
 							}
-							if (outputfam.HitChance == kHitChanceDashing)
+							else if (outputfam.HitChance == kHitChanceDashing)
 							{
 								Vec3 pred;
 								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
@@ -458,13 +458,13 @@ void Combo()
 						{
 							AdvPredictionOutput outputfam;
 							Q->RunPrediction(Qtarget, false, kCollidesWithNothing, &outputfam);
-							if (outputfam.HitChance >= kHitChanceHigh && outputfam.HitChance != kHitChanceDashing)
+							if (outputfam.HitChance >= kHitChanceHigh)
 							{
 								Vec3 pred;
 								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
 								Q->CastOnPosition(pred);
 							}
-							if (outputfam.HitChance == kHitChanceDashing)
+							else if (outputfam.HitChance == kHitChanceDashing)
 							{
 								Vec3 pred;
 								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
@@ -548,6 +548,7 @@ void AutoQdash()
 						{
 							Q->CastOnTarget(Enemy, kHitChanceDashing);
 						}
+						else return;
 					}
 				}
 
@@ -614,13 +615,13 @@ void Mixed()
 			{
 				AdvPredictionOutput outputfam;
 				Q->RunPrediction(target, false, kCollidesWithNothing, &outputfam);
-				if (outputfam.HitChance >= kHitChanceHigh && outputfam.HitChance != kHitChanceDashing)
+				if (outputfam.HitChance >= kHitChanceHigh)
 				{
 					Vec3 pred;
 					GPrediction->GetFutureUnitPosition(target, 0.3f, true, pred);
 					Q->CastOnPosition(pred);
 				}
-				if (outputfam.HitChance == kHitChanceDashing)
+				else if (outputfam.HitChance == kHitChanceDashing)
 				{
 					Vec3 pred;
 					GPrediction->GetFutureUnitPosition(target, 0.3f, true, pred);
@@ -645,13 +646,13 @@ void Killsteal()
 			{
 				AdvPredictionOutput outputfam;
 				Q->RunPrediction(Enemy, false, kCollidesWithNothing, &outputfam);
-				if (outputfam.HitChance >= kHitChanceHigh && outputfam.HitChance != kHitChanceDashing)
+				if (outputfam.HitChance >= kHitChanceHigh)
 				{
 					Vec3 pred;
 					GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
 					Q->CastOnPosition(pred);
 				}
-				if (outputfam.HitChance == kHitChanceDashing)
+				else if (outputfam.HitChance == kHitChanceDashing)
 				{
 					Vec3 pred;
 					GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
@@ -729,14 +730,33 @@ void Farm()
 }
 void _OnOrbwalkPreAttack(IUnit* minion)
 {
-	auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE);
 	for (auto minion : GEntityList->GetAllMinions(false, true, false))
 	{
-		if(FarmETypeChoose->GetInteger() == 0)
+		if (minion->IsCreep() || minion->IsJungleCreep())
 		{
-			if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+			auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE);
+			if (FarmETypeChoose->GetInteger() == 0)
 			{
-				if (FarmELH->Enabled() && !FarmE->Enabled() && GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
+				if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+				{
+					if (FarmELH->Enabled() && !FarmE->Enabled() && GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
+					{
+						if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
+						{
+							if (minion->GetHealth() < EDamage + 100 && Player->GetMana() > E->ManaCost())
+							{
+								if (minion != nullptr && minion->IsCreep())
+								{
+									GOrbwalking->DisableNextAttack();
+								}
+							}
+						}
+					}
+				}
+			}
+			if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
+			{
+				if (LastE->Enabled() && GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
 				{
 					if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
 					{
@@ -751,25 +771,9 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 				}
 			}
 		}
-		if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
-		{
-			if (LastE->Enabled() && GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
-			{
-				if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
-				{
-					if (minion->GetHealth() < EDamage + 100 && Player->GetMana() > E->ManaCost())
-					{
-						if (minion != nullptr && minion->IsCreep())
-						{
-							GOrbwalking->DisableNextAttack();
-						}
-					}
-				}
-			}
-		}
 	}
-}
 
+}
 void JungleClear()
 {
 	for (auto Minion : GEntityList->GetAllMinions(false, false, true))
