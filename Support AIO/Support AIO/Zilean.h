@@ -24,7 +24,7 @@ public:
 			RSet = ComboMenu->AddMenu("R settings");
 			ComboRenable = RSet->CheckBox("Use R", true);
 			//ComboRkills = RSet->CheckBox("Auto R if damage kills Ally", true);
-			ComboRhp = RSet->AddInteger("Use R if HP <", 5, 30, 15);
+			ComboRhp = RSet->AddInteger("Use R if HP <", 5, 100, 15);
 			QWQMouse = ComboMenu->AddKey("QWQ to Mouse", 'T');
 			SupportMode = ComboMenu->CheckBox("Support Mode", true);
 
@@ -270,7 +270,7 @@ public:
 		}
 		for (auto Ally : GEntityList->GetAllHeros(true, false))
 		{
-			if (Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), R->Range()))
+			if (!Ally->IsRecalling() && Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), R->Range()) && !Ally->IsDead() && !GUtility->IsPositionInFountain(Ally->GetPosition(), true, false))
 			{
 				if (ComboRenable->Enabled() && R->Range() && R->IsReady())
 				{
@@ -281,13 +281,13 @@ public:
 						R->CastOnTarget(Ally);
 					}*/
 				}
-				if (ComboRhp->GetInteger() > Ally->HealthPercent() && R->Range() && R->IsReady())
+				if (ComboRhp->GetInteger() >= Ally->HealthPercent() && R->Range() && R->IsReady())
 				{
 					R->CastOnTarget(Ally);
 				}
 			}
 		}
-		if (ComboRhp->GetInteger() > GEntityList->Player()->HealthPercent() && R->Range() && R->IsReady())
+		if (!GEntityList->Player()->IsRecalling() &&ComboRhp->GetInteger() >= GEntityList->Player()->HealthPercent() && R->Range() && R->IsReady() && !GEntityList->Player()->IsDead() && !GUtility->IsPositionInFountain(GEntityList->Player()->GetPosition(), true, false))
 		{
 			R->CastOnPlayer();
 		}

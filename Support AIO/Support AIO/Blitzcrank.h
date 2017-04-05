@@ -24,7 +24,7 @@ public:
 			AutoQ = HookMenu->CheckBox("Use auto Q", false);
 			ComboQmin = HookMenu->AddInteger("Min Q range", 10, 400, 300);
 			ComboQmax = HookMenu->AddInteger("Max Q range", 600, 900, 900);
-			ComboPred = HookMenu->AddSelection("Pred mode", 0, { "Very Good(No Collision)", "Decent(Collision Check)" });
+			//ComboPred = HookMenu->AddSelection("Pred mode", 0, { "Very Good(No Collision)", "Decent(Collision Check)" });
 		}
 
 
@@ -52,20 +52,11 @@ public:
 	void LoadSpells()
 	{
 		Q = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall, kCollidesWithMinions));
-		if (ComboPred->GetInteger() == 0)
-		{
-			Q->SetOverrideDelay(0.25);
-			Q->SetOverrideRadius(50);
-			Q->SetOverrideSpeed(2000);
-			Q->SetOverrideRange(950);
-		}
-		if (ComboPred->GetInteger() == 1)
-		{
-			Q->SetOverrideDelay(0.25);
-			Q->SetOverrideRadius(70);
-			Q->SetOverrideSpeed(10000000000000);
-			Q->SetOverrideRange(950);
-		}
+		Q->SetOverrideDelay(0.25);
+		Q->SetOverrideRadius(50);
+		Q->SetOverrideSpeed(2000);
+		Q->SetOverrideRange(950);
+		
 		E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, false, true, static_cast<eCollisionFlags>(kCollidesWithNothing));
 
@@ -124,13 +115,16 @@ public:
 		{
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
 			IMenuOption * temp = BlacklistMenu->GetOption(Enemy->ChampionName());
-			if (ComboPred->GetInteger() == 0)
+
+			if (target != nullptr)
 			{
-				if (target != nullptr)
+				if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && !temp->Enabled() && target->IsValidTarget())
 				{
-					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && !temp->Enabled() && target->IsValidTarget())
+					if ((!target->HasBuffOfType(BUFF_SpellShield) || !target->HasBuffOfType(BUFF_SpellImmunity)) && target != nullptr && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
 					{
-						if ((!target->HasBuffOfType(BUFF_SpellShield) || !target->HasBuffOfType(BUFF_SpellImmunity)) && target != nullptr && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
+						AdvPredictionOutput outputfam;
+						Q->RunPrediction(target, false, kCollidesWithMinions, &outputfam);
+						if (outputfam.HitChance >= kHitChanceHigh)
 						{
 							Vec3 pred;
 							GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
@@ -138,22 +132,8 @@ public:
 								Q->CastOnPosition(pred);
 						}
 					}
-
 				}
-			}
-			if (ComboPred->GetInteger() == 1)
-			{
-				if (target != nullptr)
-				{
-					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && !temp->Enabled() && target->IsValidTarget())
-					{
-						if ((!target->HasBuffOfType(BUFF_SpellShield) || !target->HasBuffOfType(BUFF_SpellImmunity)) && target != nullptr && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
-						{
-							Q->CastOnTarget(target);
-						}
-					}
 
-				}
 			}
 
 			if (ComboE->Enabled() && E->IsReady() && Q->Range())
@@ -196,52 +176,25 @@ public:
 			if (AutoQ->Enabled())
 			{
 				IMenuOption * temp = BlacklistMenu->GetOption(Enemy->ChampionName());
-				if (ComboPred->GetInteger() == 0)
+
+				if (Enemy != nullptr)
 				{
-					if (Enemy != nullptr)
+					if (Q->IsReady() && !temp->Enabled() && Enemy->IsValidTarget())
 					{
-						if (Q->IsReady() && !temp->Enabled() && Enemy->IsValidTarget())
+						if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
 						{
-							if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance == kHitChanceDashing)
 							{
-								AdvPredictionOutput outputfam;
-								Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
-								if (outputfam.HitChance == kHitChanceDashing)
-								{
-									Q->CastOnTarget(Enemy, kHitChanceDashing);
-								}
+								Q->CastOnTarget(Enemy, kHitChanceDashing);
 							}
 						}
-
 					}
-				}
-				if (ComboPred->GetInteger() == 1)
-				{
-					if (Enemy != nullptr)
-					{
-						if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && !temp->Enabled() && Enemy->IsValidTarget())
-						{
-							if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
-							{
-								AdvPredictionOutput outputfam;
-								Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
-								if (outputfam.HitChance == kHitChanceDashing)
-								{
-									Q->CastOnTarget(Enemy, kHitChanceDashing);
-								}
-								Vec3 pred;
-								if (outputfam.HitChance >= kHitChanceHigh)
-								{
-									GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
-									if (InSpellRange(Q, pred))
-										Q->CastOnPosition(pred);
-								}
-							}
-						}
 
-					}
 				}
 			}
+
 		}
 	}
 
@@ -251,36 +204,26 @@ public:
 		for (auto Enemy : GEntityList->GetAllHeros(false, true))
 		{
 			IMenuOption * temp = BlacklistMenu->GetOption(Enemy->ChampionName());
-			if (ComboPred->GetInteger() == 0)
+			if (Enemy != nullptr)
 			{
-				if (Enemy != nullptr)
+				if (Q->IsReady() && !temp->Enabled() && Enemy->IsValidTarget())
 				{
-					if (Q->IsReady() && !temp->Enabled() && Enemy->IsValidTarget())
+					if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
 					{
-						if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+
+						AdvPredictionOutput outputfam;
+						Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+						if (outputfam.HitChance >= kHitChanceHigh)
 						{
 							Vec3 pred;
 							GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
 							if (InSpellRange(Q, pred))
 								Q->CastOnPosition(pred);
 						}
-					}
 
-				}
-			}
-			if (ComboPred->GetInteger() == 1)
-			{
-				if (Enemy != nullptr)
-				{
-					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && !temp->Enabled() && Enemy->IsValidTarget())
-					{
-						if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
-						{
-							Q->CastOnTarget(Enemy);
-						}
 					}
-
 				}
+
 			}
 		}
 	}
@@ -300,13 +243,15 @@ public:
 				}
 				if (KSQ->Enabled() && Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && QDamage > Enemy->GetHealth())
 				{
-					if (ComboPred->GetInteger() == 0)
+					if (Enemy != nullptr)
 					{
-						if (Enemy != nullptr)
+						if (Q->IsReady() && Enemy->IsValidTarget())
 						{
-							if (Q->IsReady() && Enemy->IsValidTarget())
+							if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
 							{
-								if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
 								{
 									Vec3 pred;
 									GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
@@ -314,26 +259,12 @@ public:
 										Q->CastOnPosition(pred);
 								}
 							}
-
 						}
-					}
-					if (ComboPred->GetInteger() == 1)
-					{
-						if (Enemy != nullptr)
-						{
-							if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && Enemy->IsValidTarget())
-							{
-								if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
-								{
-									Q->CastOnTarget(Enemy);
-								}
-							}
 
-						}
 					}
 				}
-
 			}
+
 		}
 	}
 

@@ -198,13 +198,23 @@ public:
 						{
 							if (HarassQMode->GetInteger() == 0)
 							{
-								Q->CastOnTarget(Enemy);
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Q->CastOnTarget(Enemy);
+								}
 							}
 							if (HarassQMode->GetInteger() == 1)
 							{
 								if (Enemy->HasBuff("brandablaze"))
 								{
-									Q->CastOnTarget(Enemy);
+									AdvPredictionOutput outputfam;
+									Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+									if (outputfam.HitChance >= kHitChanceHigh)
+									{
+										Q->CastOnTarget(Enemy);
+									}
 								}
 							}
 						}
@@ -237,13 +247,23 @@ public:
 				{
 					if (HarassQMode->GetInteger() == 0)
 					{
-						Q->CastOnTarget(Enemy);
+						AdvPredictionOutput outputfam;
+						Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+						if (outputfam.HitChance >= kHitChanceHigh)
+						{
+							Q->CastOnTarget(Enemy);
+						}
 					}
 					if (HarassQMode->GetInteger() == 1)
 					{
 						if (Enemy->HasBuff("brandablaze"))
 						{
-							Q->CastOnTarget(Enemy);
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh)
+							{
+								Q->CastOnTarget(Enemy);
+							}
 						}
 					}
 				}
@@ -268,13 +288,23 @@ public:
 				{
 					if (HarassQMode->GetInteger() == 0)
 					{
-						Q->CastOnTarget(Enemy);
+						AdvPredictionOutput outputfam;
+						Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+						if (outputfam.HitChance >= kHitChanceHigh)
+						{
+							Q->CastOnTarget(Enemy);
+						}
 					}
 					if (HarassQMode->GetInteger() == 1)
 					{
 						if (Enemy->HasBuff("brandablaze"))
 						{
-							Q->CastOnTarget(Enemy);
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh)
+							{
+								Q->CastOnTarget(Enemy);
+							}
 						}
 					}
 				}
@@ -293,13 +323,23 @@ public:
 				{
 					if (HarassQMode->GetInteger() == 0)
 					{
-						Q->CastOnTarget(Enemy);
+						AdvPredictionOutput outputfam;
+						Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+						if (outputfam.HitChance >= kHitChanceHigh)
+						{
+							Q->CastOnTarget(Enemy);
+						}
 					}
 					if (HarassQMode->GetInteger() == 1)
 					{
 						if (Enemy->HasBuff("brandablaze"))
 						{
-							Q->CastOnTarget(Enemy);
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh)
+							{
+								Q->CastOnTarget(Enemy);
+							}
 						}
 					}
 				}
@@ -335,8 +375,12 @@ public:
 					{
 						if (ComboQMode->GetInteger() == 0)
 						{
-
-							Q->CastOnTarget(Enemy);
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh)
+							{
+								Q->CastOnTarget(Enemy);
+							}
 							/*GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
 							if (InSpellRange(Q, pred))
 								Q->CastOnPosition(pred);*/
@@ -345,7 +389,12 @@ public:
 						{
 							if (Enemy->HasBuff("brandablaze"))
 							{
-								Q->CastOnTarget(Enemy);
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Q->CastOnTarget(Enemy);
+								}
 							}
 						}
 					}
@@ -376,13 +425,23 @@ public:
 					{
 						if (ComboQMode->GetInteger() == 0)
 						{
-							Q->CastOnTarget(Enemy);
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh)
+							{
+								Q->CastOnTarget(Enemy);
+							}
 						}
 						if (ComboQMode->GetInteger() == 1)
 						{
 							if (Enemy->HasBuff("brandablaze"))
 							{
-								Q->CastOnTarget(Enemy);
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Q->CastOnTarget(Enemy);
+								}
 							}
 						}
 
@@ -405,13 +464,23 @@ public:
 					{
 						if (ComboQMode->GetInteger() == 0)
 						{
-							Q->CastOnTarget(Enemy);
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh)
+							{
+								Q->CastOnTarget(Enemy);
+							}
 						}
 						if (ComboQMode->GetInteger() == 1)
 						{
 							if (Enemy->HasBuff("brandablaze"))
 							{
-								Q->CastOnTarget(Enemy);
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Q->CastOnTarget(Enemy);
+								}
 							}
 						}
 					}
@@ -431,13 +500,23 @@ public:
 					{
 						if (ComboQMode->GetInteger() == 0)
 						{
-							Q->CastOnTarget(Enemy);
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh)
+							{
+								Q->CastOnTarget(Enemy);
+							}
 						}
 						if (ComboQMode->GetInteger() == 1)
 						{
 							if (Enemy->HasBuff("brandablaze"))
 							{
-								Q->CastOnTarget(Enemy);
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Q->CastOnTarget(Enemy);
+								};
 							}
 						}
 					}
@@ -539,7 +618,12 @@ public:
 				{
 					if (KSQ->Enabled() && Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && QDamage > Enemy->GetHealth())
 					{
-						Q->CastOnTarget(Enemy);
+						AdvPredictionOutput outputfam;
+						Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+						if (outputfam.HitChance >= kHitChanceHigh)
+						{
+							Q->CastOnTarget(Enemy);
+						}
 					}
 					if (KSW->Enabled() && W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()) && WDamage > Enemy->GetHealth())
 					{
