@@ -1,4 +1,5 @@
 #include "PluginSDK.h"
+#include <string>
 
 PluginSetup("Jax by Kornis")
 
@@ -51,6 +52,7 @@ ISpell2* Q;
 ISpell2* W;
 ISpell2* E;
 ISpell2* R;
+ISpell2* Wards;
 
 IUnit* Player;
 IUnit* target;
@@ -63,17 +65,28 @@ ISpell2* jump;
 
 boolean ButtonDown = false;
 boolean doJump = false;
+boolean letward = false;
 Vec3 location;
 
-IInventoryItem *sight_stone;
-IInventoryItem *red_stone;
-IInventoryItem *pink_ward;
-IInventoryItem *yellow_trinket;
-IInventoryItem *t_knife;
-IInventoryItem *t_knifeA;
-IInventoryItem *t_knifeB;
-IInventoryItem *t_knifeC;
-IInventoryItem *t_knifeD;
+IInventoryItem* Ward1;
+IInventoryItem* Ward2;
+IInventoryItem* Ward3;
+IInventoryItem* Ward4;
+IInventoryItem* Ward5;
+IInventoryItem* Ward6;
+IInventoryItem* Ward7;
+IInventoryItem* Ward8;
+IInventoryItem* Ward9;
+IInventoryItem* Ward10;
+IInventoryItem* Ward11;
+IInventoryItem* Ward12;
+IInventoryItem* Ward13;
+IInventoryItem* Ward14;
+IInventoryItem* Ward15;
+IInventoryItem* Ward16;
+IInventoryItem* Ward17;
+
+
 
 std::vector<std::string> ComboMode = { "Q>E", "E>Q"};
 std::vector<std::string> HarassMode = { "Q>E", "E>Q"};
@@ -86,58 +99,132 @@ void LoadSpells()
 	W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, kCollidesWithNothing);
 	E = GPluginSDK->CreateSpell2(kSlotE, kCircleCast, false, false, kCollidesWithNothing);
 	R = GPluginSDK->CreateSpell2(kSlotR, kTargetCast, false, false, kCollidesWithNothing);
+	Wards = GPluginSDK->CreateSpell2(kSlotTrinket, kCircleCast, false, false, kCollidesWithWalls);
+	Ward1 = GPluginSDK->CreateItemForId(2045, 600);
+	Ward2 = GPluginSDK->CreateItemForId(2049, 600);
+	Ward3 = GPluginSDK->CreateItemForId(2050, 600);
+	Ward4 = GPluginSDK->CreateItemForId(2301, 600);
+	Ward5 = GPluginSDK->CreateItemForId(2302, 600);
+	Ward6 = GPluginSDK->CreateItemForId(2303, 600);
+	Ward7 = GPluginSDK->CreateItemForId(3340, 600);
+	Ward8 = GPluginSDK->CreateItemForId(3361, 600);
+	Ward9 = GPluginSDK->CreateItemForId(3362, 600);
+	Ward10 = GPluginSDK->CreateItemForId(3711, 600);
+	Ward11 = GPluginSDK->CreateItemForId(1408, 600);
+	Ward12 = GPluginSDK->CreateItemForId(1409, 600);
+	Ward13 = GPluginSDK->CreateItemForId(1410, 600);
+	Ward14 = GPluginSDK->CreateItemForId(1411, 600);
+	Ward15 = GPluginSDK->CreateItemForId(2043, 600);
+	Ward16 = GPluginSDK->CreateItemForId(2055, 600);
+	Ward17 = GPluginSDK->CreateItemForId(1418, 600);
 }
 
-IInventoryItem* GetAvaliableItem() {
 
-	if (sight_stone->IsOwned() && sight_stone->IsReady()) {
-		return sight_stone;
-	}
-	else if (t_knife->IsOwned() && t_knife->IsReady()) {
-		return t_knife;
-	}
-	else if (t_knifeA->IsOwned() && t_knifeA->IsReady()) {
-		return t_knifeA;
-	}
-	else if (t_knifeB->IsOwned() && t_knifeB->IsReady()) {
-		return t_knifeB;
-	}
-	else if (t_knifeC->IsOwned() && t_knifeC->IsReady()) {
-		return t_knifeC;
-	}
-	else if (t_knifeD->IsOwned() && t_knifeD->IsReady()) {
-		return t_knifeD;
-	}
-	else if (red_stone->IsOwned() && red_stone->IsReady()) {
-		return red_stone;
-	}
-	else if (yellow_trinket->IsOwned() && yellow_trinket->IsReady()) {
-		return yellow_trinket;
-	}
-
-	else if (pink_ward->IsOwned() && pink_ward->IsReady()) {
-		return pink_ward;
-	}
-
-
-
+inline float GetDistanceVectors(Vec3 from, Vec3 to)
+{
+	float x1 = from.x;
+	float x2 = to.x;
+	float y1 = from.y;
+	float y2 = to.y;
+	float z1 = from.z;
+	float z2 = to.z;
+	return static_cast<float>(sqrt(pow((x2 - x1), 2.0) + pow((y2 - y1), 2.0) + pow((z2 - z1), 2.0)));
 }
-
-void DoWardJump() {
-
+//JumpPos from Federal
+static void DoWardJump(Vec3 pos)
+{
+	Vec3 JumpPos;
+	auto basePos = GEntityList->Player()->GetPosition();
+	auto newPos = pos - GEntityList->Player()->GetPosition();
 	if (!jump->IsReady()) {
 		return;
 	}
 
-	auto item = GetAvaliableItem();
-	if (item == nullptr) {
-		GGame->PrintChat("No wards");
-		return;
+	if (GetDistanceVectors(GEntityList->Player()->GetPosition(), pos) <= 590)
+	{
+		JumpPos = pos;
+	}
+	else if (GetDistanceVectors(GEntityList->Player()->GetPosition(), pos) > 590)
+	{
+		JumpPos = basePos + newPos.VectorNormalize() * 590;
+	}
+	else
+	{
+		JumpPos = basePos + newPos.VectorNormalize() * GetDistanceVectors(GEntityList->Player()->GetPosition(), pos);
 	}
 
-	location = GGame->CursorPosition();
-	item->CastOnPosition(location);
+	if (Ward1->IsReady() && Ward1->IsOwned())
+	{
+		Ward1->CastOnPosition(JumpPos);
+	}
+	else if (Ward2->IsReady() && Ward2->IsOwned())
+	{
+		Ward2->CastOnPosition(JumpPos);
+	}
+	else if (Ward3->IsReady() && Ward3->IsOwned())
+	{
+		Ward3->CastOnPosition(JumpPos);
+	}
+	else if (Ward4->IsReady() && Ward4->IsOwned())
+	{
+		Ward4->CastOnPosition(JumpPos);
+	}
+	else if (Ward5->IsReady() && Ward5->IsOwned())
+	{
+		Ward5->CastOnPosition(JumpPos);
+	}
+	else if (Ward6->IsReady() && Ward6->IsOwned())
+	{
+		Ward6->CastOnPosition(JumpPos);
+	}
+	else if (Ward7->IsReady() && Ward7->IsOwned())
+	{
+		Ward7->CastOnPosition(JumpPos);
+	}
+	else if (Ward8->IsReady() && Ward8->IsOwned())
+	{
+		Ward8->CastOnPosition(JumpPos);
+	}
+	else if (Ward9->IsReady() && Ward9->IsOwned())
+	{
+		Ward9->CastOnPosition(JumpPos);
+	}
+	else if (Ward10->IsReady() && Ward10->IsOwned())
+	{
+		Ward10->CastOnPosition(JumpPos);
+	}
+	else if (Ward11->IsReady() && Ward11->IsOwned())
+	{
+		Ward11->CastOnPosition(JumpPos);
+	}
+	else if (Ward12->IsReady() && Ward12->IsOwned())
+	{
+		Ward12->CastOnPosition(JumpPos);
+	}
+	else if (Ward13->IsReady() && Ward13->IsOwned())
+	{
+		Ward13->CastOnPosition(JumpPos);
+	}
+	else if (Ward14->IsReady() && Ward14->IsOwned())
+	{
+		Ward14->CastOnPosition(JumpPos);
+	}
+	else if (Ward15->IsReady() && Ward15->IsOwned())
+	{
+		Ward15->CastOnPosition(JumpPos);
+	}
+	else if (Ward16->IsReady() && Ward16->IsOwned())
+	{
+		Ward16->CastOnPosition(JumpPos);
+	}
+	else if (Ward17->IsReady() && Ward17->IsOwned())
+	{
+		Ward17->CastOnPosition(JumpPos);
+	}
+
+
 	doJump = true;
+
 }
 
 
@@ -151,7 +238,7 @@ void KeyPressEvent() {
 
 	if (IsKeyDown(FleeKey) && ButtonDown == false) {
 		ButtonDown = true;
-		DoWardJump();
+		DoWardJump(GGame->CursorPosition());
 
 	}
 
@@ -503,15 +590,16 @@ PLUGIN_EVENT(void) OnCreateObject(IUnit* Source)
 	//sprintf_s(array, "%f", flDistance);
 	//GGame->PrintChat(array);
 
-	if (flDistance < 100) {
+	if (flDistance < 50000) {
 
 		std::string itemName = Source->GetObjectName();
-		if (itemName.find("Ward") != std::string::npos || itemName.find("ward") != std::string::npos) {
+		if (itemName.find("Ward") != std::string::npos || itemName.find("ward") != std::string::npos || itemName.find("JammerDevice") != std::string::npos) {
 			jump->CastOnUnit(Source);
 			doJump = false;
 		}
-
 	}
+
+
 
 }
 
@@ -539,15 +627,6 @@ boolean InitSpells()
 		jump = GPluginSDK->CreateSpell2(kSlotQ, kTargetCast, false, false, kCollidesWithNothing);
 	}
 
-	sight_stone = GPluginSDK->CreateItemForId(2049, 625);
-	red_stone = GPluginSDK->CreateItemForId(2045, 625);
-	yellow_trinket = GPluginSDK->CreateItemForId(3340, 625);
-	pink_ward = GPluginSDK->CreateItemForId(2055, 625);
-	t_knife = GPluginSDK->CreateItemForId(3711, 625);
-	t_knifeA = GPluginSDK->CreateItemForId(1408, 625);
-	t_knifeB = GPluginSDK->CreateItemForId(1409, 625);
-	t_knifeC = GPluginSDK->CreateItemForId(1410, 625);
-	t_knifeD = GPluginSDK->CreateItemForId(1418, 625);
 
 
 	return true;
