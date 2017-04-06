@@ -712,12 +712,14 @@ public:
 
 	void OnGapCloser(GapCloserSpell const& Args) override
 	{
+		JannaBase().AntiGapclose(Args);
 	}
 
 
 
 	void OnInterruptible(InterruptibleSpell const& Args) override
 	{
+		JannaBase().Interrupt(Args);
 	}
 	void OnSpellCast(CastedSpell const& Args) override
 	{

@@ -22,9 +22,11 @@ public:
 		ShieldMenu = MainMenu->AddMenu("Shielding");
 		{
 			ShieldE = ShieldMenu->CheckBox("Auto E", true);
-			ShieldHP = ShieldMenu->AddFloat("Auto Shield if > X HP", 1, 100, 50);
+			ShieldHP = ShieldMenu->AddFloat("Auto Shield if X HP", 1, 100, 50);
+			ShieldHPinc = ShieldMenu->AddFloat("Auto Shield if Inc. Damage Percent", 1, 100, 10);
+			ShieldInc = ShieldMenu->CheckBox("Auto Shield only Incoming Damage(sometimes not accurate)", true);
 			ShieldKill = ShieldMenu->CheckBox("Auto Shield if inc. damage will kill", true);
-			ShieldAA = ShieldMenu->CheckBox("Priority Allies than me", true);
+			ShieldAA = ShieldMenu->CheckBox("Priority Allies over me", true);
 		}
 
 		DrawingMenu = MainMenu->AddMenu("Drawings");
@@ -40,6 +42,7 @@ public:
 			InterruptQ = MiscMenu->CheckBox("Use Q to interrupt", true);
 			InterruptR = MiscMenu->CheckBox("Use R to interupt", true);
 			AntiGapQ = MiscMenu->CheckBox("Anti Gap Q", true);
+			AntiGapW = MiscMenu->CheckBox("Anti Gap W", true);
 		}
 
 	}
@@ -47,13 +50,34 @@ public:
 	void LoadSpells()
 	{
 		Q = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall));
-		Q->SetSkillshot(0.f, 120.f, 900.f, 1700.f);
+		Q->SetSkillshot(0.25f, 100.f, 10000000.f, 800.f);
 		W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 	}
 
 
+	int GetAlliesInRange(IUnit* Source, float range)
+	{
+		auto allies = GEntityList->GetAllHeros(true, false);
+		auto AlliesInRange = 0;
+
+		for (auto target : allies)
+		{
+			if (target != GEntityList->Player())
+			{
+				if (target != nullptr && !target->IsDead())
+				{
+					auto flDistance = (target->GetPosition() - Source->GetPosition()).Length();
+					if (flDistance <= range)
+					{
+						AlliesInRange++;
+					}
+				}
+			}
+		}
+		return AlliesInRange;
+	}
 
 	void AutoE()
 	{
@@ -65,45 +89,203 @@ public:
 			{
 				if (ally != GEntityList->Player())
 				{
-					std::string s = std::to_string(tracker.hasIncomingDamage(GEntityList->Player()));
-					char const *pchar = s.c_str();
-					GGame->PrintChat(pchar);
-					if (ally != nullptr && !ally->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(ally, E->Range()))
+					if (!ShieldInc->Enabled())
 					{
-						float extraDamage;
-						if (ally != nullptr && !ally->IsDead() && (GEntityList->Player()->GetPosition() - ally->GetPosition()).Length2D() <= E->Range()
-							&& ally->HealthPercent() <= 15.f && tracker.hasIncomingLethalDamage(ally, extraDamage))
+						if (ally != nullptr && !ally->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(ally, E->Range()))
 						{
-							E->CastOnUnit(ally);
-						}
 
-						if (!tracker.hasIncomingDamage(ally))
-							return;
-						if (ShieldKill->Enabled())
-						{
-							if ((tracker.getIncomingDamage(ally) >= ally->GetHealth()) || ((ally->HealthPercent() - tracker.getIncomingDamagePercent(ally)) <= 15.f && (GEntityList->Player()->GetPosition() - ally->GetPosition()).Length2D() <= E->Range()))
+							if (ally != nullptr && !ally->IsDead() && (GEntityList->Player()->GetPosition() - ally->GetPosition()).Length2D() <= E->Range()
+								&& ally->HealthPercent() <= ShieldHP->GetFloat() && GetEnemiesInRange(ally, E->Range()) >= 1)
 							{
 								E->CastOnUnit(ally);
 							}
-						}
-						if ((ally->HealthPercent() - tracker.getIncomingDamagePercent(ally)) <= ShieldHP->GetFloat() && (GEntityList->Player()->GetPosition() - ally->GetPosition()).Length2D() <= E->Range())
-						{
-							E->CastOnUnit(ally);
+							if (GetAlliesInRange(GEntityList->Player(), E->Range()) == 0)
+							{
+								if (GetEnemiesInRange(GEntityList->Player(), E->Range()) >= 1 && GEntityList->Player()->HealthPercent() <= ShieldHP->GetFloat())
+								{
+									E->CastOnPlayer();
+								}
+
+							}
+							if (ShieldKill->Enabled())
+							{
+								if (tracker.getIncomingDamage(ally) >= ally->GetHealth())
+								{
+									E->CastOnUnit(ally);
+								}
+							}
+							if (ally != nullptr)
+							{
+								if (tracker.getIncomingDamagePercent(ally) >= ShieldHPinc->GetFloat())
+								{
+
+									E->CastOnUnit(ally);
+								}
+							}
+							if (tracker.hasIncomingDamage(ally))
+							{
+
+								if (ShieldKill->Enabled())
+								{
+									if (tracker.getIncomingDamage(ally) >= ally->GetHealth())
+									{
+										E->CastOnUnit(ally);
+									}
+								}
+							}
+
 						}
 					}
 				}
 				if (ShieldAA->Enabled())
 				{
+					if (ally != GEntityList->Player())
+					{
+						if (GetAlliesInRange(GEntityList->Player(), E->Range()) >= 1)
+						{
+							if (ally != nullptr && !ally->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(ally, E->Range()))
+							{
+								if (ally->HealthPercent() <= GEntityList->Player()->HealthPercent())
+								{
+									if (ally != nullptr)
+									{
+										if (tracker.getIncomingDamagePercent(ally) >= ShieldHPinc->GetFloat())
+										{
+
+											E->CastOnUnit(ally);
+										}
+									}
+									if (!tracker.hasIncomingDamage(ally))
+										return;
+									if (ShieldKill->Enabled())
+									{
+										if (tracker.getIncomingDamage(ally) >= ally->GetHealth())
+										{
+											E->CastOnUnit(ally);
+										}
+									}
+								}
+							}
+						}
+						if (GetAlliesInRange(GEntityList->Player(), E->Range()) == 0)
+						{
+							if (GEntityList->Player() != nullptr && !GEntityList->Player()->IsDead())
+							{
+
+								if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
+								{
+									E->CastOnPlayer();
+								}
+							}
+							if (GetEnemiesInRange(GEntityList->Player(), E->Range()) >= 1 && GEntityList->Player()->HealthPercent() <= ShieldHP->GetFloat())
+							{
+								E->CastOnPlayer();
+							}
+
+							
+							if (!tracker.hasIncomingDamage(GEntityList->Player()))
+								return;
+							if (ShieldKill->Enabled())
+							{
+								if (tracker.getIncomingDamage(ally) >= GEntityList->Player()->GetHealth())
+								{
+									E->CastOnPlayer();
+								}
+							}
+						}
+					}
+				}
+			
+				if (!ShieldAA->Enabled())
+				{
 					if (ally == GEntityList->Player())
 					{
-						if (ally->HealthPercent() <= GEntityList->Player()->HealthPercent())
+						if (GEntityList->Player() != nullptr && !GEntityList->Player()->IsDead())
 						{
-							if (ally != nullptr && !GEntityList->Player()->IsDead())
+
+							if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
 							{
-								float extraDamage;
-								if (tracker.hasIncomingDamage(GEntityList->Player()) && GEntityList->Player()->HealthPercent() <= 15.f && tracker.hasIncomingLethalDamage(GEntityList->Player(), extraDamage))
+								E->CastOnPlayer();
+							}
+							if (GetEnemiesInRange(GEntityList->Player(), E->Range()) >= 1 && GEntityList->Player()->HealthPercent() <= ShieldHP->GetFloat())
+							{
+								E->CastOnPlayer();
+							}
+						}
+
+						if (!tracker.hasIncomingDamage(GEntityList->Player()))
+							return;
+						if (ShieldKill->Enabled())
+						{
+							if (tracker.getIncomingDamage(ally) >= GEntityList->Player()->GetHealth())
+							{
+								E->CastOnPlayer();
+							}
+						}
+
+					}
+
+				}
+				if (ShieldInc->Enabled())
+				{
+					if (ShieldAA->Enabled())
+					{
+						if (ally != GEntityList->Player())
+						{
+							if (GetAlliesInRange(GEntityList->Player(), E->Range()) >= 1)
+							{
+								if (ally != nullptr && !ally->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(ally, E->Range()))
 								{
-									GGame->PrintChat("1");
+									if (ally->HealthPercent() <= GEntityList->Player()->HealthPercent())
+									{
+										if (ally != nullptr)
+										{
+											if (tracker.getIncomingDamagePercent(ally) >= ShieldHPinc->GetFloat())
+											{
+
+												E->CastOnUnit(ally);
+											}
+										}
+										if (!tracker.hasIncomingDamage(ally))
+											return;
+										if (ShieldKill->Enabled())
+										{
+											if (tracker.getIncomingDamage(ally) >= ally->GetHealth())
+											{
+												E->CastOnUnit(ally);
+											}
+										}
+									}
+									if (ally->HealthPercent() >= GEntityList->Player()->HealthPercent())
+									{
+
+										if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
+										{
+
+											E->CastOnPlayer();
+										}
+									}
+									if (!tracker.hasIncomingDamage(GEntityList->Player()))
+										return;
+									if (ShieldKill->Enabled())
+									{
+										if (tracker.getIncomingDamage(GEntityList->Player()) >= ally->GetHealth())
+										{
+											E->CastOnPlayer();
+										}
+
+									}
+								}
+								
+							}
+						}
+						if (GetAlliesInRange(GEntityList->Player(), E->Range()) == 0)
+						{
+							if (GEntityList->Player() != nullptr && !GEntityList->Player()->IsDead())
+							{
+
+								if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
+								{
 									E->CastOnPlayer();
 								}
 							}
@@ -111,52 +293,40 @@ public:
 								return;
 							if (ShieldKill->Enabled())
 							{
-								if (tracker.hasIncomingDamage(GEntityList->Player()) && (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth()) || ((GEntityList->Player()->HealthPercent() - tracker.getIncomingDamagePercent(GEntityList->Player())) <= 15.f))
+								if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
 								{
-									GGame->PrintChat("2");
 									E->CastOnPlayer();
 								}
 							}
-							if (tracker.hasIncomingDamage(GEntityList->Player()) && (GEntityList->Player()->HealthPercent() - tracker.getIncomingDamagePercent(GEntityList->Player())) <= ShieldHP->GetFloat())
-							{
-								GGame->PrintChat("3");
-								E->CastOnPlayer();
-							}
 						}
 					}
-				}
-				if (!ShieldAA->Enabled())
-				{
-					if (ally == GEntityList->Player())
+					if (!ShieldAA->Enabled())
 					{
-						if (ally != nullptr && !GEntityList->Player()->IsDead())
+						if (ally == GEntityList->Player())
 						{
-							float extraDamage;
-							if (tracker.hasIncomingDamage(GEntityList->Player())&& GEntityList->Player()->HealthPercent() <= 15.f && tracker.hasIncomingLethalDamage(GEntityList->Player(), extraDamage))
+							if (GEntityList->Player() != nullptr && !GEntityList->Player()->IsDead())
 							{
-								GGame->PrintChat("1");
-								E->CastOnPlayer();
+
+								if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
+								{
+									E->CastOnPlayer();
+								}
 							}
-						}
-						if (!tracker.hasIncomingDamage(GEntityList->Player()))
-							return;
-						if (ShieldKill->Enabled())
-						{
-							if (tracker.hasIncomingDamage(GEntityList->Player()) && (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth()) || ((GEntityList->Player()->HealthPercent() - tracker.getIncomingDamagePercent(GEntityList->Player())) <= 15.f))
+							if (!tracker.hasIncomingDamage(GEntityList->Player()))
+								return;
+							if (ShieldKill->Enabled())
 							{
-								GGame->PrintChat("2");
-								E->CastOnPlayer();
+								if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
+								{
+									E->CastOnPlayer();
+								}
 							}
+
 						}
-						if (tracker.hasIncomingDamage(GEntityList->Player()) && (GEntityList->Player()->HealthPercent() - tracker.getIncomingDamagePercent(GEntityList->Player())) <= ShieldHP->GetFloat())
-						{
-							GGame->PrintChat("3");
-							E->CastOnPlayer();
-						}
+
 					}
 
 				}
-
 			}
 		}
 	}
@@ -189,32 +359,16 @@ public:
 				Q->CastOnTarget(target, kHitChanceHigh);
 
 			}
-		}
-	}
-
-
-
-	int GetAlliesInRange(IUnit* Source, float range)
-	{
-		auto allies = GEntityList->GetAllHeros(true, false);
-		auto AlliesInRange = 0;
-
-		for (auto target : allies)
-		{
-			if (target != GEntityList->Player())
+			if (ComboW->Enabled() && GEntityList->Player()->IsValidTarget(target, W->Range()) && W->IsReady())
 			{
-				if (target != nullptr && !target->IsDead())
-				{
-					auto flDistance = (target->GetPosition() - Source->GetPosition()).Length();
-					if (flDistance <= range)
-					{
-						AlliesInRange++;
-					}
-				}
+				W->CastOnTarget(target);
+
 			}
 		}
-		return AlliesInRange;
 	}
+
+
+
 
 	void AAdisable()
 	{
@@ -247,9 +401,54 @@ public:
 		}
 	}
 
+	void AntiGapclose(GapCloserSpell const& Args)
+	{
+		if (Args.Sender != GEntityList->Player()
+			&& Args.Sender->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Sender, Q->Range() + Args.Sender->BoundingRadius())
+			&& AntiGapQ->Enabled() && Q->IsReady())
+		{
+			Q->CastOnTarget(Args.Sender);
+		}
+		if (Args.Sender != GEntityList->Player()
+			&& Args.Sender->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Sender, W->Range() + Args.Sender->BoundingRadius())
+			&& AntiGapW->Enabled() && W->IsReady())
+		{
+			W->CastOnTarget(Args.Sender);
+		}
+	}
+
+
+	void Interrupt(InterruptibleSpell const& Args)
+	{
+		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, Q->Range()) && InterruptQ->Enabled() && Q->IsReady())
+		{
+			Q->CastOnTarget(Args.Target, kHitChanceHigh);
+
+			LastQcast = GGame->TickCount() + 1500;
+
+
+		}
+		if (LastQcast < GGame->TickCount())
+		{
+			if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, R->Range()) && InterruptR->Enabled() && R->IsReady())
+			{
+				if (Args.DangerLevel == kHighDanger && !Q->IsReady())
+				{
+					R->CastOnPlayer();
+
+				}
+			}
+
+		}
+	}
 
 	void Draw() const
 	{
 		if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range()); }
+		if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()); }
+		if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(125, 155, 255, 255), E->Range()); }
+		if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), R->Range()); }
 	}
 };

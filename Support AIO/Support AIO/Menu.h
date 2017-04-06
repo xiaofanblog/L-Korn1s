@@ -169,6 +169,8 @@ IMenuOption* SupportMode;
 IMenuOption* HarassAA;
 IMenuOption* KSRmin;
 IMenuOption* ShieldAA;
+IMenuOption* ShieldInc;
+IMenuOption* ShieldHPinc;
 
 ISpell2* Q;
 ISpell2* W;
@@ -181,6 +183,7 @@ IUnit* Enemy;
 ISpell* Flash;
 
 int lastwcast;
+int LastQcast;
 
 IEventManager* eventManager = nullptr;
 
