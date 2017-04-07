@@ -11,6 +11,7 @@ IMenu* ComboMenu;
 IMenuOption* ComboQ;
 IMenuOption* ComboW;
 IMenuOption* ComboE;
+IMenuOption* HarassLast;
 IMenuOption* ComboWstart;
 IMenu* RMenu;
 IMenuOption* ComboQnotpoison;
@@ -135,6 +136,7 @@ void Menu()
 	}
 	HarassMenu = MainMenu->AddMenu("Harass");
 	{
+		HarassLast = HarassMenu->CheckBox("Use E to Lasthit", true);
 		HarassMana = HarassMenu->AddInteger("Min Mana. for Harass", 10, 100, 50);
 		HarassAuto = HarassMenu->CheckBox("Use AUTO Harass", false);
 		HarassQ = HarassMenu->CheckBox("Use Q to harass", true);
@@ -629,6 +631,22 @@ void Mixed()
 				}
 			}
 		}
+		if (HarassLast->Enabled())
+		{
+			for (auto minion : GEntityList->GetAllMinions(false, true, true))
+			{
+				if (minion != nullptr && !minion->IsDead())
+				{
+					if (GEntityList->Player()->IsValidTarget(minion, E->Range()))
+					{
+						if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, static_cast<int>(E->GetDelay() * 1000)))
+						{
+							E->CastOnUnit(minion);
+						}
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -757,6 +775,22 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 			if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
 			{
 				if (LastE->Enabled() && GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
+				{
+					if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
+					{
+						if (minion->GetHealth() < EDamage + 100 && Player->GetMana() > E->ManaCost())
+						{
+							if (minion != nullptr && minion->IsCreep())
+							{
+								GOrbwalking->DisableNextAttack();
+							}
+						}
+					}
+				}
+			}
+			if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
+			{
+				if (HarassLast->Enabled() && GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
 				{
 					if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
 					{
