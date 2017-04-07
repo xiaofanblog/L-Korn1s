@@ -50,6 +50,10 @@ ISpell2* E;
 ISpell2* R;
 ISpell2* Smite;
 
+IMenu* DodgeMenu;
+IMenuOption* DodgeQ;
+IMenuOption* DodgeW;
+
 
 IUnit* Player;
 
@@ -112,10 +116,15 @@ void Menu()
 		SmiteUse = SmiteMenu->CheckBox("Use Smite", true);
 	}
 
-	SkinMenu = MainMenu->AddMenu("Skin Cahnger");
+	SkinMenu = MainMenu->AddMenu("Skin Changer");
 	{
 		SkinChangeEnable = SkinMenu->CheckBox("Use Skin Changer", true);
 		SkinChange = SkinMenu->AddInteger("Skins", 1, 20, 9);
+	}
+	DodgeMenu = MainMenu->AddMenu("Dodging");
+	{
+		DodgeQ = DodgeMenu->CheckBox("Dodge Targeted with Q", true);
+		DodgeW = DodgeMenu->CheckBox("Use W if Q down", false);
 	}
 }
 
@@ -158,7 +167,7 @@ void Combo()
 
 		if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
 		{
-			
+
 			Smite->CastOnTarget(GTargetSelector->GetFocusedTarget());
 		}
 		else
@@ -226,18 +235,66 @@ void Combo()
 	if (ComboE->Enabled() && E->IsReady())
 	{
 		auto target = GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, E->Range() + 200);
-		if (target != nullptr && E->Range()+200)
+		if (target != nullptr && E->Range() + 200)
 		{
 			E->CastOnPlayer();
 		}
 
 	}
-	if (ComboR->Enabled() && R->IsReady() && Player->AttackRange()+1400)
+	if (ComboR->Enabled() && R->IsReady() && Player->AttackRange() + 1400)
 	{
 		auto target = GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, Player->AttackRange() + 1400);
 		if (target != nullptr && !target->IsDead() && !target->IsInvulnerable() && (target->GetPosition() - Player->GetPosition()).Length() < 1400 && (target->GetPosition() - Player->GetPosition()).Length() > 600)
 		{
 			R->CastOnPlayer();
+		}
+	}
+}
+PLUGIN_EVENT(void) OnSpellCast(CastedSpell const& Args)
+{
+	if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+	{
+		if (Args.Target_ == GEntityList->Player() && Args.Caster_->IsHero() && Args.Caster_->IsEnemy(GEntityList->Player())) {
+
+			auto data = Args.Data_;
+			auto target = GSpellData->GetTarget(data);
+			auto arget = GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, Q->Range());
+			std::string spellName = Args.Name_;
+			if (spellName.find("BasicAttack") != std::string::npos) {
+				return;
+			}
+			if (DodgeQ->Enabled())
+			{
+				if (Args.Caster_->IsValidTarget(GEntityList->Player(), Q->Range()) && !GUtility->IsPositionUnderTurret(Args.Caster_->GetPosition(), false, true))
+				{
+					Q->CastOnTarget(Args.Caster_);
+				}
+				if (!Args.Caster_->IsValidTarget(GEntityList->Player(), Q->Range()))
+				{
+					if (arget != nullptr && !arget->IsDead())
+					{
+						Q->CastOnTarget(arget);
+					}
+				}
+				if (!Args.Caster_->IsValidTarget(GEntityList->Player(), Q->Range()) && !arget->IsValidTarget(GEntityList->Player(), Q->Range()))
+				{
+					for (auto Minion : GEntityList->GetAllMinions(false, true, true))
+					{
+						if (!Minion->IsDead() && Minion != nullptr)
+						{
+							Q->CastOnTarget(Minion);
+						}
+					}
+				}
+			}
+			if (DodgeW->Enabled())
+			{
+				if (!Q->IsReady() && W->IsReady())
+				{
+					W->CastOnPlayer();
+				}
+			}
+
 		}
 	}
 }
@@ -408,6 +465,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
 	GEventManager->AddEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
+	GEventManager->AddEventHandler(kEventOnSpellCast, OnSpellCast);
 }
 
 PLUGIN_API void OnUnload()
@@ -416,4 +474,5 @@ PLUGIN_API void OnUnload()
 	GEventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->RemoveEventHandler(kEventOnRender, OnRender);
 	GEventManager->RemoveEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
+	GEventManager->RemoveEventHandler(kEventOnSpellCast, OnSpellCast);
 }
