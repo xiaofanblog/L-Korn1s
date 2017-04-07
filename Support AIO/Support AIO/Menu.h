@@ -11,6 +11,17 @@ IMenu* QSet;
 IMenu* WSet;
 IMenu* ESet;
 IMenu* RSet;
+int xOffset = 10;
+int yOffset = 15;
+int Width = 103;
+int Height = 8;
+Vec4 Color = Vec4(105, 198, 5, 255);
+Vec4 FillColor = Vec4(198, 176, 5, 255);
+Vec4 Color2 = Vec4(238, 18, 0, 72);
+
+
+float DragonDmg = 0;
+double DragonTime = 0;
 
 IMenu* ComboMenu;
 IMenuOption* Survival;
@@ -42,6 +53,8 @@ IMenuOption* ComboQinterrupt;
 
 IMenuOption* HealRsemi;
 IMenuOption* ComboRenable;
+IUnit* EMissile;
+int lastQcast;
 
 
 IMenuOption* ComboEgapclose;
@@ -96,6 +109,7 @@ IMenuOption* HealRhp;
 IMenuOption* MiscMana;
 IMenuOption* HealEMe;
 IMenuOption* InterruptW;
+IMenuOption* DrawKillable;
 IMenuOption* AAlevel;
 IMenuOption* AntiGapQ;
 IMenuOption* AntiGapW;
@@ -138,6 +152,8 @@ IMenuOption* AntiGapR;
 IMenuOption* DrawEmin;
 IMenuOption* DrawWRange;
 IMenuOption* FarmQ;
+IMenuOption* ComboR1vs1;
+IMenu* RSettings;
 IMenuOption* SaveW;
 IMenuOption* SaveKey;
 IMenuOption* SaveE;
@@ -172,10 +188,18 @@ IMenuOption* ShieldAA;
 IMenuOption* ShieldInc;
 IMenuOption* ShieldHPinc;
 
+IMenu* JungleKS;
+IMenuOption* AutoRjungle;
+IMenuOption*  Rdragon;
+IMenuOption* Rbaron;
+IMenuOption* Rred;
+IMenuOption* Rblue;
+IMenuOption* Rally;
 ISpell2* Q;
 ISpell2* W;
 ISpell2* E;
 ISpell2* R;
+IMenuOption* Rmin;
 
 IUnit* Enemy;
 

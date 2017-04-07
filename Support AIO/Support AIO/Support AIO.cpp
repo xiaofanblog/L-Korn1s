@@ -14,6 +14,7 @@
 #include "Soraka.h"
 #include "EventManager.h"
 #include "Brand.h"
+#include "Lux.h"
 PluginSetup("Support AIO by Kornis");
 
 class zHero
@@ -26,6 +27,7 @@ public:
 	virtual void OnInterruptible(InterruptibleSpell const& Args) = 0;
 	virtual void OnSpellCast(CastedSpell const& Args) = 0;
 	virtual void OnCreateObject(IUnit* Source) = 0;
+	virtual void OnDeleteObject(IUnit* Object) = 0;
 	virtual void OnLevelUp(IUnit* Source, int NewLevel) = 0;
 	virtual void OnPauseAnimation(IUnit* Source) = 0;
 	virtual bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) = 0;
@@ -84,6 +86,9 @@ public:
 	void OnLevelUp(IUnit* Source, int NewLevel) override
 	{
 
+	}
+	void OnDeleteObject(IUnit* Source) override
+	{
 	}
 	void OnPauseAnimation(IUnit* Source) override
 	{
@@ -150,6 +155,9 @@ public:
 	{
 
 	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+	}
 	void OnPauseAnimation(IUnit* Source) override
 	{
 		//none
@@ -215,6 +223,9 @@ public:
 	void OnLevelUp(IUnit* Source, int NewLevel) override
 	{
 
+	}
+	void OnDeleteObject(IUnit* Source) override
+	{
 	}
 	void OnAfterAttack(IUnit* Source, IUnit* Target) override
 	{
@@ -289,6 +300,9 @@ public:
 	void OnCreateObject(IUnit* Source) override
 	{
 		//none
+	}
+	void OnDeleteObject(IUnit* Source) override
+	{
 	}
 	void OnLevelUp(IUnit* Source, int NewLevel) override
 	{
@@ -372,6 +386,9 @@ public:
 	{
 		//none
 	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+	}
 	void OnLevelUp(IUnit* Source, int NewLevel) override
 	{
 
@@ -440,6 +457,9 @@ public:
 	{
 	}
 
+	void OnDeleteObject(IUnit* Source) override
+	{
+	}
 	void OnCreateObject(IUnit* Source) override
 	{
 		//none
@@ -538,6 +558,9 @@ public:
 	{
 		return true;
 	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+	}
 private:
 	void PrintMessage()
 	{
@@ -611,6 +634,9 @@ class Sona : public zHero
 		{
 			return true;
 		}
+		void OnDeleteObject(IUnit* Source) override
+		{
+		}
 	private:
 		void PrintMessage()
 		{
@@ -676,6 +702,9 @@ public:
 	{
 		//none
 	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+	}
 	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
 	{
 		return true;
@@ -708,6 +737,7 @@ public:
 		{
 			JannaBase().Combo();
 		}
+
 	}
 
 	void OnGapCloser(GapCloserSpell const& Args) override
@@ -732,6 +762,9 @@ public:
 	void OnCreateObject(IUnit* Source) override
 	{
 		//none
+	}
+	void OnDeleteObject(IUnit* Source) override
+	{
 	}
 	void OnLevelUp(IUnit* Source, int NewLevel) override
 	{
@@ -812,6 +845,9 @@ public:
 	void OnPauseAnimation(IUnit* Source) override
 	{
 		//none
+	}
+	void OnDeleteObject(IUnit* Source) override
+	{
 	}
 	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
 	{
@@ -898,6 +934,9 @@ public:
 	{
 		return true;
 	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+	}
 private:
 	void PrintMessage()
 	{
@@ -980,6 +1019,9 @@ public:
 	{
 		return true;
 	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+	}
 private:
 	void PrintMessage()
 	{
@@ -1055,6 +1097,9 @@ public:
 	{
 		return true;
 	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+	}
 private:
 	void PrintMessage()
 	{
@@ -1062,6 +1107,90 @@ private:
 	}
 };
 
+class Lux : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		LuxBase().DrawMenu();
+		LuxBase().LoadSpells();
+	}
+
+	void OnRender() override
+	{
+		LuxBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		LuxBase().KsJungle();
+		LuxBase().Killsteal();
+		LuxBase().AAdisable();
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			LuxBase().Combo();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			LuxBase().Push();
+		}
+
+		if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
+		{
+			LuxBase().harass();
+		}
+		if (GetAsyncKeyState(ForceR->GetInteger()))
+		{
+			LuxBase().Semi();
+		}
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+		LuxBase().AntiGapclose(Args);
+	}
+
+
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+		
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+	}
+
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+	}
+
+	void OnCreateObject(IUnit* Source) override
+	{
+		LuxBase().OnCreateObject(Source);
+	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+		LuxBase().OnDeleteObject(Source);
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Lux</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
 
 
 zHero* yHero = nullptr;
@@ -1105,6 +1234,11 @@ PLUGIN_EVENT(void) OnLevelUp(IUnit* Source, int NewLevel)
 {
 	yHero->OnLevelUp(Source, NewLevel);
 }
+PLUGIN_EVENT(void) OnDeleteObject(IUnit* Source)
+{
+	yHero->OnDeleteObject(Source);
+}
+
 
 PLUGIN_EVENT(void) OnPauseAnimation(IUnit* Source)
 {
@@ -1147,6 +1281,8 @@ void LoadChampion()
 		yHero = new Karma;
 	else if (playerHero == "TahmKench")
 		yHero = new TahmKench;
+	else if (playerHero == "Lux")
+		yHero = new Lux;
 	else
 	{
 		GGame->PrintChat("<b><font color=\"#FFFFFF\">This champion isn't supported.</b></font>");
@@ -1180,6 +1316,15 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 			TahmBase().AutoSmth();
 		});
 	}
+	if (playerHero == "Lux")
+	{
+		eventManager = PluginSDK->GetEventManager();
+		eventmanager::RegisterEvents(eventManager);
+		eventmanager::GameEventManager::RegisterUpdateEvent([&](event_id_t id) -> void
+		{
+			LuxBase().AutoW();
+		});
+	}
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->AddEventHandler(kEventOnGapCloser, OnGapCloser);
@@ -1190,6 +1335,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnPauseAnimation, OnPauseAnimation);
 	GEventManager->AddEventHandler(kEventOnPreCast, OnPreCast);
 	GEventManager->AddEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
+	GEventManager->AddEventHandler(kEventOnDestroyObject, OnDeleteObject);
 	
 
 }
@@ -1206,6 +1352,7 @@ PLUGIN_API void OnUnload()
 	GEventManager->RemoveEventHandler(kEventOnCreateObject, OnCreateObject);
 	GEventManager->RemoveEventHandler(kEventOnLevelUp, OnLevelUp);
 	GEventManager->RemoveEventHandler(kEventOnPauseAnimation, OnPauseAnimation);
+	GEventManager->RemoveEventHandler(kEventOnDestroyObject, OnDeleteObject);
 	GEventManager->RemoveEventHandler(kEventOnPreCast, OnPreCast);
 	GEventManager->RemoveEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
 	eventmanager::UnregisterEvents(eventManager);

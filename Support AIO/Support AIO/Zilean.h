@@ -48,13 +48,18 @@ public:
 			KSQ = KillstealMenu->CheckBox("Use Q", true);
 			KSW = KillstealMenu->CheckBox("Use QWQ", true);
 		}
+		BlacklistMenuR = MainMenu->AddMenu("R Blacklist");
+
+		for (auto ally : GEntityList->GetAllHeros(true, false)) {
+			BlacklistMenuR->CheckBox(ally->ChampionName(), false);
+		}
 	}
 
 	void LoadSpells()
 	{
 		Q = GPluginSDK->CreateSpell2(kSlotQ, kCircleCast, true, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		Q->SetOverrideDelay(0.25);
-		Q->SetOverrideRadius(100);
+		Q->SetOverrideRadius(90);
 		Q->SetOverrideSpeed(100000000000);
 		Q->SetOverrideRange(810);
 		W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, kCollidesWithNothing);
@@ -240,6 +245,24 @@ public:
 	}
 	
 
+	int GetEnemiesInRange(IUnit* Source, float range)
+	{
+		auto enemies = GEntityList->GetAllHeros(false, true);
+		auto enemiesInRange = 0;
+
+		for (auto enemy : enemies)
+		{
+			if (enemy->IsValidTarget() && !enemy->IsDead() && enemy != nullptr && enemy->GetTeam() != GEntityList->Player()->GetTeam())
+			{
+				auto flDistance = (enemy->GetPosition() - GEntityList->Player()->GetPosition()).Length();
+				if (flDistance < range)
+				{
+					enemiesInRange++;
+				}
+			}
+		}
+		return enemiesInRange;
+	}
 
 	void Auto()
 	{
@@ -270,26 +293,28 @@ public:
 		}
 		for (auto Ally : GEntityList->GetAllHeros(true, false))
 		{
+			IMenuOption* temp = BlacklistMenuR->GetOption(Ally->ChampionName());
 			if (!Ally->IsRecalling() && Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), R->Range()) && !Ally->IsDead() && !GUtility->IsPositionInFountain(Ally->GetPosition(), true, false))
 			{
 				if (ComboRenable->Enabled() && R->Range() && R->IsReady())
 				{
 					/*if (Ally->HasIncomingDamage() > Ally->GetHealth())
 					{
-					
+
 						GGame->PrintChat("omg");
 						R->CastOnTarget(Ally);
 					}*/
 				}
-				if (ComboRhp->GetInteger() >= Ally->HealthPercent() && R->Range() && R->IsReady())
+				if (!temp->Enabled() && ComboRhp->GetInteger() >= Ally->HealthPercent() && R->Range() && R->IsReady() && (GetEnemiesInRange(Ally, R->Range()) >= 1))
 				{
 					R->CastOnTarget(Ally);
 				}
 			}
-		}
-		if (!GEntityList->Player()->IsRecalling() &&ComboRhp->GetInteger() >= GEntityList->Player()->HealthPercent() && R->Range() && R->IsReady() && !GEntityList->Player()->IsDead() && !GUtility->IsPositionInFountain(GEntityList->Player()->GetPosition(), true, false))
-		{
-			R->CastOnPlayer();
+
+			if (!temp->Enabled() && !GEntityList->Player()->IsRecalling() && ComboRhp->GetInteger() >= GEntityList->Player()->HealthPercent() && R->Range() && R->IsReady() && !GEntityList->Player()->IsDead() && !GUtility->IsPositionInFountain(GEntityList->Player()->GetPosition(), true, false) && (GetEnemiesInRange(GEntityList->Player(), R->Range()) >= 1))
+			{
+				R->CastOnPlayer();
+			}
 		}
 		/*if (GEntityList->Player()->HasIncomingDamage() > Player->GetHealth() && ComboRkills->Enabled())
 		{
