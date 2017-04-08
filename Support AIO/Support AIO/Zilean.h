@@ -305,13 +305,13 @@ public:
 						R->CastOnTarget(Ally);
 					}*/
 				}
-				if (!temp->Enabled() && ComboRhp->GetInteger() >= Ally->HealthPercent() && R->Range() && R->IsReady() && (GetEnemiesInRange(Ally, R->Range()) >= 1))
+				if (ComboRenable->Enabled() &&!temp->Enabled() && ComboRhp->GetInteger() >= Ally->HealthPercent() && R->Range() && R->IsReady() && (GetEnemiesInRange(Ally, R->Range()) >= 1))
 				{
 					R->CastOnTarget(Ally);
 				}
 			}
 
-			if (!temp->Enabled() && !GEntityList->Player()->IsRecalling() && ComboRhp->GetInteger() >= GEntityList->Player()->HealthPercent() && R->Range() && R->IsReady() && !GEntityList->Player()->IsDead() && !GUtility->IsPositionInFountain(GEntityList->Player()->GetPosition(), true, false) && (GetEnemiesInRange(GEntityList->Player(), R->Range()) >= 1))
+			if (ComboRenable->Enabled() && !temp->Enabled() && !GEntityList->Player()->IsRecalling() && ComboRhp->GetInteger() >= GEntityList->Player()->HealthPercent() && R->Range() && R->IsReady() && !GEntityList->Player()->IsDead() && !GUtility->IsPositionInFountain(GEntityList->Player()->GetPosition(), true, false) && (GetEnemiesInRange(GEntityList->Player(), R->Range()) >= 1))
 			{
 				R->CastOnPlayer();
 			}

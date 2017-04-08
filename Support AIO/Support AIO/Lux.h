@@ -45,7 +45,7 @@ public:
 		HarassQ = HarassMenu->CheckBox("Q harras", true);
 		HarassE = HarassMenu->CheckBox("E harras", true);
 		ShieldMenu = MainMenu->AddMenu("Shield Menu");
-		ShieldE = ShieldMenu->CheckBox("Auto E", true);
+		ShieldE = ShieldMenu->CheckBox("Auto W", true);
 		ShieldHP = ShieldMenu->AddFloat("Auto Shield if X HP", 1, 100, 50);
 		ShieldHPinc = ShieldMenu->AddFloat("Auto Shield if Inc. Damage Percent", 1, 100, 10);
 		ShieldInc = ShieldMenu->CheckBox("Auto Shield only Incoming Damage(sometimes not accurate)", true);
