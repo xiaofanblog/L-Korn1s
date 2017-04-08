@@ -64,6 +64,7 @@ ISpell2* W;
 ISpell2* E;
 ISpell2* R;
 ISpell* Flash;
+int Wproc = 0;
 
 std::vector<std::string> ComboRType = { "Gapclose", "Dash", "After Dash" };
 std::vector<std::string> HarassType = { "WQAEE", "EEWQ" };
@@ -285,16 +286,18 @@ void dmgdraw()
 
 static void OnCreateObject(IUnit* Source)
 {
+
 	if (strstr(Source->GetObjectName(), "Fizz_Base_W_DmgMarkerMaintain.troy"))
 	{
-		if (ComboWproc->Enabled())
-		{
-			if (GOrbwalking->GetOrbwalkingMode() == kModeCombo &&
-				GetDistance(GEntityList->Player(), Source) < GOrbwalking->GetAutoAttackRange(GEntityList->Player()) + 50)
-			{
-				W->CastOnPlayer();
-			}
-		}
+		Wproc = 1;
+	}
+}
+
+static void OnDeleteObject(IUnit* Source)
+{
+	if (strstr(Source->GetObjectName(), "Fizz_Base_W_DmgMarkerDecay.troy") || strstr(Source->GetObjectName(), "Fizz_Base_W_DmgMarker_champion.troy"))
+	{
+		Wproc = 0;
 	}
 }
 
@@ -338,6 +341,7 @@ void Combo()
 	auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
 	if (target != nullptr && !target->IsInvulnerable() && !target->IsDead())
 	{
+
 		if (R->IsReady())
 		{
 			auto targetE = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range() * 2);
@@ -393,6 +397,13 @@ void Combo()
 				if (!ComboWproc->Enabled() && ComboW->Enabled() && target->IsValidTarget(GEntityList->Player(), 500))
 				{
 					W->CastOnPlayer();
+				}
+				if (ComboWproc->Enabled() && ComboW->Enabled() && target->IsValidTarget(GEntityList->Player(), 350) && Wproc == 1)
+				{
+					if (W->CastOnPlayer())
+					{
+						Wproc = 0;
+					}
 				}
 				auto targetEa = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 800);
 				if (targetEa != nullptr)
@@ -452,6 +463,13 @@ void Combo()
 				{
 					W->CastOnPlayer();
 				}
+				if (ComboWproc->Enabled() && ComboW->Enabled() && target->IsValidTarget(GEntityList->Player(), 350) && Wproc == 1)
+				{
+					if (W->CastOnPlayer())
+					{
+						Wproc = 0;
+					}
+				}
 
 				auto targetEa = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 800);
 				if (targetEa != nullptr)
@@ -480,6 +498,13 @@ void Combo()
 			}
 			if (ComboRmode->GetInteger() == 2)
 			{
+				if (ComboWproc->Enabled() && ComboW->Enabled() && target->IsValidTarget(GEntityList->Player(), 350) && Wproc == 1)
+				{
+					if (W->CastOnPlayer())
+					{
+						Wproc = 0;
+					}
+				}
 				if (!ComboWproc->Enabled() && ComboW->Enabled() && target->IsValidTarget(GEntityList->Player(), Q->Range() + 20))
 				{
 					W->CastOnPlayer();
@@ -582,6 +607,13 @@ void Combo()
 				if (ComboW->Enabled() && W->IsReady() && target->IsValidTarget(GEntityList->Player(), 500))
 				{
 					W->CastOnPlayer();
+				}
+			}
+			if (ComboWproc->Enabled() && ComboW->Enabled() && target->IsValidTarget(GEntityList->Player(), 350) && Wproc == 1)
+			{
+				if (W->CastOnPlayer())
+				{
+					Wproc = 0;
 				}
 			}
 
@@ -797,6 +829,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);		
 	GEventManager->AddEventHandler(kEventOnCreateObject, OnCreateObject);
+	GEventManager->AddEventHandler(kEventOnDestroyObject, OnDeleteObject);
 
 }
 
@@ -806,4 +839,5 @@ PLUGIN_API void OnUnload()
 	GEventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->RemoveEventHandler(kEventOnRender, OnRender);
 	GEventManager->RemoveEventHandler(kEventOnCreateObject, OnCreateObject);
+	GEventManager->RemoveEventHandler(kEventOnDestroyObject, OnDeleteObject);
 }
