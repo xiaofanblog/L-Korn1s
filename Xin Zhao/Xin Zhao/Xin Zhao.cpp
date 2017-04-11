@@ -28,7 +28,11 @@ IMenu* FarmMenu;
 IMenuOption* FarmQ;
 IMenuOption* FarmW;
 IMenuOption* FarmE;
+IMenuOption* FarmLQ;
+IMenuOption* FarmLW;
+IMenuOption* FarmLE;
 IMenuOption* FarmMana;
+IMenuOption* FarmManaL;
 
 IMenu* KillstealMenu;
 IMenuOption* KSR;
@@ -96,12 +100,19 @@ void Menu()
 		DrawERange = DrawingMenu->CheckBox("Draw E Range", true);
 		DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
 	}
-	FarmMenu = MainMenu->AddMenu("Farming");
+	FarmMenu = MainMenu->AddMenu("Jungle Clear");
 	{
 		FarmMana = FarmMenu->AddInteger("Mana percent for clear", 10, 100, 50);
-		FarmQ = FarmMenu->CheckBox("Lane Clear with Q", true);
-		FarmW = FarmMenu->CheckBox("Lane Clear with W", true);
-		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
+		FarmQ = FarmMenu->CheckBox("Jungle Clear with Q", true);
+		FarmW = FarmMenu->CheckBox("Jungle Clear with W", true);
+		FarmE = FarmMenu->CheckBox("Jungle Clear with E", true);
+	}
+	FarmMenu = MainMenu->AddMenu("Lane Clear");
+	{
+		FarmManaL = FarmMenu->AddInteger("Mana percent for clear", 10, 100, 50);
+		FarmLQ = FarmMenu->CheckBox("Lane Clear with Q", true);
+		FarmLW = FarmMenu->CheckBox("Lane Clear with W", true);
+		FarmLE = FarmMenu->CheckBox("Lane Clear with E", true);
 	}
 
 	KillstealMenu = MainMenu->AddMenu("Killsteal");
@@ -311,9 +322,9 @@ void Farm()
 {
 	if (Player->ManaPercent() > FarmMana->GetInteger())
 	{
-		for (auto Minion : GEntityList->GetAllMinions(false, true, true))
+		for (auto Minion : GEntityList->GetAllMinions(false, false, true))
 		{
-			if (!Minion->IsDead() && Minion != nullptr)
+			if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && (Minion->IsCreep() || Minion->IsJungleCreep()))
 			{
 				if (FarmQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
 				{
@@ -331,6 +342,29 @@ void Farm()
 			}
 		}
 	}
+	if (Player->ManaPercent() > FarmManaL->GetInteger())
+	{
+		for (auto Minion : GEntityList->GetAllMinions(false, true, false))
+		{
+			if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && (Minion->IsCreep() || Minion->IsJungleCreep()))
+			{
+				if (FarmLQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+				{
+					Q->CastOnPlayer();
+				}
+				if (FarmLE->Enabled() && E->IsReady() && Minion->IsValidTarget(GEntityList->Player(), E->Range()))
+				{
+					E->CastOnUnit(Minion);
+				}
+				if (FarmLW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), 250))
+				{
+					W->CastOnPlayer();
+				}
+
+			}
+		}
+	}
+
 }
 
 PLUGIN_EVENT(void) OnAfterAttack(IUnit* source, IUnit* target)
