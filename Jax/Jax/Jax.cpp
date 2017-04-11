@@ -85,6 +85,9 @@ IInventoryItem* Ward14;
 IInventoryItem* Ward15;
 IInventoryItem* Ward16;
 IInventoryItem* Ward17;
+IInventoryItem* Tiamat;
+IInventoryItem* Titanic_Hydra;
+IInventoryItem* Ravenous_Hydra;
 
 
 
@@ -117,6 +120,9 @@ void LoadSpells()
 	Ward15 = GPluginSDK->CreateItemForId(2043, 600);
 	Ward16 = GPluginSDK->CreateItemForId(2055, 600);
 	Ward17 = GPluginSDK->CreateItemForId(1418, 600);
+	Titanic_Hydra = GPluginSDK->CreateItemForId(3748, 385);
+	Ravenous_Hydra = GPluginSDK->CreateItemForId(3074, 385);
+	Tiamat = GPluginSDK->CreateItemForId(3077, 385);
 }
 
 
@@ -656,6 +662,24 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	}
 }
 
+int EnemiesInRange(IUnit* Source, float range)
+{
+	auto Targets = GEntityList->GetAllHeros(false, true);
+	auto enemiesInRange = 0;
+
+	for (auto target : Targets)
+	{
+		if (target != nullptr && !target->IsDead())
+		{
+			auto flDistance = (target->GetPosition() - Source->GetPosition()).Length();
+			if (flDistance < range)
+			{
+				enemiesInRange++;
+			}
+		}
+	}
+	return enemiesInRange;
+}
 
 PLUGIN_EVENT(void) OnAfterAttack(IUnit* source, IUnit* target)
 {
@@ -669,6 +693,31 @@ PLUGIN_EVENT(void) OnAfterAttack(IUnit* source, IUnit* target)
 			if (ComboWAA->Enabled() && W->IsReady() && (hero->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 300)
 			{
 				W->CastOnPlayer();
+
+			}
+			if (!W->IsReady())
+			{
+				if (Ravenous_Hydra->IsOwned() && Ravenous_Hydra->IsReady() && !(Player->IsDead()))
+				{
+					if (EnemiesInRange(Player, 385) > 0)
+					{
+						Ravenous_Hydra->CastOnPlayer();
+					}
+				}
+				if (Tiamat->IsOwned() && Tiamat->IsReady() && !(Player->IsDead()))
+				{
+					if (EnemiesInRange(Player, 385) > 0)
+					{
+						Tiamat->CastOnPlayer();
+					}
+				}
+				if (Titanic_Hydra->IsOwned() && Titanic_Hydra->IsReady() && !(Player->IsDead()))
+				{
+					if (EnemiesInRange(Player, 385) > 0)
+					{
+						Titanic_Hydra->CastOnPlayer();
+					}
+				}
 			}
 		}
 		break;
@@ -678,6 +727,30 @@ PLUGIN_EVENT(void) OnAfterAttack(IUnit* source, IUnit* target)
 			{
 				W->CastOnPlayer();
 			}
+			if (!W->IsReady())
+			{
+				if (Ravenous_Hydra->IsOwned() && Ravenous_Hydra->IsReady() && !(Player->IsDead()))
+				{
+					if (EnemiesInRange(Player, 385) > 0)
+					{
+						Ravenous_Hydra->CastOnPlayer();
+					}
+				}
+				if (Tiamat->IsOwned() && Tiamat->IsReady() && !(Player->IsDead()))
+				{
+					if (EnemiesInRange(Player, 385) > 0)
+					{
+						Tiamat->CastOnPlayer();
+					}
+				}
+				if (Titanic_Hydra->IsOwned() && Titanic_Hydra->IsReady() && !(Player->IsDead()))
+				{
+					if (EnemiesInRange(Player, 385) > 0)
+					{
+						Titanic_Hydra->CastOnPlayer();
+					}
+				}
+			}
 		}
 		break;
 	case kModeLaneClear:
@@ -685,6 +758,30 @@ PLUGIN_EVENT(void) OnAfterAttack(IUnit* source, IUnit* target)
 			if (FarmW->Enabled() && W->IsReady() && (minion->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 300)
 			{
 				W->CastOnPlayer();
+			}
+			if (!W->IsReady())
+			{
+				if (Ravenous_Hydra->IsOwned() && Ravenous_Hydra->IsReady() && !(Player->IsDead()))
+				{
+					if (EnemiesInRange(Player, 385) > 0)
+					{
+						Ravenous_Hydra->CastOnPlayer();
+					}
+				}
+				if (Tiamat->IsOwned() && Tiamat->IsReady() && !(Player->IsDead()))
+				{
+					if (EnemiesInRange(Player, 385) > 0)
+					{
+						Tiamat->CastOnPlayer();
+					}
+				}
+				if (Titanic_Hydra->IsOwned() && Titanic_Hydra->IsReady() && !(Player->IsDead()))
+				{
+					if (EnemiesInRange(Player, 385) > 0)
+					{
+						Titanic_Hydra->CastOnPlayer();
+					}
+				}
 			}
 		}
 		break;
