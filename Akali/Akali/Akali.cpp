@@ -35,6 +35,7 @@ IMenu* FarmMenu;
 IMenuOption* FarmQ;
 IMenuOption* FarmE;
 IMenuOption* FarmQL;
+IMenuOption* FarmLogic;
 IMenuOption* FarmEnergy;
 
 IMenu* FleeMenu;
@@ -105,6 +106,7 @@ void Menu()
 	}
 	FarmMenu = MainMenu->AddMenu("Farming");
 	{
+		FarmLogic = FarmMenu->CheckBox("Use Farm Logic?", true);
 		FarmEnergy = FarmMenu->AddInteger("Energy percent for clear", 10, 100, 50);
 		FarmQL = FarmMenu->CheckBox("Last Hit with Q", true);
 		FarmQ = FarmMenu->CheckBox("Lane Clear with Q", true);
@@ -395,20 +397,72 @@ void Killsteal()
 
 void Farm()
 {
-	if (Player->ManaPercent() < FarmEnergy->GetInteger())
-		return;
-	if (FarmE->Enabled())
+
+	if (Player->ManaPercent() > FarmEnergy->GetInteger())
 	{
-		if (E->IsReady())
+		if (!FarmLogic->Enabled())
 		{
-			E->AttackMinions();
+			if (FarmE->Enabled())
+			{
+				if (E->IsReady())
+				{
+					E->AttackMinions();
+				}
+			}
+			if (FarmQ->Enabled())
+			{
+				if (Q->IsReady())
+				{
+					Q->AttackMinions();
+				}
+			}
 		}
 	}
-	if (FarmQ->Enabled())
+	if (FarmLogic->Enabled())
 	{
-		if (Q->IsReady())
+		for (auto Minion : GEntityList->GetAllMinions(false, true, true))
 		{
-			Q->AttackMinions();
+			if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && (Minion->IsCreep() || Minion->IsJungleCreep()))
+			{
+				auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), Minion, kSlotQ);
+				auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), Minion, kSlotE);
+				if (Minion->GetHealth() > QDamage + EDamage)
+				{
+					if (Q->IsReady() && FarmQ->Enabled() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+					{
+						if (Minion->IsValidTarget(GEntityList->Player(), 200))
+						{
+							Q->CastOnUnit(Minion);
+						}
+						if (!Minion->IsValidTarget(GEntityList->Player(), 200) && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+						{
+							Q->CastOnUnit(Minion);
+						}
+					}
+				}
+				
+				if (Minion->HasBuff("AkaliMota"))
+				{
+					if (EDamage < Minion->GetHealth())
+					{
+						if (FarmE->Enabled() && Minion->IsValidTarget(GEntityList->Player(), E->Range()))
+						{
+							E->CastOnUnit(Minion);
+
+							GGame->IssueOrder(GEntityList->Player(), kAttackUnit, Minion);
+
+						}
+					}
+				}
+				if (!Q->IsReady() && !Minion->HasBuff("AkaliMota"))
+				{
+					if (FarmE->Enabled() && Minion->IsValidTarget(GEntityList->Player(), E->Range()))
+					{
+						E->CastOnUnit(Minion);
+					}
+				}
+
+			}
 		}
 	}
 }
