@@ -269,6 +269,7 @@ void Combo()
 				if (object != Vec3(0, 0, 0))
 				{
 					W->CastOnPosition(object);
+					
 					lastwe = GGame->TickCount() + GGame->Latency() + 150;
 
 				}
@@ -372,6 +373,7 @@ void Killsteal()
 					if (object != Vec3(0, 0, 0))
 					{
 						W->CastOnPosition(object);
+						lastw = GGame->TickCount() + 50;
 						lastwe = GGame->TickCount() + GGame->Latency() + 150;
 
 					}
@@ -540,6 +542,7 @@ void Harass()
 					if (object != Vec3(0, 0, 0))
 					{
 						W->CastOnPosition(object);
+						lastw = GGame->TickCount() + 50;
 						lastwe = GGame->TickCount() + GGame->Latency() + 150;
 
 					}
@@ -612,7 +615,7 @@ static void OnProcessSpellCast(CastedSpell const& Args)
 	{
 		if (std::string(Args.Name_) == "SyndraQ")
 		{
-			if (GOrbwalking->GetOrbwalkingMode() == kModeCombo && lastwe < GGame->TickCount())
+			if (GOrbwalking->GetOrbwalkingMode() == kModeCombo && lastw < GGame->TickCount())
 			{
 				E->CastOnPosition(Args.EndPosition_);
 			}
