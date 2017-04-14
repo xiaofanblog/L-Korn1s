@@ -482,6 +482,18 @@ void Farm()
 		{
 			W->CastOnPosition(pos);
 		}
+		if (GetMinionsW(W->Range()) <= 2)
+		{
+			GPrediction->FindBestCastPosition(W->Range(), W->Radius(), false, true, false, pos, WHit);
+			if (WHit == 2)
+			{
+				W->CastOnPosition(pos);
+			}
+			if (WHit == 1)
+			{
+				W->CastOnPosition(pos);
+			}
+		}
 	}
 }
 void Rrange()
