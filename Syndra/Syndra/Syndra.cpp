@@ -21,6 +21,10 @@ IMenuOption* ComboRStack;
 IMenuOption* ItemsCombo;
 IMenuOption* ComboRmin;
 IMenu* RBlacklist;
+IMenu* AASet;
+IMenuOption* ComboAA;
+IMenuOption* ComboAAkey;
+IMenuOption* ComboAALevel;
 
 IMenu* KillstealMenu;
 IMenuOption* KSQ;
@@ -103,6 +107,10 @@ void Menu()
 		ComboE = ComboMenu->CheckBox("Use E", true);
 		ComboR = ComboMenu->CheckBox("Use R", true);
 		ComboRcheck = ComboMenu->CheckBox("Dont waste R if Q or W can kill", true);
+		AASet = ComboMenu->AddMenu("AA Settings");
+		ComboAALevel = AASet->AddInteger("At what level disable AA", 1, 18, 6);
+		ComboAA = AASet->CheckBox("Disable AA", false);
+		ComboAAkey = AASet->AddKey("Disable key", 32);
 		RBlacklist = MainMenu->AddMenu("R Blacklist");
 		for (auto enemy : GEntityList->GetAllHeros(false, true)) {
 			RBlacklist->CheckBox(enemy->ChampionName(), false);
@@ -113,7 +121,7 @@ void Menu()
 	HarassMenu = MainMenu->AddMenu("Harass Settings");
 	{
 		HarassMana = HarassMenu->AddFloat("Mana Percent", 10, 100, 50);
-		HarassQauto = HarassMenu->CheckBox("Auto Q", false);
+		HarassQauto = HarassMenu->CheckBox("Auto Q on dash", true);
 		HarassQ = HarassMenu->CheckBox("Harass with Q", true);
 		HarassW = HarassMenu->CheckBox("Harass with W", true);
 		HarassE = HarassMenu->CheckBox("Harass with E", true);
@@ -123,7 +131,6 @@ void Menu()
 		FarmMana = FarmMenu->AddFloat("Mana Percent", 10, 100, 50);
 		FarmQ = FarmMenu->CheckBox("Farm with Q", true);
 		FarmW = FarmMenu->CheckBox("Farm with W", true);
-		FarmQLS = FarmMenu->CheckBox("Last hit Q unkillable", true);
 	}
 	KillstealMenu = MainMenu->AddMenu("Killsteal");
 	{
@@ -262,6 +269,7 @@ void Combo()
 				if (object != Vec3(0, 0, 0))
 				{
 					W->CastOnPosition(object);
+					lastwe = GGame->TickCount() + GGame->Latency() + 150;
 
 				}
 			}
@@ -276,7 +284,7 @@ void Combo()
 			if (!target->HasBuff("SyndraEDebuff"))
 			{
 				W->CastOnTarget(target);
-				lastwe = GGame->TickCount() + 150;
+				
 			}
 
 		}
@@ -321,7 +329,7 @@ void Combo()
 					IMenuOption* temp = RBlacklist->GetOption(enemy->ChampionName());
 					if (Q->IsReady() && GDamage->GetSpellDamage(GEntityList->Player(), enemy, kSlotQ) > enemy->GetHealth())
 						continue;
-					if (W->IsReady() && GDamage->GetSpellDamage(GEntityList->Player(), enemy, kSlotW) > enemy->GetHealth())
+					if ((GEntityList->Player()->HasBuff("syndrawtooltip") || W->IsReady()) && GDamage->GetSpellDamage(GEntityList->Player(), enemy, kSlotW) > enemy->GetHealth())
 						continue;
 
 					if (GetUltimateDamage(enemy) > enemy->GetHealth() && R->IsReady() && enemy->IsValidTarget(GEntityList->Player(), R->Range()))
@@ -364,6 +372,7 @@ void Killsteal()
 					if (object != Vec3(0, 0, 0))
 					{
 						W->CastOnPosition(object);
+						lastwe = GGame->TickCount() + GGame->Latency() + 150;
 
 					}
 				}
@@ -380,7 +389,7 @@ void Killsteal()
 						if (!target->HasBuff("SyndraEDebuff"))
 						{
 							W->CastOnTarget(target);
-							lastwe = GGame->TickCount() + 150;
+							
 						}
 
 					}
@@ -398,7 +407,7 @@ void Killsteal()
 					IMenuOption* temp = RBlacklist->GetOption(enemy->ChampionName());
 					if (Q->IsReady() && QDamage> enemy->GetHealth())
 						continue;
-					if (W->IsReady() && WDamage > enemy->GetHealth())
+					if ((GEntityList->Player()->HasBuff("syndrawtooltip") || W->IsReady()) && WDamage > enemy->GetHealth())
 						continue;
 					if (GetUltimateDamage(enemy) > enemy->GetHealth() && R->IsReady() && enemy->IsValidTarget(GEntityList->Player(), R->Range()))
 					{
@@ -456,6 +465,7 @@ void Farm()
 					if (obj != Vec3(0, 0, 0) && GEntityList->Player()->ServerPosition().To2D().Distance(obj.To2D()) < 925.f && W->IsReady())
 					{
 						W->CastOnPosition(obj);
+
 					}
 				}
 			}
@@ -487,15 +497,20 @@ void autoQ()
 		{
 			if (Enemy != nullptr)
 			{
-				if (Q->IsReady() && Enemy->IsValidTarget() && !Enemy->IsDead())
+				if (Q->IsReady() && Enemy->IsValidTarget())
 				{
 					if (Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
 					{
-						Vec3 pred;
-						GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
-						Q->CastOnPosition(pred);
+						AdvPredictionOutput outputfam;
+						Q->RunPrediction(Enemy, false, kCollidesWithNothing, &outputfam);
+						if (outputfam.HitChance == kHitChanceDashing)
+						{
+							Q->CastOnTarget(Enemy, kHitChanceDashing);
+						}
+						else return;
 					}
 				}
+
 			}
 		}
 	}
@@ -525,6 +540,7 @@ void Harass()
 					if (object != Vec3(0, 0, 0))
 					{
 						W->CastOnPosition(object);
+						lastwe = GGame->TickCount() + GGame->Latency() + 150;
 
 					}
 				}
@@ -539,7 +555,7 @@ void Harass()
 				if (!target->HasBuff("SyndraEDebuff"))
 				{
 					W->CastOnTarget(target);
-					lastwe = GGame->TickCount() + 150;
+					
 				}
 
 			}
@@ -596,7 +612,7 @@ static void OnProcessSpellCast(CastedSpell const& Args)
 	{
 		if (std::string(Args.Name_) == "SyndraQ")
 		{
-			if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+			if (GOrbwalking->GetOrbwalkingMode() == kModeCombo && lastwe < GGame->TickCount())
 			{
 				E->CastOnPosition(Args.EndPosition_);
 			}
@@ -604,7 +620,7 @@ static void OnProcessSpellCast(CastedSpell const& Args)
 			{
 				E->CastOnPosition(Args.EndPosition_);
 			}
-			
+
 		}
 	}
 }
@@ -673,6 +689,20 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Farm();
 	}
+	if (GetAsyncKeyState(ComboAAkey->GetInteger()))
+	{
+		auto level = Player->GetLevel();
+		if (ComboAA->Enabled() && level >= ComboAALevel->GetInteger() && Player->GetMana() > 100)
+		{
+			GOrbwalking->SetAttacksAllowed(false);
+		}
+	}
+	if (!GetAsyncKeyState(ComboAAkey->GetInteger()) || Player->GetMana() < 100 || (!Q->IsReady() && !W->IsReady() && !E->IsReady()))
+	{
+		{
+			GOrbwalking->SetAttacksAllowed(true);
+		}
+	}
 
 }
 PLUGIN_EVENT(void) OnInterruptible(InterruptibleSpell const& Args)
@@ -705,16 +735,6 @@ PLUGIN_EVENT(void) OnRender()
 	dmgdraw();
 }
 
-PLUGIN_EVENT(void) UnkillableMinions(IUnit* minion)
-{
-	if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear || GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
-	{
-		if (FarmQLS->Enabled())
-		{
-			Q->CastOnUnit(minion);
-		}
-	}
-}
 
 PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 {
@@ -728,7 +748,6 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnSpellCast, OnProcessSpellCast);
 	GEventManager->AddEventHandler(kEventOnInterruptible, OnInterruptible);
 	GEventManager->AddEventHandler(kEventOnGapCloser, OnGapCloser);
-	GEventManager->AddEventHandler(kEventOrbwalkNonKillableMinion, UnkillableMinions);
 	GGame->PrintChat("<b><font color=\"#FFFFFF\">Syndra<b><font color=\"#f8a101\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
 
 }
@@ -742,5 +761,4 @@ PLUGIN_API void OnUnload()
 	GEventManager->RemoveEventHandler(kEventOnSpellCast, OnProcessSpellCast);
 	GEventManager->RemoveEventHandler(kEventOnInterruptible, OnInterruptible);
 	GEventManager->RemoveEventHandler(kEventOnGapCloser, OnGapCloser);
-	GEventManager->RemoveEventHandler(kEventOrbwalkNonKillableMinion, UnkillableMinions);
 }
