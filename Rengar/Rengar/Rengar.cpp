@@ -351,17 +351,22 @@ void Combo()
 
 
 void Mixed()
-{ 
-	if (Player->GetMana() < 4)
+{
+	Enemy = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+	for (auto Enemy : GEntityList->GetAllHeros(false, true));
+	if (Enemy != nullptr && Enemy->IsValidTarget() && Enemy->IsHero() && Enemy->IsValidTarget())
 	{
-		if (ComboE->Enabled() && E->IsReady())
-		{
-			auto target = GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, E->Range());
-			if (target != nullptr && E->Range())
-			{
-				E->CastOnPlayer();
-			}
 
+		if (Player->GetMana() < 4)
+		{
+			if (HarassE->Enabled() && E->IsReady())
+			{
+				if (Enemy != nullptr)
+				{
+					E->CastOnTarget(Enemy);
+				}
+
+			}
 		}
 	}
 }
@@ -402,6 +407,20 @@ void Farm()
 			{
 				if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && (Minion->IsCreep() || Minion->IsJungleCreep()))
 				{
+					if (Tiamat->IsOwned() && Tiamat->IsReady() && ComboItems->Enabled() && !(Player->IsDead()))
+					{
+						if (Minion->IsValidTarget(GEntityList->Player(), 385))
+						{
+							Tiamat->CastOnPlayer();
+						}
+					}
+					if (Titanic_Hydra->IsOwned() && Titanic_Hydra->IsReady() && ComboItems->Enabled() && !(Player->IsDead()))
+					{
+						if (Minion->IsValidTarget(GEntityList->Player(), 385))
+						{
+							Titanic_Hydra->CastOnPlayer();
+						}
+					}
 					if (FarmQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), 400))
 					{
 						Vec3 vecCastPosition;
@@ -439,6 +458,20 @@ void Farm()
 			{
 				if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && (Minion->IsCreep() || Minion->IsJungleCreep()))
 				{
+					if (Tiamat->IsOwned() && Tiamat->IsReady() && ComboItems->Enabled() && !(Player->IsDead()))
+					{
+						if (Minion->IsValidTarget(GEntityList->Player(), 385))
+						{
+							Tiamat->CastOnPlayer();
+						}
+					}
+					if (Titanic_Hydra->IsOwned() && Titanic_Hydra->IsReady() && ComboItems->Enabled() && !(Player->IsDead()))
+					{
+						if (Minion->IsValidTarget(GEntityList->Player(), 385))
+						{
+							Titanic_Hydra->CastOnPlayer();
+						}
+					}
 					if (FarmQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), 400))
 					{
 						Vec3 vecCastPosition;
