@@ -3,7 +3,8 @@
 #include <map>
 #include "Extension.h"
 #include "EventManager.h"
-
+#include "MalachitePred.h"
+#include "Geometry.h"
 IMenu* MainMenu;
 
 
@@ -27,6 +28,7 @@ IMenu* ComboMenu;
 IMenuOption* Survival;
 IMenuOption* Chase;
 IMenuOption* ComboQ;
+IMenuOption* ComboQ2;
 IMenuOption* ComboQflash;
 IMenuOption* ComboW;
 IMenuOption* ComboE;
@@ -48,6 +50,7 @@ IMenuOption* ComboRinterrupt;
 IMenuOption* ComboRmin;
 IMenuOption* ComboQmin;
 IMenuOption* ComboQmax;
+IMenuOption* InterruptE;
 IMenuOption* ComboRhp;
 IMenuOption* ComboQinterrupt;
 
@@ -134,6 +137,7 @@ IMenu* HarassMenu;
 IMenu* HealMenu;
 IMenuOption* HarassMana;
 IMenuOption* HarassQ;
+IMenuOption* HarassQ2;
 IMenuOption* HarassE;
 IMenuOption* HarassW;
 IMenu* WMenu;
@@ -196,13 +200,15 @@ IMenuOption* Rred;
 IMenuOption* Rblue;
 IMenuOption* Rally;
 ISpell2* Q;
+ISpell2* Q2;
+ISpell2* Q3;
 ISpell2* W;
 ISpell2* E;
 ISpell2* R;
 IMenuOption* Rmin;
 
 IUnit* Enemy;
-
+IUnit* VelkozQMissile;
 
 ISpell* Flash;
 

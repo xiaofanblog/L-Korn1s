@@ -15,6 +15,8 @@
 #include "EventManager.h"
 #include "Brand.h"
 #include "Lux.h"
+#include "MalachitePred.h"
+#include "VelKoz.h"
 PluginSetup("Support AIO by Kornis");
 
 class zHero
@@ -32,6 +34,7 @@ public:
 	virtual void OnPauseAnimation(IUnit* Source) = 0;
 	virtual bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) = 0;
 	virtual void OnLoad() = 0;
+	virtual void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent) = 0;
 };
 
 class Blitzcrank : public zHero
@@ -93,6 +96,10 @@ public:
 	void OnPauseAnimation(IUnit* Source) override
 	{
 		//none
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+
 	}
 	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
 	{
@@ -157,6 +164,10 @@ public:
 	}
 	void OnDeleteObject(IUnit* Source) override
 	{
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+
 	}
 	void OnPauseAnimation(IUnit* Source) override
 	{
@@ -235,6 +246,9 @@ public:
 	{
 		//none
 	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+	}
 	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
 	{
 		return true;
@@ -302,6 +316,9 @@ public:
 		//none
 	}
 	void OnDeleteObject(IUnit* Source) override
+	{
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
 	{
 	}
 	void OnLevelUp(IUnit* Source, int NewLevel) override
@@ -388,6 +405,10 @@ public:
 	}
 	void OnDeleteObject(IUnit* Source) override
 	{
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+
 	}
 	void OnLevelUp(IUnit* Source, int NewLevel) override
 	{
@@ -476,6 +497,10 @@ public:
 	{
 		return true;
 	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+
+	}
 private:
 	void PrintMessage()
 	{
@@ -561,6 +586,9 @@ public:
 	void OnDeleteObject(IUnit* Source) override
 	{
 	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+	}
 private:
 	void PrintMessage()
 	{
@@ -642,6 +670,10 @@ class Sona : public zHero
 		{
 			GGame->PrintChat("<b><font color = \"#f8a101\">Sona</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 		}
+		void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+		{
+
+		}
 };
 
 class Alistar : public zHero
@@ -669,13 +701,16 @@ public:
 		{
 			AlistarBase().FlashQ();
 		}
+		if (GetAsyncKeyState(ComboQ2->GetInteger()))
+		{
+			AlistarBase().EngageCombo();
+		}
 	}
 
 	void OnGapCloser(GapCloserSpell const& Args) override
 	{
 		AlistarBase().AntiGapclose(Args);
 	}
-
 
 
 	void OnInterruptible(InterruptibleSpell const& Args) override
@@ -713,6 +748,10 @@ private:
 	void PrintMessage()
 	{
 		GGame->PrintChat("<b><font color = \"#f8a101\">Alistar</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+
 	}
 };
 class Janna : public zHero
@@ -777,6 +816,10 @@ public:
 	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
 	{
 		return true;
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+
 	}
 private:
 	void PrintMessage()
@@ -852,6 +895,10 @@ public:
 	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
 	{
 		return true;
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+
 	}
 private:
 	void PrintMessage()
@@ -936,6 +983,10 @@ public:
 	}
 	void OnDeleteObject(IUnit* Source) override
 	{
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+
 	}
 private:
 	void PrintMessage()
@@ -1022,6 +1073,9 @@ public:
 	void OnDeleteObject(IUnit* Source) override
 	{
 	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+	}
 private:
 	void PrintMessage()
 	{
@@ -1098,6 +1152,9 @@ public:
 		return true;
 	}
 	void OnDeleteObject(IUnit* Source) override
+	{
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
 	{
 	}
 private:
@@ -1177,6 +1234,10 @@ public:
 	{
 
 	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+		
+	}
 	void OnPauseAnimation(IUnit* Source) override
 	{
 		//none
@@ -1192,6 +1253,92 @@ private:
 	}
 };
 
+class VelKoz : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		VelKozBase().DrawMenu();
+		VelKozBase().LoadSpells();
+	}
+
+	void OnRender() override
+	{
+		VelKozBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		VelKozBase().AutoE();
+		VelKozBase().AAdisable();
+		VelKozBase().autoQ();
+		VelKozBase().setQ();
+		VelKozBase().Killsteal();
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			VelKozBase().Combo();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			VelKozBase().Farm();
+		}
+
+		if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
+		{
+			VelKozBase().Harass();
+		}
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+		VelKozBase().AntiGapclose(Args);
+	}
+
+
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+		VelKozBase().Interrupt(Args);
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+	}
+
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+	}
+
+	void OnCreateObject(IUnit* Source) override
+	{
+		VelKozBase().VelkozOnCreateObject(Source);
+	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+		VelKozBase().VelkozOnDestroyObject(Source);
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+		VelKozBase().OnUpdateChargedSpell(Slot, Position, ReleaseCast, TriggerEvent);
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Vel'Koz</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
 
 zHero* yHero = nullptr;
 
@@ -1238,6 +1385,12 @@ PLUGIN_EVENT(void) OnDeleteObject(IUnit* Source)
 {
 	yHero->OnDeleteObject(Source);
 }
+PLUGIN_EVENT(void) OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+{
+
+	yHero->OnUpdateChargedSpell(Slot, Position, ReleaseCast, TriggerEvent);
+	
+}
 
 
 PLUGIN_EVENT(void) OnPauseAnimation(IUnit* Source)
@@ -1283,6 +1436,8 @@ void LoadChampion()
 		yHero = new TahmKench;
 	else if (playerHero == "Lux")
 		yHero = new Lux;
+	else if (playerHero == "Velkoz")
+		yHero = new VelKoz;
 	else
 	{
 		GGame->PrintChat("<b><font color=\"#FFFFFF\">This champion isn't supported.</b></font>");
@@ -1298,6 +1453,18 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	LoadChampion();
 	yHero->OnLoad();
 	std::string playerHero = GEntityList->Player()->ChampionName();
+	GEventManager->AddEventHandler(kEventOnRender, OnRender);
+	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
+	GEventManager->AddEventHandler(kEventOnGapCloser, OnGapCloser);
+	GEventManager->AddEventHandler(kEventOnInterruptible, OnInterruptible);
+	GEventManager->AddEventHandler(kEventOnSpellCast, OnSpellCast);
+	GEventManager->AddEventHandler(kEventOnCreateObject, OnCreateObject);
+	GEventManager->AddEventHandler(kEventOnLevelUp, OnLevelUp);
+	GEventManager->AddEventHandler(kEventOnPauseAnimation, OnPauseAnimation);
+	GEventManager->AddEventHandler(kEventOnPreCast, OnPreCast);
+	GEventManager->AddEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
+	GEventManager->AddEventHandler(kEventOnDestroyObject, OnDeleteObject);
+	GEventManager->AddEventHandler(kEventOnUpdateChargedSpell, OnUpdateChargedSpell);
 	if (playerHero == "Janna")
 	{
 		eventManager = PluginSDK->GetEventManager();
@@ -1325,17 +1492,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 			LuxBase().AutoW();
 		});
 	}
-	GEventManager->AddEventHandler(kEventOnRender, OnRender);
-	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
-	GEventManager->AddEventHandler(kEventOnGapCloser, OnGapCloser);
-	GEventManager->AddEventHandler(kEventOnInterruptible, OnInterruptible);
-	GEventManager->AddEventHandler(kEventOnSpellCast, OnSpellCast);
-	GEventManager->AddEventHandler(kEventOnCreateObject, OnCreateObject);
-	GEventManager->AddEventHandler(kEventOnLevelUp, OnLevelUp);
-	GEventManager->AddEventHandler(kEventOnPauseAnimation, OnPauseAnimation);
-	GEventManager->AddEventHandler(kEventOnPreCast, OnPreCast);
-	GEventManager->AddEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
-	GEventManager->AddEventHandler(kEventOnDestroyObject, OnDeleteObject);
+	MalachitePredOnload();
 	
 
 }
@@ -1343,6 +1500,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 // calls when plugin is closed
 PLUGIN_API void OnUnload()
 {
+	std::string playerHero = GEntityList->Player()->ChampionName();
 	MainMenu->Remove();
 	GEventManager->RemoveEventHandler(kEventOnRender, OnRender);
 	GEventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
@@ -1352,8 +1510,21 @@ PLUGIN_API void OnUnload()
 	GEventManager->RemoveEventHandler(kEventOnCreateObject, OnCreateObject);
 	GEventManager->RemoveEventHandler(kEventOnLevelUp, OnLevelUp);
 	GEventManager->RemoveEventHandler(kEventOnPauseAnimation, OnPauseAnimation);
-	GEventManager->RemoveEventHandler(kEventOnDestroyObject, OnDeleteObject);
 	GEventManager->RemoveEventHandler(kEventOnPreCast, OnPreCast);
 	GEventManager->RemoveEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
-	eventmanager::UnregisterEvents(eventManager);
+	GEventManager->RemoveEventHandler(kEventOnDestroyObject, OnDeleteObject);
+	GEventManager->RemoveEventHandler(kEventOnUpdateChargedSpell, OnUpdateChargedSpell);
+	if (playerHero == "Janna")
+	{
+		eventmanager::UnregisterEvents(eventManager);
+	}
+	if (playerHero == "TahmKench")
+	{
+		eventmanager::UnregisterEvents(eventManager);
+	}
+	if (playerHero == "Lux")
+	{
+		eventmanager::UnregisterEvents(eventManager);
+	}
+	MalachitePredUnload();
 }

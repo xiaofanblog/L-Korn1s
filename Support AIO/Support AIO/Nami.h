@@ -261,7 +261,7 @@ public:
 	{
 		for (auto Ally : GEntityList->GetAllHeros(true, false))
 		{
-			if (Ally != GEntityList->Player())
+			if (Ally != GEntityList->Player() && !GEntityList->Player()->IsDead() && !Ally->IsDead())
 			{
 				if (WHeal1 != nullptr && WHeal1->Enabled() && WHeal01->ChampionName() == Ally->ChampionName())
 				{
@@ -559,7 +559,7 @@ public:
 			if (Ally != nullptr && Ally->IsValidTarget())
 			{
 
-				if (HealW->Enabled() && HealWmy->GetInteger() > GEntityList->Player()->HealthPercent() && W->IsReady() && !GEntityList->Player()->IsRecalling() && !GUtility->IsPositionInFountain(GEntityList->Player()->ServerPosition()))
+				if (!GEntityList->Player()->IsDead() && HealW->Enabled() && HealWmy->GetInteger() > GEntityList->Player()->HealthPercent() && W->IsReady() && !GEntityList->Player()->IsRecalling() && !GUtility->IsPositionInFountain(GEntityList->Player()->ServerPosition()))
 				{
 					W->CastOnPlayer();
 				}

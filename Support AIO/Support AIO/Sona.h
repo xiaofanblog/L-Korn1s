@@ -167,7 +167,7 @@ public:
 		{
 			if (HealW->Enabled() && W->IsReady())
 			{
-				if (!Ally->IsRecalling() && Ally != nullptr && Ally->HealthPercent() <= HealWally->GetInteger() &&  Ally != GEntityList->Player() && !Ally->IsDead() && GetAlliesInRange(GEntityList->Player(), W->Range()) >= HealWenemy->GetInteger())
+				if (!GEntityList->Player()->IsRecalling() && !Ally->IsRecalling() && Ally != nullptr && Ally->HealthPercent() <= HealWally->GetInteger() &&  Ally != GEntityList->Player() && !Ally->IsDead() && GetAlliesInRange(GEntityList->Player(), W->Range()) >= HealWenemy->GetInteger())
 				{
 					W->CastOnTarget(Ally);
 				}

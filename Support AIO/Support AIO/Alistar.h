@@ -11,7 +11,6 @@ public:
 		ComboMenu = MainMenu->AddMenu("Combo");
 		{
 			ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
-			ComboQflash = ComboMenu->AddKey("Q Flash", 'T');
 			ComboW = ComboMenu->CheckBox("Use W in Combo", true);
 			ComboE = ComboMenu->CheckBox("Use E in Combo", true);
 			ComboR = ComboMenu->CheckBox("Use R in Combo", true);
@@ -27,6 +26,8 @@ public:
 			DrawWRange = DrawingMenu->CheckBox("Draw W Range", true);
 			DrawERange = DrawingMenu->CheckBox("Draw E Range", true);
 			DrawQFRange = DrawingMenu->CheckBox("Draw Q Flash Range", true);
+			DrawQmin = DrawingMenu->CheckBox("Draw Engage Range", true);
+
 
 		}
 
@@ -37,6 +38,8 @@ public:
 			AntiGapQ = MiscMenu->CheckBox("Q AntiGap", true);
 			AntiGapW = MiscMenu->CheckBox("W AntiGap", true);
 		}
+		ComboQflash = MainMenu->AddKey("Q Flash", 'T');
+		ComboQ2 = MainMenu->AddKey("W > Q > Flash Combo(Selected Target)", 'G');
 	}
 
 	void LoadSpells()
@@ -99,12 +102,13 @@ public:
 			}
 		}
 	}
+	
 
 	void FlashQ()
 	{
-		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
 		if (GUtility->IsLeagueWindowFocused() && !GGame->IsChatOpen())
 		{
+		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
 			for (auto Enemy : GEntityList->GetAllHeros(false, true))
 			{
 				if (Q->IsReady() && Flash != nullptr && Flash->IsReady())
@@ -143,6 +147,29 @@ public:
 		}
 		return AlliesInRange;
 	}
+	void EngageCombo()
+	{
+		if (GUtility->IsLeagueWindowFocused() && !GGame->IsChatOpen())
+		{
+		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+
+			auto target = GTargetSelector->GetFocusedTarget();
+			if (target != nullptr && target->IsValidTarget() && target->IsHero() && target->IsValidTarget())
+			{
+				if (target->IsValidTarget(GEntityList->Player(), 1300))
+				{
+					for (auto minionW : GEntityList->GetAllMinions(false, true, true))
+					{
+						if (minionW->IsValidTarget(GEntityList->Player(), W->Range()) && (target->GetPosition() - minionW->GetPosition()).Length2D() < 730)
+						{
+							W->CastOnUnit(minionW);
+						}
+						FlashQ();
+					}
+				}
+			}
+		}
+	}
 
 	void Interrupt(InterruptibleSpell const& Args)
 	{
@@ -179,5 +206,6 @@ public:
 		if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()); }
 		if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
 		if (DrawQFRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range() + 380); }	
+		if (DrawQmin->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), 1300); }
 	}
 };
