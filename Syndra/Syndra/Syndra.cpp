@@ -269,7 +269,7 @@ void Combo()
 				if (object != Vec3(0, 0, 0))
 				{
 					W->CastOnPosition(object);
-					
+					lastw = GGame->TickCount() + GGame->Latency() + 20;
 					lastwe = GGame->TickCount() + GGame->Latency() + 150;
 
 				}
@@ -373,7 +373,7 @@ void Killsteal()
 					if (object != Vec3(0, 0, 0))
 					{
 						W->CastOnPosition(object);
-						lastw = GGame->TickCount() + 50;
+						lastw = GGame->TickCount() + GGame->Latency() + 20;
 						lastwe = GGame->TickCount() + GGame->Latency() + 150;
 
 					}
@@ -542,7 +542,7 @@ void Harass()
 					if (object != Vec3(0, 0, 0))
 					{
 						W->CastOnPosition(object);
-						lastw = GGame->TickCount() + 50;
+						lastw = GGame->TickCount() + GGame->Latency() + 20;
 						lastwe = GGame->TickCount() + GGame->Latency() + 150;
 
 					}
