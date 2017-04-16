@@ -40,12 +40,13 @@ IMenuOption* DrawRfill;
 IMenuOption* DrawOrb;
 IMenuOption* DrawWRange;
 IMenuOption* DrawQE;
-
+IMenuOption* DrawLane;
 IMenu* MiscMenu;
 IMenuOption* AntiGapE;
 IMenuOption* InterruptE;
 
 IMenu* FarmMenu;
+IMenuOption* FarmToggle;
 IMenuOption* FarmMana;
 IMenuOption* FarmQ;
 IMenuOption* FarmQLS;
@@ -57,6 +58,7 @@ IMenuOption* HarassQ;
 IMenuOption* HarassW;
 IMenuOption* HarassE;
 IMenuOption* HarassQauto;
+IMenuOption* HarassQautom;
 ISpell2* Q;
 ISpell2* QE;
 ISpell2* W;
@@ -69,6 +71,11 @@ IUnit* Player;
 
 int lastw;
 int lastwe;
+
+bool Farmenable = true;
+bool Harassenable = true;
+float KeyPre; 
+float KeyPres;
 
 int xOffset = 10;
 int yOffset = 20;
@@ -121,13 +128,15 @@ void Menu()
 	HarassMenu = MainMenu->AddMenu("Harass Settings");
 	{
 		HarassMana = HarassMenu->AddFloat("Mana Percent", 10, 100, 50);
-		HarassQauto = HarassMenu->CheckBox("Auto Q on dash", true);
+		HarassQauto = HarassMenu->CheckBox("Auto Q On Dash", true);
+		HarassQautom = HarassMenu->AddKey("Auto Q Always(Toggle)", 'G');
 		HarassQ = HarassMenu->CheckBox("Harass with Q", true);
 		HarassW = HarassMenu->CheckBox("Harass with W", true);
 		HarassE = HarassMenu->CheckBox("Harass with E", true);
 	}
 	FarmMenu = MainMenu->AddMenu("Farm Settings");
 	{
+		FarmToggle = FarmMenu->AddKey("Farm Toggle", 4);
 		FarmMana = FarmMenu->AddFloat("Mana Percent", 10, 100, 50);
 		FarmQ = FarmMenu->CheckBox("Farm with Q", true);
 		FarmW = FarmMenu->CheckBox("Farm with W", true);
@@ -148,7 +157,7 @@ void Menu()
 		DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
 		DrawRkill = DrawingMenu->CheckBox("Draw R killable", true);
 		DrawRfill= DrawingMenu->CheckBox("Draw R Damage", true);
-
+		DrawLane = DrawingMenu->CheckBox("Draw Lane Toggle", true);
 	}
 
 	MiscMenu = MainMenu->AddMenu("Misc.");
@@ -443,55 +452,98 @@ static int GetMinionsW(float range)
 
 
 
+
+void FarmTog()
+{
+	if (GetAsyncKeyState(FarmToggle->GetInteger()))
+	{
+		if (Farmenable == true && GGame->Time() > KeyPre)
+		{
+			Farmenable = false;
+			KeyPre = GGame->Time() + 0.250;
+			
+		}
+		if (Farmenable == false && GGame->Time() > KeyPre)
+		{
+			Farmenable = true;
+			KeyPre = GGame->Time() + 0.250;
+
+		}
+
+	}
+}
+void HarasTog()
+{
+	if (GetAsyncKeyState(HarassQautom->GetInteger()))
+	{
+		if (Harassenable == true && GGame->Time() > KeyPres)
+		{
+			Harassenable = false;
+			KeyPres = GGame->Time() + 0.250;
+
+		}
+		if (Harassenable == false && GGame->Time() > KeyPres)
+		{
+			Harassenable = true;
+			KeyPres = GGame->Time() + 0.250;
+
+		}
+
+	}
+}
+
 void Farm()
 {
-	if (FarmMana->GetFloat() <= GEntityList->Player()->ManaPercent())
+	if (Farmenable == true)
 	{
-		for (auto Minion : GEntityList->GetAllMinions(false, true, true))
+		if (FarmMana->GetFloat() <= GEntityList->Player()->ManaPercent())
 		{
-			if (FarmQ->Enabled())
+			for (auto Minion : GEntityList->GetAllMinions(false, true, true))
 			{
-				if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && (Minion->IsCreep() || Minion->IsJungleCreep()))
+				if (FarmQ->Enabled())
 				{
-					if (Q->IsReady() && GEntityList->Player()->IsValidTarget(Minion, Q->Range()))
+					if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && (Minion->IsCreep() || Minion->IsJungleCreep()))
 					{
-						Q->CastOnUnit(Minion);
+						if (Q->IsReady() && GEntityList->Player()->IsValidTarget(Minion, Q->Range()))
+						{
+							Q->CastOnUnit(Minion);
+						}
 					}
 				}
-			}
-			if (FarmW->Enabled() && W->IsReady() && GetMinionsW(W->Range()) >= 3)
-			{
-				if (!GEntityList->Player()->HasBuff("syndrawtooltip"))
+				if (FarmW->Enabled() && W->IsReady() && GetMinionsW(W->Range()) >= 3)
 				{
-					auto obj = GetGrabbableObjectPosition(false);
-					if (obj != Vec3(0, 0, 0) && GEntityList->Player()->ServerPosition().To2D().Distance(obj.To2D()) < 925.f && W->IsReady())
+					if (!GEntityList->Player()->HasBuff("syndrawtooltip"))
 					{
-						W->CastOnPosition(obj);
+						auto obj = GetGrabbableObjectPosition(false);
+						if (obj != Vec3(0, 0, 0) && GEntityList->Player()->ServerPosition().To2D().Distance(obj.To2D()) < 925.f && W->IsReady())
+						{
+							W->CastOnPosition(obj);
 
+						}
 					}
 				}
 			}
 		}
-	}
-	if (GEntityList->Player()->HasBuff("syndrawtooltip"))
-	{
-		Vec3 pos;
-		int WHit;
-		GPrediction->FindBestCastPosition(W->Range(), W->Radius(), false, true, false, pos, WHit);
-		if (WHit >= 2)
+		if (GEntityList->Player()->HasBuff("syndrawtooltip"))
 		{
-			W->CastOnPosition(pos);
-		}
-		if (GetMinionsW(W->Range()) <= 2)
-		{
+			Vec3 pos;
+			int WHit;
 			GPrediction->FindBestCastPosition(W->Range(), W->Radius(), false, true, false, pos, WHit);
-			if (WHit == 2)
+			if (WHit >= 2)
 			{
 				W->CastOnPosition(pos);
 			}
-			if (WHit == 1)
+			if (GetMinionsW(W->Range()) <= 2)
 			{
-				W->CastOnPosition(pos);
+				GPrediction->FindBestCastPosition(W->Range(), W->Radius(), false, true, false, pos, WHit);
+				if (WHit == 2)
+				{
+					W->CastOnPosition(pos);
+				}
+				if (WHit == 1)
+				{
+					W->CastOnPosition(pos);
+				}
 			}
 		}
 	}
@@ -522,6 +574,29 @@ void autoQ()
 							Q->CastOnTarget(Enemy, kHitChanceDashing);
 						}
 						else return;
+					}
+				}
+
+			}
+		}
+	}
+
+}
+void HarassAuto()
+{
+	if (Harassenable == true)
+	{
+		for (auto Enemy : GEntityList->GetAllHeros(false, true))
+		{
+			if (Enemy != nullptr)
+			{
+				if (Q->IsReady() && Enemy->IsValidTarget() && !Enemy->IsDead())
+				{
+					if (Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+						Q->CastOnPosition(pred);
 					}
 				}
 
@@ -688,6 +763,9 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	autoQ();
 	Rrange();
 	Killsteal();
+	FarmTog();
+	HarasTog();
+	HarassAuto();
 	if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 	{
 		Combo();
@@ -748,6 +826,35 @@ PLUGIN_EVENT(void) OnRender()
 	if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
 	if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), R->Range()); }
 	dmgdraw();
+	if (DrawLane->Enabled())
+	{
+		static IFont* pFont = nullptr;
+
+		if (pFont == nullptr)
+		{
+			pFont = GRender->CreateFont("Tahoma", 16.f, kFontWeightNormal);
+			pFont->SetOutline(true);
+			pFont->SetLocationFlags(kFontLocationNormal);
+		}
+		Vec2 pos;
+		if (GGame->Projection(GEntityList->Player()->GetPosition(), &pos))
+		{
+			if (Farmenable == true)
+			{
+				std::string text = std::string("Farm ON");
+				Vec4 clr = Vec4(188, 255, 50, 255);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x, pos.y, text.c_str());
+			}
+			if (Farmenable == false)
+			{
+				std::string text = std::string("Farm OFF");
+				Vec4 clr = Vec4(188, 255, 50, 255);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x, pos.y, text.c_str());
+			}
+		}
+	}
 }
 
 
