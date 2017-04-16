@@ -159,7 +159,6 @@ void Menu()
 	{
 		FarmMana = FarmMenu->AddInteger("Mana for clear", 10, 100, 50);
 		FarmQ = FarmMenu->CheckBox("Lane Clear with Q", true);
-		FarmQhit = FarmMenu->AddInteger("Q hit X minions >", 1, 6, 2);
 		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
 		FarmELH = FarmMenu->CheckBox("Last hit E in Lane Clear", false);
 		FarmETypeChoose = FarmMenu->AddSelection("Last Hit E Type", 0, FarmEType);
@@ -189,15 +188,14 @@ void Menu()
 
 void Semi()
 {
+
+	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
 	{
-		if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
+		for (auto Enemy : GEntityList->GetAllHeros(false, true))
 		{
-			for (auto Enemy : GEntityList->GetAllHeros(false, true))
+			if (!Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), ComboRRANGE->GetInteger()) && !Enemy->IsDead())
 			{
-				if (!Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), ComboRRANGE->GetInteger()) && !Enemy->IsDead())
-				{
-					R->CastOnTarget(Enemy, kHitChanceHigh);
-				}
+				R->CastOnTarget(Enemy, kHitChanceHigh);
 			}
 		}
 	}
@@ -561,29 +559,32 @@ void AutoQdash()
 
 void Rflash()
 {
-	GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
-	for (auto Enemy : GEntityList->GetAllHeros(false, true))
+	if (GUtility->IsLeagueWindowFocused() && !GGame->IsChatOpen())
 	{
-		if (R->IsReady() && Flash != nullptr && Flash->IsReady() && ComboRRANGE->GetInteger() + 410 && ComboREnable->Enabled())
+	GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		for (auto Enemy : GEntityList->GetAllHeros(false, true))
 		{
-			if ((Player->GetPosition() - Enemy->GetPosition()).Length() > R->Range() && Enemy->IsValidTarget() && Enemy != nullptr && ((Player->GetPosition() - Enemy->GetPosition()).Length()) < R->Range()+410 && !Enemy->IsDead())
+			if (R->IsReady() && Flash != nullptr && Flash->IsReady() && ComboRRANGE->GetInteger() + 410 && ComboREnable->Enabled())
 			{
-			
-				if (R->CastOnPosition(Enemy->ServerPosition()))
+				if ((Player->GetPosition() - Enemy->GetPosition()).Length() > R->Range() && Enemy->IsValidTarget() && Enemy != nullptr && ((Player->GetPosition() - Enemy->GetPosition()).Length()) < R->Range() + 410 && !Enemy->IsDead())
 				{
-					Flash->CastOnPosition(Enemy->ServerPosition());
+
+					if (R->CastOnPosition(Enemy->ServerPosition()))
+					{
+						Flash->CastOnPosition(Enemy->ServerPosition());
+					}
 				}
 			}
-		}
-		if (Enemy->IsValidTarget() && W->Range() && !Flash->IsReady() && !R->IsReady())
-		{
-			if (Enemy != nullptr)
+			if (Enemy->IsValidTarget() && W->Range() && !Flash->IsReady() && !R->IsReady())
 			{
+				if (Enemy != nullptr)
+				{
 
-				W->CastOnTarget(Enemy);
+					W->CastOnTarget(Enemy);
+				}
 			}
-		}
 
+		}
 	}
 }
 
@@ -690,10 +691,27 @@ void Killsteal()
 }
 
 
+static int GetMinionsQ(float range)
+{
+	auto minions = GEntityList->GetAllMinions(false, true, false);
+	auto minionsInRange = 0;
+	for (auto minion : minions)
+	{
+		if (minion != nullptr && minion->IsValidTarget() && minion->IsEnemy(GEntityList->Player()) && !minion->IsDead())
+		{
+			auto minionDistance = (minion->GetPosition() - GEntityList->Player()->GetPosition()).Length2D();
+			if (minionDistance < range)
+			{
+				minionsInRange++;
+			}
+		}
+	}
+	return minionsInRange;
+}
 void Farm()
 {
 
-	minions = GEntityList->GetAllMinions(false, true, true);
+	minions = GEntityList->GetAllMinions(false, true, false);
 	for (IUnit* minion : minions)
 	{
 		if (FarmELH->Enabled() && FarmE->Enabled() && GGame->Time() > delay)
@@ -737,10 +755,15 @@ void Farm()
 			{
 				Vec3 pos;
 				int hit;
-				GPrediction->FindBestCastPosition(Q->Range(), 100, false, true, false, pos, hit);
-				if (hit >= FarmQhit->GetInteger())
+				if (GetMinionsQ(Q->Range()) < 7)
+				{
+					GPrediction->FindBestCastPosition(Q->Range(), 100, false, true, false, pos, hit);
 					Q->CastOnPosition(pos);
-
+				}
+				if (GetMinionsQ(Q->Range()) > 7 && minion->IsEnemy(GEntityList->Player()) && !minion->IsDead() && minion->IsValidTarget() && minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+				{
+					Q->CastOnUnit(minion);
+				}
 			}
 
 		}
