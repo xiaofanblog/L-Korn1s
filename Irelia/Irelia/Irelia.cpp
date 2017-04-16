@@ -323,7 +323,7 @@ void Combo()
 			}
 			if (ComboE->Enabled() && E->IsReady() && E->Range() && ComboEStun->Enabled())
 			{
-				if (Enemy->HealthPercent() > Player->HealthPercent())
+				if (Etarget->HealthPercent() > Player->HealthPercent())
 				{
 					E->CastOnTarget(Etarget);
 				}
