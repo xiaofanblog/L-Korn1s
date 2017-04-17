@@ -596,16 +596,15 @@ PLUGIN_EVENT(void) OnRender()
 		if (pFont == nullptr)
 		{
 			pFont = GRender->CreateFont("Tahoma", 20.f, kFontWeightNormal);
-			pFont->SetLocationFlags(kFontLocationCenter);
+			pFont->SetOutline(true);
+			pFont->SetLocationFlags(kFontLocationNormal);
 		}
 		Vec2 pos;
-		Vec3 vecPosition = GEntityList->Player()->GetPosition();
-		Vec2 vecScreen;
-
-		if (GGame->Projection(vecPosition, &vecScreen))
+		if (GGame->Projection(GEntityList->Player()->GetPosition(), &pos))
 		{
 			if (SmiteUse->Enabled())
 			{
+
 				std::string text = std::string("AUTOSMITE ON");
 				Vec4 clr = Vec4(25, 255, 0, 200);
 				pFont->SetColor(clr);
