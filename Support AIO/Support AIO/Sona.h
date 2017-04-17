@@ -138,7 +138,7 @@ public:
 		{
 			for (auto Enemy : GEntityList->GetAllHeros(false, true))
 			{
-				if (!Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), 860) && !Enemy->IsDead())
+				if (!Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), 860) && Enemy != nullptr && Enemy->IsValidTarget() && Enemy->IsHero() && !Enemy->IsDead())
 				{
 					R->CastOnTarget(Enemy, kHitChanceHigh);
 				}
