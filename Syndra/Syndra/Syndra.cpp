@@ -70,8 +70,9 @@ IUnit* Enemy;
 IUnit* Player;
 
 int lastw;
+int lastq;
 int lastwe;
-
+int lastqe;
 bool Farmenable = true;
 bool Harassenable = true;
 float KeyPre; 
@@ -93,7 +94,7 @@ void LoadSpells()
 	QE = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, false, false, kCollidesWithYasuoWall);
 	QE->SetSkillshot(0.6f, 80.f, 2100.f, 1100.f);
 	W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, true, false, kCollidesWithNothing);
-	W->SetSkillshot(0.25f, 50.f, 5000.f, 925.f);
+	W->SetSkillshot(0.25f, 50.f, 5000.f, 980.f);
 
 	E = GPluginSDK->CreateSpell2(kSlotE, kConeCast, false, false, kCollidesWithYasuoWall);
 	E->SetSkillshot(0.25f, 80.f, 2500.f, 650.f);
@@ -122,7 +123,7 @@ void Menu()
 		for (auto enemy : GEntityList->GetAllHeros(false, true)) {
 			RBlacklist->CheckBox(enemy->ChampionName(), false);
 		}
-		QEmouse = ComboMenu->AddKey("QE to Mouse", 'T');
+		QEmouse = ComboMenu->AddKey("QE Key", 'T');
 
 	}
 	HarassMenu = MainMenu->AddMenu("Harass Settings");
@@ -202,6 +203,7 @@ static void CastQELogic(IUnit* target)
 		GPrediction->GetFutureUnitPosition(target, 0.6f, true, pred);
 		if (Q->CastOnPosition(pred.Extend(GEntityList->Player()->ServerPosition(), 500)));
 		{
+			lastq = GGame->TickCount() + GGame->Latency() + 80;
 			Q->SetOverrideRange(800);
 			QE->SetFrom(Vec3(0, 0, 0));
 		}
@@ -272,7 +274,7 @@ void Combo()
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
 		if (target != nullptr && target->IsValidTarget(GEntityList->Player(), W->Range()) && ComboW->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 		{
-			if (!GEntityList->Player()->HasBuff("syndrawtooltip"))
+			if (!GEntityList->Player()->HasBuff("syndrawtooltip") && lastq < GGame->TickCount())
 			{
 				auto object = GetGrabbableObjectPosition(false);
 				if (object != Vec3(0, 0, 0))
@@ -289,7 +291,7 @@ void Combo()
 	if (GEntityList->Player()->HasBuff("syndrawtooltip"))
 	{
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
-		if (target != nullptr && target->IsValidTarget(GEntityList->Player(), W->Range()) && ComboW->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+		if (target != nullptr && target->IsValidTarget(GEntityList->Player(), W->Range()) && lastqe < GGame->TickCount() && ComboW->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 		{
 			if (!target->HasBuff("SyndraEDebuff"))
 			{
@@ -314,8 +316,9 @@ void Combo()
 		auto wTarget = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
 		if (wTarget == nullptr && qeTarget != nullptr && Q->IsReady() && E->IsReady() && GEntityList->Player()->IsValidTarget(qeTarget, QE->Range()))
 		{
-
+			
 			CastQELogic(qeTarget);
+			lastqe = GGame->TickCount() + GGame->Latency() + 100;
 		}
 	}
 	if (R->IsReady())
@@ -376,13 +379,13 @@ void Killsteal()
 			if (KSW->Enabled() && W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()) && WDamage > Enemy->GetHealth())
 			{
 
-				if (!GEntityList->Player()->HasBuff("syndrawtooltip"))
+				if (!GEntityList->Player()->HasBuff("syndrawtooltip") && lastq < GGame->TickCount())
 				{
 					auto object = GetGrabbableObjectPosition(false);
 					if (object != Vec3(0, 0, 0))
 					{
 						W->CastOnPosition(object);
-						lastw = GGame->TickCount() + GGame->Latency() + 20;
+						lastw = GGame->TickCount() + GGame->Latency() + 40;
 						lastwe = GGame->TickCount() + GGame->Latency() + 150;
 
 					}
@@ -397,7 +400,7 @@ void Killsteal()
 					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
 					if (target != nullptr && target->IsValidTarget(GEntityList->Player(), W->Range()) && ComboW->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 					{
-						if (!target->HasBuff("SyndraEDebuff"))
+						if (!target->HasBuff("SyndraEDebuff") && lastqe < GGame->TickCount())
 						{
 							W->CastOnTarget(target);
 							
@@ -522,27 +525,28 @@ void Farm()
 						}
 					}
 				}
-			}
-		}
-		if (GEntityList->Player()->HasBuff("syndrawtooltip"))
-		{
-			Vec3 pos;
-			int WHit;
-			GPrediction->FindBestCastPosition(W->Range(), W->Radius(), false, true, false, pos, WHit);
-			if (WHit >= 2)
-			{
-				W->CastOnPosition(pos);
-			}
-			if (GetMinionsW(W->Range()) <= 2)
-			{
-				GPrediction->FindBestCastPosition(W->Range(), W->Radius(), false, true, false, pos, WHit);
-				if (WHit == 2)
+
+				if (GEntityList->Player()->HasBuff("syndrawtooltip") && Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && (Minion->IsCreep() || Minion->IsJungleCreep()))
 				{
-					W->CastOnPosition(pos);
-				}
-				if (WHit == 1)
-				{
-					W->CastOnPosition(pos);
+					Vec3 pos;
+					int WHit;
+					GPrediction->FindBestCastPosition(W->Range(), 120, false, true, false, pos, WHit);
+					if (WHit >= 2)
+					{
+						W->CastOnPosition(pos);
+					}
+					if (GetMinionsW(W->Range()) <= 2)
+					{
+						GPrediction->FindBestCastPosition(W->Range(), W->Radius(), false, true, false, pos, WHit);
+						if (WHit == 2)
+						{
+							W->CastOnPosition(pos);
+						}
+						if (WHit == 1)
+						{
+							W->CastOnPosition(pos);
+						}
+					}
 				}
 			}
 		}
@@ -623,7 +627,7 @@ void Harass()
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
 			if (target != nullptr && target->IsValidTarget(GEntityList->Player(), W->Range()) && HarassW->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 			{
-				if (!GEntityList->Player()->HasBuff("syndrawtooltip"))
+				if (!GEntityList->Player()->HasBuff("syndrawtooltip") && lastq < GGame->TickCount())
 				{
 					auto object = GetGrabbableObjectPosition(false);
 					if (object != Vec3(0, 0, 0))
@@ -642,7 +646,7 @@ void Harass()
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
 			if (target != nullptr && target->IsValidTarget(GEntityList->Player(), W->Range()) && HarassW->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 			{
-				if (!target->HasBuff("SyndraEDebuff"))
+				if (!target->HasBuff("SyndraEDebuff") && lastqe < GGame->TickCount())
 				{
 					W->CastOnTarget(target);
 					
@@ -671,6 +675,24 @@ inline float GetDistanceVectors(Vec3 from, Vec3 to)
 	float z2 = to.z;
 	return static_cast<float>(sqrt(pow((x2 - x1), 2.0) + pow((y2 - y1), 2.0) + pow((z2 - z1), 2.0)));
 }
+int GetEnemiesInRange(IUnit* Source, float range)
+{
+	auto enemies = GEntityList->GetAllHeros(false, true);
+	auto enemiesInRange = 0;
+
+	for (auto enemy : enemies)
+	{
+		if (enemy->IsValidTarget() && !enemy->IsDead() && enemy != nullptr && enemy->GetTeam() != GEntityList->Player()->GetTeam())
+		{
+			auto flDistance = (enemy->GetPosition() - GEntityList->Player()->GetPosition()).Length();
+			if (flDistance < range)
+			{
+				enemiesInRange++;
+			}
+		}
+	}
+	return enemiesInRange;
+}
 void SemiQE(Vec3 pos)
 {
 	if (GUtility->IsLeagueWindowFocused() && !GGame->IsChatOpen())
@@ -691,7 +713,6 @@ void SemiQE(Vec3 pos)
 			Qpos = playerpos + newPos.VectorNormalize() * GetDistanceVectors(GEntityList->Player()->GetPosition(), pos);
 		}
 		Q->CastOnPosition(Qpos);
-
 	}
 }
 
@@ -772,7 +793,19 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	}
 	if (GetAsyncKeyState(QEmouse->GetInteger()))
 	{
-		SemiQE(GGame->CursorPosition());
+		if (GetEnemiesInRange(GEntityList->Player(), QE->Range()) == 0)
+		{
+			SemiQE(GGame->CursorPosition());
+		}
+		if (GetEnemiesInRange(GEntityList->Player(), QE->Range()) > 0)
+		{
+			auto qeTarget = GTargetSelector->FindTarget(QuickestKill, SpellDamage, QE->Range());
+			if (qeTarget != nullptr && Q->IsReady() && E->IsReady() && GEntityList->Player()->IsValidTarget(qeTarget, QE->Range()))
+			{
+
+				CastQELogic(qeTarget);
+			}
+		}
 	}
 	if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
 	{
