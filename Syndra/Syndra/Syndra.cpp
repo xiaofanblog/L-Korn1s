@@ -1,6 +1,6 @@
 #include "PluginSDK.h"
 #include <string>
-#include "OrbManager.h"
+#include "Template.h"
 
 PluginSetup("Kornis Syndra")
 
@@ -41,6 +41,7 @@ IMenuOption* DrawOrb;
 IMenuOption* DrawWRange;
 IMenuOption* DrawQE;
 IMenuOption* DrawLane;
+IMenuOption* DrawHarass;
 IMenu* MiscMenu;
 IMenuOption* AntiGapE;
 IMenuOption* InterruptE;
@@ -74,7 +75,7 @@ int lastq;
 int lastwe;
 int lastqe;
 bool Farmenable = true;
-bool Harassenable = true;
+bool Harassenable = false;
 float KeyPre; 
 float KeyPres;
 
@@ -159,6 +160,7 @@ void Menu()
 		DrawRkill = DrawingMenu->CheckBox("Draw R killable", true);
 		DrawRfill= DrawingMenu->CheckBox("Draw R Damage", true);
 		DrawLane = DrawingMenu->CheckBox("Draw Lane Toggle", true);
+		DrawHarass = DrawingMenu->CheckBox("Draw Harass Toggle", true);
 	}
 
 	MiscMenu = MainMenu->AddMenu("Misc.");
@@ -167,23 +169,47 @@ void Menu()
 		InterruptE = MiscMenu->CheckBox("Interrupt E", true);
 	}
 }
+inline float GetDistanceVectors(Vec3 from, Vec3 to)
+{
+	auto x1 = from.x;
+	auto x2 = to.x;
+	auto y1 = from.y;
+	auto y2 = to.y;
+	auto z1 = from.z;
+	auto z2 = to.z;
+	return static_cast<float>(sqrt(pow((x2 - x1), 2.0) + pow((y2 - y1), 2.0) + pow((z2 - z1), 2.0)));
+}
 static Vec3 GetGrabbableObjectPosition(bool onlyOrbs)
 {
 	auto GrabRange = 925.f;
 	if (onlyOrbs)
 	{
-		return OrbManager::GetOrbToGrab(static_cast<int>(GrabRange));
-	}
-
-	for (auto minion : GEntityList->GetAllMinions(false, true, true))
-	{
-		if (minion != nullptr && minion->IsValidTarget(GEntityList->Player(), GrabRange))
+		for (auto orbs : GEntityList->GetAllUnits())
 		{
-			return minion->ServerPosition();
+			if (orbs != nullptr && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
+			{
+				return orbs->ServerPosition();
+			}
 		}
 	}
 
-	return OrbManager::GetOrbToGrab(static_cast<int>(GrabRange));
+	if (!onlyOrbs)
+	{
+		for (auto orbs : GEntityList->GetAllUnits())
+		{
+			if (orbs != nullptr && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
+			{
+				return orbs->ServerPosition();
+			}
+		}
+		for (auto minion : GEntityList->GetAllMinions(false, true, true))
+		{
+			if (minion != nullptr && minion->IsValidTarget(GEntityList->Player(), GrabRange))
+			{
+				return minion->ServerPosition();
+			}
+		}
+	}
 }
 
 
@@ -228,11 +254,59 @@ static double GetUltimateDamage(IUnit* target)
 
 }
 
-//Dewblack <3
+
+void ProjectOn(Vec2 const& Point, Vec2 const& SegmentStart, Vec2 const& SegmentEnd, ProjectionInfo& Out)
+{
+	auto cx = Point.x;
+	auto cy = Point.y;
+	auto ax = SegmentStart.x;
+	auto ay = SegmentStart.y;
+	auto bx = SegmentEnd.x;
+	auto by = SegmentEnd.y;
+	auto rL = ((cx - ax) * (bx - ax) + (cy - ay) * (by - ay)) /
+		(powf(bx - ax, 2) + powf(by - ay, 2));
+	auto pointLine = Vec2(ax + rL * (bx - ax), ay + rL * (by - ay));
+	float rS;
+	if (rL < 0)
+	{
+		rS = 0;
+	}
+	else if (rL > 1)
+	{
+		rS = 1;
+	}
+	else
+	{
+		rS = rL;
+	}
+
+	auto isOnSegment = (rS == rL);
+	auto pointSegment = isOnSegment ? pointLine : Vec2(ax + rS * (bx - ax), ay + rS * (by - ay));
+
+	Out = ProjectionInfo(isOnSegment, pointSegment, pointLine);
+}
+
+float Distance(Vec2 point, Vec2 start, Vec2 End, bool onlyOnSegment)
+{
+	ProjectionInfo projection_info;
+	ProjectOn(point, start, End, projection_info);
+
+	if (projection_info.IsOnSegment || onlyOnSegment == false)
+	{
+		return projection_info.SegmentPoint.Distance(point);
+	}
+
+	return FLT_MAX;
+}
+// iJava <3
 static void CastELogic(IUnit* target)
 {
-	for (auto orb : OrbManager::GetOrbs(true))
+	SArray<IUnit*> sOrbs = SArray<IUnit*>(GEntityList->GetAllUnits()).Where([](IUnit* m) {return m != nullptr &&
+		m->GetTeam() == GEntityList->Player()->GetTeam() && !m->IsDead() && std::string(m->GetObjectName()) == "Seed"; });
+
+	for (auto ball : sOrbs.ToVector())
 	{
+		auto orb = ball->ServerPosition();
 		if (GEntityList->Player()->ServerPosition().To2D().Distance(orb.To2D()) <= E->Range())
 		{
 			auto rangeLeft = 100 + (-0.6 * GEntityList->Player()->ServerPosition().To2D().Distance(orb.To2D()) + 950);
@@ -246,7 +320,7 @@ static void CastELogic(IUnit* target)
 			QE->RunPrediction(target, true, kCollidesWithYasuoWall, &prediction_output);
 
 			if (prediction_output.HitChance >= kHitChanceHigh
-				&& OrbManager::Distance(prediction_output.TargetPosition.To2D(), start_point, end_point, false) < QE->Radius() + target->BoundingRadius())
+				&& Distance(prediction_output.TargetPosition.To2D(), start_point, end_point, false) < QE->Radius() + target->BoundingRadius())
 			{
 				E->CastOnPosition(orb);
 				QE->SetFrom(Vec3(0, 0, 0));
@@ -256,6 +330,14 @@ static void CastELogic(IUnit* target)
 	}
 }
 
+void autorange()
+{
+	if (!GEntityList->Player()->HasBuff("syndrawtooltip"))
+	{
+		W->SetOverrideRange(925);
+	}
+	else W->SetOverrideRange(980);
+}
 void Combo()
 {
 
@@ -665,16 +747,6 @@ void Harass()
 		}
 	}
 }
-inline float GetDistanceVectors(Vec3 from, Vec3 to)
-{
-	float x1 = from.x;
-	float x2 = to.x;
-	float y1 = from.y;
-	float y2 = to.y;
-	float z1 = from.z;
-	float z2 = to.z;
-	return static_cast<float>(sqrt(pow((x2 - x1), 2.0) + pow((y2 - y1), 2.0) + pow((z2 - z1), 2.0)));
-}
 int GetEnemiesInRange(IUnit* Source, float range)
 {
 	auto enemies = GEntityList->GetAllHeros(false, true);
@@ -718,7 +790,6 @@ void SemiQE(Vec3 pos)
 
 static void OnProcessSpellCast(CastedSpell const& Args)
 {
-	OrbManager::OnProcessSpellCast(Args);
 	if (Args.Caster_ == GEntityList->Player())
 	{
 		if (std::string(Args.Name_) == "SyndraQ")
@@ -781,6 +852,7 @@ void dmgdraw()
 
 PLUGIN_EVENT(void) OnGameUpdate()
 {
+	autorange();
 	autoQ();
 	Rrange();
 	Killsteal();
@@ -888,6 +960,35 @@ PLUGIN_EVENT(void) OnRender()
 			}
 		}
 	}
+	if (DrawHarass->Enabled())
+	{
+		static IFont* pFont = nullptr;
+
+		if (pFont == nullptr)
+		{
+			pFont = GRender->CreateFont("Tahoma", 16.f, kFontWeightNormal);
+			pFont->SetOutline(true);
+			pFont->SetLocationFlags(kFontLocationCenterVertical);
+		}
+		Vec2 pos;
+		if (GGame->Projection(GEntityList->Player()->GetPosition(), &pos))
+		{
+			if (Harassenable == true)
+			{
+				std::string text = std::string("Harass ON");
+				Vec4 clr = Vec4(188, 255, 50, 255);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x, pos.y - 10, text.c_str());
+			}
+			if (Harassenable == false)
+			{
+				std::string text = std::string("Harass OFF");
+				Vec4 clr = Vec4(188, 255, 50, 255);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x, pos.y - 10, text.c_str());
+			}
+		}
+	}
 }
 
 
@@ -904,6 +1005,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnInterruptible, OnInterruptible);
 	GEventManager->AddEventHandler(kEventOnGapCloser, OnGapCloser);
 	GGame->PrintChat("<b><font color=\"#FFFFFF\">Syndra<b><font color=\"#f8a101\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
+	GGame->PrintChat("<b><font color=\"#f8a101\">Version: 0.1</font></b>");
 
 }
 
