@@ -15,6 +15,7 @@ IMenuOption* ComboW;
 IMenuOption* ComboE;
 IMenuOption* ComboR;
 IMenuOption* ComboRcheck;
+IMenuOption* KSRcheck;
 IMenuOption* QEmouse;
 IMenuOption* ComboWR;
 IMenuOption* ComboRStack;
@@ -24,6 +25,7 @@ IMenu* RBlacklist;
 IMenu* AASet;
 IMenuOption* ComboAA;
 IMenuOption* ComboAAkey;
+IMenuOption* QEsettings;
 IMenuOption* ComboAALevel;
 
 IMenu* KillstealMenu;
@@ -68,6 +70,9 @@ ISpell2* R;
 ISpell2* Ignite;
 
 IUnit* Enemy;
+
+Vec3 EndPos;
+
 IUnit* Player;
 
 int lastw;
@@ -78,6 +83,7 @@ bool Farmenable = true;
 bool Harassenable = false;
 float KeyPre; 
 float KeyPres;
+int lastqE;
 
 int xOffset = 10;
 int yOffset = 20;
@@ -91,9 +97,8 @@ void LoadSpells()
 {
 	Q = GPluginSDK->CreateSpell2(kSlotQ, kCircleCast, false, false, (kCollidesWithNothing));
 	Q->SetSkillshot(0.f, 60.f, 10000000000000.f, 800.f);
-
 	QE = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, false, false, kCollidesWithYasuoWall);
-	QE->SetSkillshot(0.6f, 80.f, 2100.f, 1100.f);
+	QE->SetSkillshot(0.6f, 80.f, 2100.f, 1400.f);
 	W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, true, false, kCollidesWithNothing);
 	W->SetSkillshot(0.25f, 50.f, 5000.f, 980.f);
 
@@ -115,7 +120,7 @@ void Menu()
 		ComboW = ComboMenu->CheckBox("Use W", true);
 		ComboE = ComboMenu->CheckBox("Use E", true);
 		ComboR = ComboMenu->CheckBox("Use R", true);
-		ComboRcheck = ComboMenu->CheckBox("Dont waste R if Q or W can kill", true);
+		ComboRcheck = ComboMenu->AddFloat("Dont waste R if Enemy HP lower than", 0, 500, 100);
 		AASet = ComboMenu->AddMenu("AA Settings");
 		ComboAALevel = AASet->AddInteger("At what level disable AA", 1, 18, 6);
 		ComboAA = AASet->CheckBox("Disable AA", false);
@@ -125,6 +130,7 @@ void Menu()
 			RBlacklist->CheckBox(enemy->ChampionName(), false);
 		}
 		QEmouse = ComboMenu->AddKey("QE Key", 'T');
+		QEsettings = ComboMenu->AddSelection("QE on Key Mode", 1, { "Target", "Mouse", "Logic"});
 
 	}
 	HarassMenu = MainMenu->AddMenu("Harass Settings");
@@ -149,14 +155,15 @@ void Menu()
 		KSW = KillstealMenu->CheckBox("Killsteal with W", true);
 		KSE = KillstealMenu->CheckBox("Killsteal with E", true);
 		KSR = KillstealMenu->CheckBox("Killsteal with Smart R", true);
+		KSRcheck = KillstealMenu->AddFloat("Dont waste R if Enemy HP lower than", 0, 500, 100);
 	}
-	DrawingMenu = MainMenu->AddMenu("Drawings");
+	DrawingMenu = MainMenu->AddMenu("Drawings.");
 	{
 		DrawQRange = DrawingMenu->CheckBox("Draw Q Range", true);
 		DrawQE = DrawingMenu->CheckBox("Draw QE Range", true);
 		DrawWRange = DrawingMenu->CheckBox("Draw W Range", true);
-		DrawERange = DrawingMenu->CheckBox("Draw E Range", true);
-		DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
+		DrawERange = DrawingMenu->CheckBox("Draw E Range", false);
+		DrawRRange = DrawingMenu->CheckBox("Draw R Range", false);
 		DrawRkill = DrawingMenu->CheckBox("Draw R killable", true);
 		DrawRfill= DrawingMenu->CheckBox("Draw R Damage", true);
 		DrawLane = DrawingMenu->CheckBox("Draw Lane Toggle", true);
@@ -179,44 +186,13 @@ inline float GetDistanceVectors(Vec3 from, Vec3 to)
 	auto z2 = to.z;
 	return static_cast<float>(sqrt(pow((x2 - x1), 2.0) + pow((y2 - y1), 2.0) + pow((z2 - z1), 2.0)));
 }
-static Vec3 GetGrabbableObjectPosition(bool onlyOrbs)
-{
-	auto GrabRange = 925.f;
-	if (onlyOrbs)
-	{
-		for (auto orbs : GEntityList->GetAllUnits())
-		{
-			if (orbs != nullptr && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
-			{
-				return orbs->ServerPosition();
-			}
-		}
-	}
-
-	if (!onlyOrbs)
-	{
-		for (auto orbs : GEntityList->GetAllUnits())
-		{
-			if (orbs != nullptr && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
-			{
-				return orbs->ServerPosition();
-			}
-		}
-		for (auto minion : GEntityList->GetAllMinions(false, true, true))
-		{
-			if (minion != nullptr && minion->IsValidTarget(GEntityList->Player(), GrabRange))
-			{
-				return minion->ServerPosition();
-			}
-		}
-	}
-}
 
 
 static void CastQELogic(IUnit* target)
 {
 	auto ppos = GEntityList->Player()->ServerPosition();
 	auto startPosition = ppos.Extend(target->ServerPosition(), Q->Range());
+
 	QE->SetRangeCheckFrom(startPosition);
 	QE->SetFrom(startPosition);
 	AdvPredictionOutput prediction_output;
@@ -226,12 +202,24 @@ static void CastQELogic(IUnit* target)
 	{
 		Q->SetOverrideRange(1250);
 		Vec3 pred;
-		GPrediction->GetFutureUnitPosition(target, 0.6f, true, pred);
-		if (Q->CastOnPosition(pred.Extend(GEntityList->Player()->ServerPosition(), 500)));
+		GPrediction->GetFutureUnitPosition(target, 0.6, true, pred);
+		if (!target->IsValidTarget(GEntityList->Player(), E->Range()))
 		{
-			lastq = GGame->TickCount() + GGame->Latency() + 80;
-			Q->SetOverrideRange(800);
-			QE->SetFrom(Vec3(0, 0, 0));
+			if (Q->CastOnPosition(pred.Extend(GEntityList->Player()->ServerPosition(), 280)));
+			{
+				lastqE = GGame->Latency();
+				Q->SetOverrideRange(800);
+				QE->SetFrom(Vec3(0, 0, 0));
+			}
+		}
+		if (target->IsValidTarget(GEntityList->Player(), E->Range()))
+		{
+			if (Q->CastOnPosition(pred));
+			{
+				lastqE = GGame->Latency();
+				Q->SetOverrideRange(800);
+				QE->SetFrom(Vec3(0, 0, 0));
+			}
 		}
 	}
 }
@@ -336,7 +324,7 @@ void autorange()
 	{
 		W->SetOverrideRange(925);
 	}
-	else W->SetOverrideRange(980);
+	else W->SetOverrideRange(1100);
 }
 void Combo()
 {
@@ -358,14 +346,35 @@ void Combo()
 		{
 			if (!GEntityList->Player()->HasBuff("syndrawtooltip") && lastq < GGame->TickCount())
 			{
-				auto object = GetGrabbableObjectPosition(false);
-				if (object != Vec3(0, 0, 0))
+				IUnit* obj = nullptr;
+				for (auto orbs : GEntityList->GetAllUnits())
 				{
-					W->CastOnPosition(object);
-					lastw = GGame->TickCount() + GGame->Latency() + 20;
-					lastwe = GGame->TickCount() + GGame->Latency() + 150;
+					if (orbs != nullptr && !orbs->IsDead() && orbs->IsValidObject() && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
+					{
+						obj = orbs;
+						if (obj != nullptr)
+						{
+							W->CastOnPosition(obj->GetPosition());
+							lastw = GGame->TickCount() + GGame->Latency() + 20;
+							lastwe = GGame->TickCount() + GGame->Latency() + 150;
+						}
+					}
 
 				}
+				for (auto minion : GEntityList->GetAllMinions(false, true, true))
+				{
+					if (minion != nullptr && minion->IsValidTarget() && !minion->IsDead() && minion->IsValidTarget(GEntityList->Player(), 925))
+					{
+						obj = minion;
+						if (obj != nullptr)
+						{
+							W->CastOnPosition(obj->GetPosition());
+							lastw = GGame->TickCount() + GGame->Latency() + 20;
+							lastwe = GGame->TickCount() + GGame->Latency() + 150;
+						}
+					}
+				}			
+
 			}
 		}
 	}
@@ -377,7 +386,9 @@ void Combo()
 		{
 			if (!target->HasBuff("SyndraEDebuff"))
 			{
-				W->CastOnTarget(target);
+				Vec3 pred;
+				GPrediction->GetFutureUnitPosition(target, 0.25f, true, pred);
+				W->CastOnPosition(pred);
 				
 			}
 
@@ -398,7 +409,6 @@ void Combo()
 		auto wTarget = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
 		if (wTarget == nullptr && qeTarget != nullptr && Q->IsReady() && E->IsReady() && GEntityList->Player()->IsValidTarget(qeTarget, QE->Range()))
 		{
-			
 			CastQELogic(qeTarget);
 			lastqe = GGame->TickCount() + GGame->Latency() + 100;
 		}
@@ -409,37 +419,21 @@ void Combo()
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
 		if (target != nullptr && ComboR->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range()) && GetUltimateDamage(target) > target->GetHealth())
 		{
-			if (!ComboRcheck->Enabled())
-			{
-				IMenuOption* temp = RBlacklist->GetOption(target->ChampionName());
-				if (!temp->Enabled())
-				{
-					R->CastOnTarget(target);
-				}
-			}
-			if (ComboRcheck->Enabled())
-			{
-				for (auto enemy : GEntityList->GetAllHeros(false, true))
-				{
-					IMenuOption* temp = RBlacklist->GetOption(enemy->ChampionName());
-					if (Q->IsReady() && GDamage->GetSpellDamage(GEntityList->Player(), enemy, kSlotQ) > enemy->GetHealth())
-						continue;
-					if ((GEntityList->Player()->HasBuff("syndrawtooltip") || W->IsReady()) && GDamage->GetSpellDamage(GEntityList->Player(), enemy, kSlotW) > enemy->GetHealth())
-						continue;
 
-					if (GetUltimateDamage(enemy) > enemy->GetHealth() && R->IsReady() && enemy->IsValidTarget(GEntityList->Player(), R->Range()))
+			for (auto enemy : GEntityList->GetAllHeros(false, true))
+			{
+				IMenuOption* temp = RBlacklist->GetOption(enemy->ChampionName());
+				if (GetUltimateDamage(enemy) > enemy->GetHealth() && R->IsReady() && enemy->IsValidTarget(GEntityList->Player(), R->Range()))
+				{
+					if (!temp->Enabled() && enemy->GetHealth() > ComboRcheck->GetFloat())
 					{
-						if (!temp->Enabled())
-						{
-							R->CastOnTarget(enemy);
-						}
-
+						R->CastOnTarget(enemy);
 					}
 
 				}
+
 			}
 		}
-
 	}
 }
 void Killsteal()
@@ -463,13 +457,33 @@ void Killsteal()
 
 				if (!GEntityList->Player()->HasBuff("syndrawtooltip") && lastq < GGame->TickCount())
 				{
-					auto object = GetGrabbableObjectPosition(false);
-					if (object != Vec3(0, 0, 0))
+					IUnit* obj = nullptr;
+					for (auto orbs : GEntityList->GetAllUnits())
 					{
-						W->CastOnPosition(object);
-						lastw = GGame->TickCount() + GGame->Latency() + 40;
-						lastwe = GGame->TickCount() + GGame->Latency() + 150;
+						if (orbs != nullptr && !orbs->IsDead() && orbs->IsValidObject() && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
+						{
+							obj = orbs;
+							if (obj != nullptr)
+							{
+								W->CastOnPosition(obj->GetPosition());
+								lastw = GGame->TickCount() + GGame->Latency() + 20;
+								lastwe = GGame->TickCount() + GGame->Latency() + 150;
+							}
+						}
 
+					}
+					for (auto minion : GEntityList->GetAllMinions(false, true, true))
+					{
+						if (minion != nullptr && minion->IsValidTarget() && !minion->IsDead() && minion->IsValidTarget(GEntityList->Player(), 925))
+						{
+							obj = minion;
+							if (obj != nullptr)
+							{
+								W->CastOnPosition(obj->GetPosition());
+								lastw = GGame->TickCount() + GGame->Latency() + 20;
+								lastwe = GGame->TickCount() + GGame->Latency() + 150;
+							}
+						}
 					}
 				}
 			}
@@ -501,16 +515,13 @@ void Killsteal()
 				for (auto enemy : GEntityList->GetAllHeros(false, true))
 				{
 					IMenuOption* temp = RBlacklist->GetOption(enemy->ChampionName());
-					if (Q->IsReady() && QDamage> enemy->GetHealth())
-						continue;
-					if ((GEntityList->Player()->HasBuff("syndrawtooltip") || W->IsReady()) && WDamage > enemy->GetHealth())
-						continue;
 					if (GetUltimateDamage(enemy) > enemy->GetHealth() && R->IsReady() && enemy->IsValidTarget(GEntityList->Player(), R->Range()))
 					{
-						if (!temp->Enabled())
+						if (!temp->Enabled() && enemy->GetHealth() > KSRcheck->GetFloat())
 						{
 							R->CastOnTarget(enemy);
 						}
+
 					}
 				}
 			}
@@ -559,21 +570,24 @@ void FarmTog()
 }
 void HarasTog()
 {
-	if (GetAsyncKeyState(HarassQautom->GetInteger()))
+	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
 	{
-		if (Harassenable == true && GGame->Time() > KeyPres)
+		if (GetAsyncKeyState(HarassQautom->GetInteger()))
 		{
-			Harassenable = false;
-			KeyPres = GGame->Time() + 0.250;
+			if (Harassenable == true && GGame->Time() > KeyPres)
+			{
+				Harassenable = false;
+				KeyPres = GGame->Time() + 0.250;
+
+			}
+			if (Harassenable == false && GGame->Time() > KeyPres)
+			{
+				Harassenable = true;
+				KeyPres = GGame->Time() + 0.250;
+
+			}
 
 		}
-		if (Harassenable == false && GGame->Time() > KeyPres)
-		{
-			Harassenable = true;
-			KeyPres = GGame->Time() + 0.250;
-
-		}
-
 	}
 }
 
@@ -599,15 +613,42 @@ void Farm()
 				{
 					if (!GEntityList->Player()->HasBuff("syndrawtooltip"))
 					{
-						auto obj = GetGrabbableObjectPosition(false);
-						if (obj != Vec3(0, 0, 0) && GEntityList->Player()->ServerPosition().To2D().Distance(obj.To2D()) < 925.f && W->IsReady())
+						IUnit* obj = nullptr;
+						for (auto orbs : GEntityList->GetAllUnits())
 						{
-							W->CastOnPosition(obj);
+							if (orbs != nullptr && !orbs->IsDead() && orbs->IsValidObject() && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
+							{
+								obj = orbs;
+								if (obj != nullptr)
+								{
+									W->CastOnPosition(obj->GetPosition());
+									lastw = GGame->TickCount() + GGame->Latency() + 20;
+									lastwe = GGame->TickCount() + GGame->Latency() + 150;
+								}
+							}
 
+						}
+						for (auto minion : GEntityList->GetAllMinions(false, true, true))
+						{
+							if (minion != nullptr && minion->IsValidTarget() && !minion->IsDead() && minion->IsValidTarget(GEntityList->Player(), 925))
+							{
+								obj = minion;
+								if (obj != nullptr)
+								{
+									W->CastOnPosition(obj->GetPosition());
+									lastw = GGame->TickCount() + GGame->Latency() + 20;
+									lastwe = GGame->TickCount() + GGame->Latency() + 150;
+								}
+							}
 						}
 					}
 				}
-
+			}
+		}
+		if (FarmMana->GetFloat() <= GEntityList->Player()->ManaPercent() && FarmMana->GetFloat()-10 <= GEntityList->Player()->ManaPercent())
+		{
+			for (auto Minion : GEntityList->GetAllMinions(false, true, true))
+			{
 				if (GEntityList->Player()->HasBuff("syndrawtooltip") && Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && (Minion->IsCreep() || Minion->IsJungleCreep()))
 				{
 					Vec3 pos;
@@ -711,13 +752,33 @@ void Harass()
 			{
 				if (!GEntityList->Player()->HasBuff("syndrawtooltip") && lastq < GGame->TickCount())
 				{
-					auto object = GetGrabbableObjectPosition(false);
-					if (object != Vec3(0, 0, 0))
+					IUnit* obj = nullptr;
+					for (auto orbs : GEntityList->GetAllUnits())
 					{
-						W->CastOnPosition(object);
-						lastw = GGame->TickCount() + GGame->Latency() + 20;
-						lastwe = GGame->TickCount() + GGame->Latency() + 150;
+						if (orbs != nullptr && !orbs->IsDead() && orbs->IsValidObject() && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
+						{
+							obj = orbs;
+							if (obj != nullptr)
+							{
+								W->CastOnPosition(obj->GetPosition());
+								lastw = GGame->TickCount() + GGame->Latency() + 20;
+								lastwe = GGame->TickCount() + GGame->Latency() + 150;
+							}
+						}
 
+					}
+					for (auto minion : GEntityList->GetAllMinions(false, true, true))
+					{
+						if (minion != nullptr && minion->IsValidTarget() && !minion->IsDead() && minion->IsValidTarget(GEntityList->Player(), 925))
+						{
+							obj = minion;
+							if (obj != nullptr)
+							{
+								W->CastOnPosition(obj->GetPosition());
+								lastw = GGame->TickCount() + GGame->Latency() + 20;
+								lastwe = GGame->TickCount() + GGame->Latency() + 150;
+							}
+						}
 					}
 				}
 			}
@@ -796,11 +857,21 @@ static void OnProcessSpellCast(CastedSpell const& Args)
 		{
 			if (GOrbwalking->GetOrbwalkingMode() == kModeCombo && lastw < GGame->TickCount())
 			{
-				E->CastOnPosition(Args.EndPosition_);
+				EndPos = Args.EndPosition_;
+				GPluginSDK->DelayFunctionCall(lastqE, []()
+				{
+					E->CastOnPosition(EndPos);
+					lastqE = 0;
+				});
 			}
 			if (GetAsyncKeyState(QEmouse->GetInteger()))
 			{
-				E->CastOnPosition(Args.EndPosition_);
+				EndPos = Args.EndPosition_;
+				GPluginSDK->DelayFunctionCall(lastqE, []()
+				{
+					E->CastOnPosition(EndPos);
+					lastqE = 0;
+				});
 			}
 
 		}
@@ -865,17 +936,36 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	}
 	if (GetAsyncKeyState(QEmouse->GetInteger()))
 	{
-		if (GetEnemiesInRange(GEntityList->Player(), QE->Range()) == 0)
+		if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
 		{
-			SemiQE(GGame->CursorPosition());
-		}
-		if (GetEnemiesInRange(GEntityList->Player(), QE->Range()) > 0)
-		{
-			auto qeTarget = GTargetSelector->FindTarget(QuickestKill, SpellDamage, QE->Range());
-			if (qeTarget != nullptr && Q->IsReady() && E->IsReady() && GEntityList->Player()->IsValidTarget(qeTarget, QE->Range()))
+			if (QEsettings->GetInteger() == 0)
 			{
+				auto qeTarget = GTargetSelector->FindTarget(QuickestKill, SpellDamage, QE->Range());
+				if (qeTarget != nullptr && Q->IsReady() && E->IsReady() && GEntityList->Player()->IsValidTarget(qeTarget, QE->Range()))
+				{
 
-				CastQELogic(qeTarget);
+					CastQELogic(qeTarget);
+				}
+			}
+			if (QEsettings->GetInteger() == 1)
+			{
+				SemiQE(GGame->CursorPosition());
+			}
+			if (QEsettings->GetInteger() == 2)
+			{
+				if (GetEnemiesInRange(GEntityList->Player(), QE->Range()) == 0)
+				{
+					SemiQE(GGame->CursorPosition());
+				}
+				if (GetEnemiesInRange(GEntityList->Player(), QE->Range()) > 0)
+				{
+					auto qeTarget = GTargetSelector->FindTarget(QuickestKill, SpellDamage, QE->Range());
+					if (qeTarget != nullptr && Q->IsReady() && E->IsReady() && GEntityList->Player()->IsValidTarget(qeTarget, QE->Range()))
+					{
+
+						CastQELogic(qeTarget);
+					}
+				}
 			}
 		}
 	}
@@ -926,7 +1016,7 @@ PLUGIN_EVENT(void) OnGapCloser(GapCloserSpell const& Args)
 PLUGIN_EVENT(void) OnRender()
 {
 	if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(145, 255, 255, 255), Q->Range()); }
-	if (DrawQE->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), QE->Range()); }
+	if (DrawQE->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), 1200); }
 	if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()); }
 	if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
 	if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), R->Range()); }
