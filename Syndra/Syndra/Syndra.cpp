@@ -98,7 +98,7 @@ void LoadSpells()
 	Q = GPluginSDK->CreateSpell2(kSlotQ, kCircleCast, false, false, (kCollidesWithNothing));
 	Q->SetSkillshot(0.f, 60.f, 10000000000000.f, 800.f);
 	QE = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, false, false, kCollidesWithYasuoWall);
-	QE->SetSkillshot(0.6f, 80.f, 2100.f, 1400.f);
+	QE->SetSkillshot(0.6f, 80.f, 2100.f, 1200.f);
 	W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, true, false, kCollidesWithNothing);
 	W->SetSkillshot(0.25f, 50.f, 5000.f, 980.f);
 
@@ -205,7 +205,7 @@ static void CastQELogic(IUnit* target)
 		GPrediction->GetFutureUnitPosition(target, 0.6, true, pred);
 		if (!target->IsValidTarget(GEntityList->Player(), E->Range()))
 		{
-			if (Q->CastOnPosition(pred.Extend(GEntityList->Player()->ServerPosition(), 280)));
+			if (Q->CastOnPosition(pred.Extend(GEntityList->Player()->ServerPosition(), 420)));
 			{
 				lastqE = GGame->Latency();
 				Q->SetOverrideRange(800);
