@@ -53,6 +53,9 @@ ISpell2* Smite;
 IMenu* DodgeMenu;
 IMenuOption* DodgeQ;
 IMenuOption* DodgeW;
+IInventoryItem* Tiamat;
+IInventoryItem* Titanic_Hydra;
+IInventoryItem* Ravenous_Hydra;
 
 
 IUnit* Player;
@@ -70,6 +73,9 @@ void LoadSpells()
 	R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, false, false, kCollidesWithNothing);
 	Botrk = GPluginSDK->CreateItemForId(3153, 550);
 	Cutlass = GPluginSDK->CreateItemForId(3144, 550);
+	Titanic_Hydra = GPluginSDK->CreateItemForId(3748, 385);
+	Ravenous_Hydra = GPluginSDK->CreateItemForId(3074, 385);
+	Tiamat = GPluginSDK->CreateItemForId(3077, 385);
 
 }
 
@@ -414,6 +420,24 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	SkinChanger();
 }
 
+int EnemiesInRange(IUnit* Source, float range)
+{
+	auto Targets = GEntityList->GetAllHeros(false, true);
+	auto enemiesInRange = 0;
+
+	for (auto target : Targets)
+	{
+		if (target != nullptr && !target->IsDead())
+		{
+			auto flDistance = (target->GetPosition() - Source->GetPosition()).Length();
+			if (flDistance < range)
+			{
+				enemiesInRange++;
+			}
+		}
+	}
+	return enemiesInRange;
+}
 PLUGIN_EVENT(void) OnAfterAttack(IUnit* source, IUnit* target)
 {
 	if (source != Player || target == nullptr || !target->IsHero())
@@ -423,11 +447,38 @@ PLUGIN_EVENT(void) OnAfterAttack(IUnit* source, IUnit* target)
 	{
 	case kModeCombo:
 		for (auto hero : GEntityList->GetAllHeros(false, true)) {
-			if (ComboWAA->Enabled() && W->IsReady() && (hero->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 200)
+			if (ComboWAA->Enabled() && W->IsReady() && (hero->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 280)
 			{
 				if (W->CastOnPlayer())
 				{
 					GOrbwalking->ResetAA();
+				}
+			}
+			if (!W->IsReady() && (hero->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 300)
+			{
+				if (GEntityList->Player()->HasBuff("doublestrike"))
+				{
+					if (Ravenous_Hydra->IsOwned() && Ravenous_Hydra->IsReady() && !(Player->IsDead()))
+					{
+						if (EnemiesInRange(Player, 385) > 0)
+						{
+							Ravenous_Hydra->CastOnPlayer();
+						}
+					}
+					if (Tiamat->IsOwned() && Tiamat->IsReady() && !(Player->IsDead()))
+					{
+						if (EnemiesInRange(Player, 385) > 0)
+						{
+							Tiamat->CastOnPlayer();
+						}
+					}
+					if (Titanic_Hydra->IsOwned() && Titanic_Hydra->IsReady() && !(Player->IsDead()))
+					{
+						if (EnemiesInRange(Player, 385) > 0)
+						{
+							Titanic_Hydra->CastOnPlayer();
+						}
+					}
 				}
 			}
 		}
@@ -439,6 +490,33 @@ PLUGIN_EVENT(void) OnAfterAttack(IUnit* source, IUnit* target)
 				if (W->CastOnPlayer())
 				{
 					GOrbwalking->ResetAA();
+				}
+			}
+			if (!W->IsReady() && (hero->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 300)
+			{
+				if (GEntityList->Player()->HasBuff("doublestrike"))
+				{
+					if (Ravenous_Hydra->IsOwned() && Ravenous_Hydra->IsReady() && !(Player->IsDead()))
+					{
+						if (EnemiesInRange(Player, 385) > 0)
+						{
+							Ravenous_Hydra->CastOnPlayer();
+						}
+					}
+					if (Tiamat->IsOwned() && Tiamat->IsReady() && !(Player->IsDead()))
+					{
+						if (EnemiesInRange(Player, 385) > 0)
+						{
+							Tiamat->CastOnPlayer();
+						}
+					}
+					if (Titanic_Hydra->IsOwned() && Titanic_Hydra->IsReady() && !(Player->IsDead()))
+					{
+						if (EnemiesInRange(Player, 385) > 0)
+						{
+							Titanic_Hydra->CastOnPlayer();
+						}
+					}
 				}
 			}
 		}
