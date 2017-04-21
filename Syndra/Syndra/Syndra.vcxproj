@@ -139,14 +139,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="OrbManager.cpp" />
     <ClCompile Include="PluginSDK.cpp" />
     <ClCompile Include="Syndra.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LPPConstants.h" />
     <ClInclude Include="lpputils.h" />
-    <ClInclude Include="OrbManager.h" />
     <ClInclude Include="PluginData.h" />
     <ClInclude Include="PluginSDK.h" />
     <ClInclude Include="Vector3.h" />

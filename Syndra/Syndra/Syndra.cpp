@@ -590,6 +590,23 @@ void HarasTog()
 		}
 	}
 }
+static int GetMinionsQ(float range)
+{
+	auto minions = GEntityList->GetAllMinions(false, true, false);
+	auto minionsInRange = 0;
+	for (auto minion : minions)
+	{
+		if (minion != nullptr && minion->IsValidTarget() && minion->IsEnemy(GEntityList->Player()) && !minion->IsDead())
+		{
+			auto minionDistance = (minion->GetPosition() - GEntityList->Player()->GetPosition()).Length2D();
+			if (minionDistance < range)
+			{
+				minionsInRange++;
+			}
+		}
+	}
+	return minionsInRange;
+}
 
 void Farm()
 {
@@ -603,7 +620,14 @@ void Farm()
 				{
 					if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && (Minion->IsCreep() || Minion->IsJungleCreep()))
 					{
-						if (Q->IsReady() && GEntityList->Player()->IsValidTarget(Minion, Q->Range()))
+						Vec3 pos;
+						int hit;
+						if (GetMinionsQ(Q->Range()) < 7 && Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+						{
+							GPrediction->FindBestCastPosition(Q->Range(), 100, false, true, false, pos, hit);
+							Q->CastOnPosition(pos);
+						}
+						if (GetMinionsQ(Q->Range()) > 7 && Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
 						{
 							Q->CastOnUnit(Minion);
 						}
