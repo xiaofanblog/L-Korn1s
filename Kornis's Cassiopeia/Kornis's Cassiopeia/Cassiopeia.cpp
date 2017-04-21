@@ -755,7 +755,7 @@ void Farm()
 			{
 				Vec3 pos;
 				int hit;
-				if (GetMinionsQ(Q->Range()) < 7)
+				if (GetMinionsQ(Q->Range()) < 7 && minion->IsEnemy(GEntityList->Player()) && !minion->IsDead() && minion->IsValidTarget() && minion->IsValidTarget(GEntityList->Player(), Q->Range()))
 				{
 					GPrediction->FindBestCastPosition(Q->Range(), 100, false, true, false, pos, hit);
 					Q->CastOnPosition(pos);
