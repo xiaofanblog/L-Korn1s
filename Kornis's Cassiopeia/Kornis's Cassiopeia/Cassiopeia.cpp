@@ -611,24 +611,27 @@ void LastHit()
 void Mixed()
 {
 	{
-		if (HarassQ->Enabled() && Q->IsReady())
+		if (GEntityList->Player()->ManaPercent() > HarassMana->GetInteger())
 		{
-			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
-			if (target != nullptr && !target->IsDashing())
+			if (HarassQ->Enabled() && Q->IsReady())
 			{
-				AdvPredictionOutput outputfam;
-				Q->RunPrediction(target, false, kCollidesWithNothing, &outputfam);
-				if (outputfam.HitChance >= kHitChanceHigh)
+				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+				if (target != nullptr && !target->IsDashing())
 				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.3f, true, pred);
-					Q->CastOnPosition(pred);
-				}
-				else if (outputfam.HitChance == kHitChanceDashing)
-				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.3f, true, pred);
-					Q->CastOnTarget(target, kHitChanceDashing);
+					AdvPredictionOutput outputfam;
+					Q->RunPrediction(target, false, kCollidesWithNothing, &outputfam);
+					if (outputfam.HitChance >= kHitChanceHigh)
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(target, 0.3f, true, pred);
+						Q->CastOnPosition(pred);
+					}
+					else if (outputfam.HitChance == kHitChanceDashing)
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(target, 0.3f, true, pred);
+						Q->CastOnTarget(target, kHitChanceDashing);
+					}
 				}
 			}
 		}
@@ -859,20 +862,22 @@ void Auto()
 {
 	if (HarassAuto->Enabled())
 	{
-
-		if (HarassQ->Enabled())
+		if (GEntityList->Player()->ManaPercent() > HarassMana->GetInteger())
 		{
-			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
-			if (target != nullptr)
+			if (HarassQ->Enabled())
 			{
-				if (Q->IsReady())
+				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+				if (target != nullptr)
 				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-					Q->CastOnPosition(pred);
+					if (Q->IsReady())
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+						Q->CastOnPosition(pred);
+					}
 				}
-			}
 
+			}
 		}
 	}
 }
