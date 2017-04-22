@@ -65,6 +65,9 @@ ISpell2* W;
 ISpell2* E;
 ISpell2* R;
 
+
+int wdelay;
+
 IUnit* enemi;
 
 
@@ -321,7 +324,7 @@ void Combo()
 								{
 									Dagger = dagger;
 									stuff = true;
-									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true)
+									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 									{
 
 										E->CastOnPosition(dagger->GetPosition());
@@ -368,7 +371,7 @@ void Combo()
 								{
 									Dagger = dagger;
 									stuff = true;
-									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true)
+									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 									{
 
 										E->CastOnPosition(dagger->GetPosition());
@@ -475,7 +478,7 @@ void Combo()
 								{
 									Dagger = dagger;
 									stuff = true;
-									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true)
+									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 									{
 
 										E->CastOnPosition(dagger->GetPosition());
@@ -531,7 +534,7 @@ void Combo()
 										{
 											Dagger = dagger;
 											stuff = true;
-											if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && damages >= target->GetHealth())
+											if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && damages >= target->GetHealth() && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 											{
 
 												E->CastOnPosition(dagger->GetPosition());
@@ -577,7 +580,7 @@ void Combo()
 											{
 												Dagger = dagger;
 												stuff = true;
-												if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true)
+												if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 												{
 
 													E->CastOnPosition(dagger->GetPosition());
@@ -631,7 +634,7 @@ void Combo()
 								{
 									Dagger = dagger;
 									stuff = true;
-									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true)
+									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 									{
 
 										E->CastOnPosition(dagger->GetPosition());
@@ -707,7 +710,7 @@ void Combo()
 										{
 											Dagger = dagger;
 											stuff = true;
-											if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && damages >= target->GetHealth())
+											if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && damages >= target->GetHealth() && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 											{
 
 												E->CastOnPosition(dagger->GetPosition());
@@ -753,7 +756,7 @@ void Combo()
 											{
 												Dagger = dagger;
 												stuff = true;
-												if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true)
+												if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 												{
 
 													E->CastOnPosition(dagger->GetPosition());
@@ -863,7 +866,7 @@ void Killsteal()
 								{
 									Dagger = dagger;
 									stuff = true;
-									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true)
+									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 									{
 
 										E->CastOnPosition(dagger->GetPosition());
@@ -940,7 +943,7 @@ void Mixed()
 							{
 								Dagger = dagger;
 								stuff = true;
-								if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true)
+								if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 								{
 
 									E->CastOnPosition(dagger->GetPosition());
@@ -987,7 +990,7 @@ void Mixed()
 							{
 								Dagger = dagger;
 								stuff = true;
-								if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true)
+								if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 								{
 
 									E->CastOnPosition(dagger->GetPosition());
@@ -1082,7 +1085,10 @@ void Farm()
 		}
 		if (FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget() && !Minion->IsDead() && Minion->IsValidTarget(GEntityList->Player(), 350) && GetMinionsW(350) >= FarmWmin->GetFloat())
 		{
-			W->CastOnPlayer();
+			if (W->CastOnPlayer())
+			{
+				wdelay = GGame->TickCount() + 1200;
+			}
 		}
 		if (FarmE->Enabled() && E->IsReady() && Minion->IsValidTarget() && !Minion->IsDead() && Minion->IsValidTarget(GEntityList->Player(), E->Range()))
 		{
@@ -1095,7 +1101,7 @@ void Farm()
 					{
 						if (dagger != nullptr)
 						{
-							if (CountMinionsNearMe(dagger, 380) >= FarmEmin->GetFloat())
+							if (wdelay < GGame->TickCount() && CountMinionsNearMe(dagger, 380) >= FarmEmin->GetFloat() && (GEntityList->Player()->GetPosition() - dagger->GetPosition()).Length2D() <= E->Range())
 							{
 								E->CastOnPosition(dagger->GetPosition());
 							}
