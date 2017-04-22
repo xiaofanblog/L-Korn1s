@@ -867,16 +867,19 @@ void Auto()
 			if (HarassQ->Enabled())
 			{
 				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
-				if (target != nullptr)
+				if (target->IsValidTarget(GEntityList->Player(), Q->Range()  && !target->IsDead()))
 				{
-					if (Q->IsReady())
+					if (target != nullptr)
 					{
-						Vec3 pred;
-						GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-						Q->CastOnPosition(pred);
+						if (Q->IsReady())
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+							Q->CastOnPosition(pred);
+						}
 					}
-				}
 
+				}
 			}
 		}
 	}
