@@ -38,6 +38,13 @@ IMenuOption* DrawDaggers;
 IMenuOption* Drawdamage;
 IMenuOption* Drawtoggle;
 
+
+IMenu* FleeMenu;
+IMenuOption* FleeW;
+IMenuOption* FleeE;
+IMenuOption* FleeKey;
+IMenuOption* FleeED;
+IMenuOption* DrawFleeRad;
 IMenu* FarmMenu;
 IMenuOption* FarmQ;
 IMenuOption* FarmE;
@@ -154,9 +161,72 @@ void Menu()
 		DrawDaggers = DrawingMenu->CheckBox("Draw Daggers", true);
 		Drawdamage = DrawingMenu->CheckBox("Draw Damage", true);
 		Drawtoggle = DrawingMenu->CheckBox("Draw Toggle", true);
+		DrawFleeRad = DrawingMenu->CheckBox("Draw Radius on Flee", true);
+	}
+	FleeMenu = MainMenu->AddMenu("Flee");
+	{
+		FleeKey = FleeMenu->AddKey("Flee", 'G');
+		FleeW = FleeMenu->CheckBox("Flee with W", true);
+		FleeE = FleeMenu->CheckBox("Flee with E", true);
+		FleeED = FleeMenu->CheckBox("^- Use E on Daggers", true);
 	}
 }
 
+void Flee()
+{
+	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
+	{
+		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		if (FleeW->Enabled() && W->IsReady())
+		{
+			W->CastOnPlayer();
+		}
+		if (FleeE->Enabled() && E->IsReady())
+		{
+			for (auto target : GEntityList->GetAllHeros(true, false))
+			{
+				if (target != GEntityList->Player())
+				{
+					if (target->IsValidTarget() && target->IsValidTarget(GEntityList->Player(), E->Range()) && !target->IsDead())
+					{
+						if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < 200)
+						{
+							E->CastOnUnit(target);
+						}
+					}
+				}
+			}
+			for (auto Minion : GEntityList->GetAllMinions(true, true, true))
+			{
+				if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget())
+				{
+					if ((Minion->GetPosition() - GGame->CursorPosition()).Length2D() < 200)
+					{
+						E->CastOnUnit(Minion);
+					}
+				}
+			}
+		}
+		if (FleeED->Enabled())
+		{
+			for (auto dagger : GEntityList->GetAllUnits())
+			{
+				if (std::string(dagger->GetObjectName()) == "HiddenMinion")
+				{
+					if ((std::string(dagger->GetObjectName()).find("Katarina_Base_Q") || std::string(dagger->GetObjectName()).find("Katarina_Base_Dagger")) && dagger != nullptr && !dagger->IsDead() && dagger->IsValidObject() && dagger->GetTeam() == GEntityList->Player()->GetTeam() && !dagger->IsDead())
+					{
+
+						if ((dagger->GetPosition() - GGame->CursorPosition()).Length2D() < 200)
+						{
+							E->CastOnPosition(dagger->GetPosition());
+						}
+					}
+				}
+			}
+		}
+
+	}
+}
 void HarasTog()
 {
 	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
@@ -189,31 +259,33 @@ void psvdmg()
 			{
 				if ((std::string(dagger->GetObjectName()).find("Katarina_Base_Q") || std::string(dagger->GetObjectName()).find("Katarina_Base_Dagger")) && dagger != nullptr && !dagger->IsDead() && dagger->IsValidObject() && dagger->GetTeam() == GEntityList->Player()->GetTeam() && !dagger->IsDead())
 				{
-
-					double basepsv = 75;
-					double psvlvl = 0;
-					if (GEntityList->Player()->GetLevel() == 1)
+					if ((target->GetPosition() - dagger->GetPosition()).Length2D() < 360)
 					{
-						psvlvl = 0.55;
+						double basepsv = 75;
+						double psvlvl = 0;
+						if (GEntityList->Player()->GetLevel() == 1)
+						{
+							psvlvl = 0.55;
+						}
+						if (GEntityList->Player()->GetLevel() == 6)
+						{
+							psvlvl = 0.7;
+						}
+						if (GEntityList->Player()->GetLevel() == 11)
+						{
+							psvlvl = 0.85;
+						}
+						if (GEntityList->Player()->GetLevel() == 16)
+						{
+							psvlvl = 1;
+						}
+						auto psv = basepsv + (GEntityList->Player()->GetLevel() * 12);
+						auto ap = GEntityList->Player()->TotalMagicDamage();
+						auto psvdmg = GEntityList->Player()->TotalMagicDamage()*psvlvl;
+						auto psvdmgad = GEntityList->Player()->PhysicalDamage() * 1;
+						auto full = psvdmg + psv + psvdmgad;
+						damages = GDamage->CalcMagicDamage(GEntityList->Player(), target, full);
 					}
-					if (GEntityList->Player()->GetLevel() == 6)
-					{
-						psvlvl = 0.7;
-					}
-					if (GEntityList->Player()->GetLevel() == 11)
-					{
-						psvlvl = 0.85;
-					}
-					if (GEntityList->Player()->GetLevel() == 16)
-					{
-						psvlvl = 1;
-					}
-					auto psv = basepsv + (GEntityList->Player()->GetLevel() * 12);
-					auto ap = GEntityList->Player()->TotalMagicDamage();
-					auto psvdmg = GEntityList->Player()->TotalMagicDamage()*psvlvl;
-					auto psvdmgad = GEntityList->Player()->PhysicalDamage() * 1;
-					auto full = psvdmg + psv + psvdmgad;
-					damages = GDamage->CalcMagicDamage(GEntityList->Player(), target, full);
 				}
 				else damages = 0;
 			}
@@ -244,6 +316,7 @@ inline Vec3 Extend(Vec3 from, Vec3 to, float distance)
 
 void Auto()
 {
+	float endtime;
 	if (Harassenable == true)
 	{
 		for (auto Enemy : GEntityList->GetAllHeros(false, true))
@@ -254,7 +327,10 @@ void Auto()
 				{
 					if (Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
 					{
-						Q->CastOnTarget(Enemy);
+						if (!GEntityList->Player()->IsCastingImportantSpell(&endtime))
+						{
+							Q->CastOnTarget(Enemy);
+						}
 					}
 				}
 
@@ -866,7 +942,7 @@ void Killsteal()
 								{
 									Dagger = dagger;
 									stuff = true;
-									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+									if ((dagger->GetPosition() - target->GetPosition()).Length2D() < 360 != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 									{
 
 										E->CastOnPosition(dagger->GetPosition());
@@ -1170,6 +1246,7 @@ void dmgdraw()
 
 PLUGIN_EVENT(void) OnGameUpdate()
 {
+
 	Killsteal();
 	Auto();
 	psvdmg();
@@ -1189,6 +1266,10 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
 	{
 		Mixed();
+	}
+	if (GetAsyncKeyState(FleeKey->GetInteger()) & 0x8000)
+	{
+		Flee();
 	}
 }
 
@@ -1218,6 +1299,16 @@ PLUGIN_EVENT(void) OnRender()
 						GPluginSDK->GetRenderer()->DrawOutlinedCircle(dagger->GetPosition(), Vec4(255, 0, 0, 200), 150);
 					}
 				}
+			}
+		}
+	}
+	if (DrawFleeRad->Enabled())
+	{
+		for (auto hero : GEntityList->GetAllHeros(false, true))
+		{
+			if (GetAsyncKeyState(FleeKey->GetInteger()))
+			{
+				GRender->DrawOutlinedCircle(GGame->CursorPosition(), Vec4(255, 0, 0, 255), 200);
 			}
 		}
 	}
