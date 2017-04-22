@@ -323,9 +323,12 @@ void Combo()
 			}
 			if (ComboE->Enabled() && E->IsReady() && E->Range() && ComboEStun->Enabled())
 			{
-				if (Etarget->HealthPercent() > Player->HealthPercent())
+				if (Etarget != nullptr)
 				{
-					E->CastOnTarget(Etarget);
+					if (Etarget->HealthPercent() > Player->HealthPercent())
+					{
+						E->CastOnTarget(Etarget);
+					}
 				}
 			}
 
