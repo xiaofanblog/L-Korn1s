@@ -610,7 +610,7 @@ void Combo()
 										{
 											Dagger = dagger;
 											stuff = true;
-											if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && damages >= target->GetHealth() && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+											if ((dagger->GetPosition() - target->GetPosition()).Length2D() < 360 && stuff == true && damages >= target->GetHealth() && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 											{
 
 												E->CastOnPosition(dagger->GetPosition());
@@ -656,7 +656,7 @@ void Combo()
 											{
 												Dagger = dagger;
 												stuff = true;
-												if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+												if ((dagger->GetPosition() - target->GetPosition()).Length2D() < 360 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 												{
 
 													E->CastOnPosition(dagger->GetPosition());
@@ -786,7 +786,7 @@ void Combo()
 										{
 											Dagger = dagger;
 											stuff = true;
-											if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && damages >= target->GetHealth() && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+											if ((dagger->GetPosition() - target->GetPosition()).Length2D() < 360 && stuff == true && damages >= target->GetHealth() && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 											{
 
 												E->CastOnPosition(dagger->GetPosition());
