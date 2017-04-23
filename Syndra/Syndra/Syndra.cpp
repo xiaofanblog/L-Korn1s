@@ -190,19 +190,61 @@ inline float GetDistanceVectors(Vec3 from, Vec3 to)
 
 static void CastQELogic(IUnit* target)
 {
-	auto ppos = GEntityList->Player()->ServerPosition();
-	auto startPosition = ppos.Extend(target->ServerPosition(), Q->Range());
-
-	QE->SetRangeCheckFrom(startPosition);
-	QE->SetFrom(startPosition);
-	AdvPredictionOutput prediction_output;
-	QE->RunPrediction(target, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall), &prediction_output);
-
-	if (prediction_output.HitChance >= kHitChanceHigh)
+	if ((GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D() < 800)
 	{
-		Q->SetOverrideRange(1250);
-		Vec3 pred;
-		GPrediction->GetFutureUnitPosition(target, 0.6, true, pred);
+		auto ppos = GEntityList->Player()->ServerPosition();
+		auto startPosition = ppos.Extend(target->ServerPosition(), Q->Range());
+
+		QE->SetRangeCheckFrom(startPosition);
+		QE->SetFrom(startPosition);
+		AdvPredictionOutput prediction_output;
+		QE->RunPrediction(target, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall), &prediction_output);
+
+		if (prediction_output.HitChance >= kHitChanceHigh)
+		{
+			Q->SetOverrideRange(1200);
+			Vec3 pred;
+			GPrediction->GetFutureUnitPosition(target, 0.5, true, pred);
+			if (!target->IsValidTarget(GEntityList->Player(), E->Range()))
+			{
+				if (Q->CastOnPosition(pred.Extend(GEntityList->Player()->ServerPosition(), 420)));
+				{
+					lastqE = GGame->Latency();
+					Q->SetOverrideRange(800);
+					QE->SetFrom(Vec3(0, 0, 0));
+				}
+			}
+			if (target->IsValidTarget(GEntityList->Player(), E->Range()))
+			{
+				if (Q->CastOnPosition(pred));
+				{
+					lastqE = GGame->Latency();
+					Q->SetOverrideRange(800);
+					QE->SetFrom(Vec3(0, 0, 0));
+				}
+			}
+		}
+	}
+	if ((GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D() > 800 && (GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D() < 1100)
+	{
+		auto ppos = GEntityList->Player()->ServerPosition();
+		auto startPosition = ppos.Extend(target->ServerPosition(), Q->Range()-100);
+		QE->SetOverrideDelay(0.4);
+		QE->SetRangeCheckFrom(startPosition);
+		QE->SetFrom(startPosition);
+		AdvPredictionOutput prediction_output;
+		QE->RunPrediction(target, true, static_cast<eCollisionFlags>(kCollidesWithYasuoWall), &prediction_output);
+
+		if (prediction_output.HitChance >= kHitChanceHigh)
+		{
+			if (Q->CastOnPosition(startPosition))
+			{
+				QE->SetFrom(Vec3(0, 0, 0));
+				lastqE = GGame->Latency();
+			}
+		}
+		/*Vec3 pred;
+		GPrediction->GetFutureUnitPosition(target, 0.3, true, pred);
 		if (!target->IsValidTarget(GEntityList->Player(), E->Range()))
 		{
 			if (Q->CastOnPosition(pred.Extend(GEntityList->Player()->ServerPosition(), 420)));
@@ -220,10 +262,9 @@ static void CastQELogic(IUnit* target)
 				Q->SetOverrideRange(800);
 				QE->SetFrom(Vec3(0, 0, 0));
 			}
-		}
+		}*/
 	}
 }
-
 static double GetUltimateDamage(IUnit* target)
 {
 	if (target == nullptr || !R->IsReady() || !target->IsValidTarget() || target->HasBuffOfType(BUFF_SpellShield) || target->HasBuffOfType(BUFF_SpellImmunity))
@@ -295,20 +336,21 @@ static void CastELogic(IUnit* target)
 	for (auto ball : sOrbs.ToVector())
 	{
 		auto orb = ball->ServerPosition();
-		if (GEntityList->Player()->ServerPosition().To2D().Distance(orb.To2D()) <= E->Range())
+		if (GEntityList->Player()->ServerPosition().To2D().Distance(orb.To2D()) <= E->Range() && GEntityList->Player()->ServerPosition().To2D().Distance(orb.To2D()) >= 200)
 		{
-			auto rangeLeft = 100 + (-0.6 * GEntityList->Player()->ServerPosition().To2D().Distance(orb.To2D()) + 950);
+			auto rangeLeft = 100 + (-0.6 * GEntityList->Player()->ServerPosition().To2D().Distance(orb.To2D()) + 900);
 			auto start_point = orb.To2D() - (orb.To2D().VectorNormalize() - GEntityList->Player()->ServerPosition().To2D().VectorNormalize()) * 10;
 			auto end_point = start_point + (start_point - GEntityList->Player()->ServerPosition().To2D()) * static_cast<float>(rangeLeft);
 
-			QE->SetOverrideDelay(E->GetDelay() * 1000.f + GEntityList->Player()->ServerPosition().To2D().Distance(orb.To2D()) / E->Speed() + target->ServerPosition().To2D().Distance(orb.To2D()) / QE->Speed());
+			QE->SetOverrideDelay(0.1);
+			QE->SetOverrideSpeed(10000000000);
 			QE->SetRangeCheckFrom(orb);
 			QE->SetFrom(orb);
 			AdvPredictionOutput prediction_output;
 			QE->RunPrediction(target, true, kCollidesWithYasuoWall, &prediction_output);
 
 			if (prediction_output.HitChance >= kHitChanceHigh
-				&& Distance(prediction_output.TargetPosition.To2D(), start_point, end_point, false) < QE->Radius() + target->BoundingRadius())
+				&& Distance(prediction_output.TargetPosition.To2D(), start_point, end_point, false) < QE->Radius() + target->BoundingRadius()-20)
 			{
 				E->CastOnPosition(orb);
 				QE->SetFrom(Vec3(0, 0, 0));
