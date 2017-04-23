@@ -314,6 +314,7 @@ inline Vec3 Extend(Vec3 from, Vec3 to, float distance)
 	return from + direction * realDistance;
 }
 
+
 void Auto()
 {
 	float endtime;
@@ -421,7 +422,7 @@ void Combo()
 						auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 150);
 						E->CastOnPosition(ext);
 					}
-					if (stuff == false && Dagger == nullptr)
+					if (stuff == false && Dagger == nullptr && !Q->IsReady())
 					{
 						E->CastOnTarget(target);
 					}
@@ -472,7 +473,7 @@ void Combo()
 					}
 					if (stuff == false && Dagger == nullptr)
 					{
-						E->CastOnTarget(target);
+						E->CastOnPosition(target->GetPosition().Extend(GEntityList->Player()->GetPosition(), 50));
 					}
 				}
 			}
@@ -538,7 +539,7 @@ void Combo()
 				}
 
 			}
-			if (ComboE->Enabled() && E->IsReady() && !Q->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
+			if (ComboE->Enabled() && E->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
 			{
 				IUnit* Dagger = nullptr;
 				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
@@ -575,7 +576,7 @@ void Combo()
 						auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 150);
 						E->CastOnPosition(ext);
 					}
-					if (stuff == false && Dagger == nullptr)
+					if (stuff == false && Dagger == nullptr && !Q->IsReady())
 					{
 						E->CastOnTarget(target);
 					}
@@ -678,7 +679,7 @@ void Combo()
 							}
 							if (stuff == false && Dagger == nullptr)
 							{
-								E->CastOnTarget(target);
+								E->CastOnPosition(target->GetPosition().Extend(GEntityList->Player()->GetPosition(), 50));
 							}
 						}
 					}
@@ -733,7 +734,7 @@ void Combo()
 					}
 					if (stuff == false && Dagger == nullptr)
 					{
-						E->CastOnTarget(target);
+						E->CastOnPosition(target->GetPosition().Extend(GEntityList->Player()->GetPosition(), 50));
 					}
 				}
 			}
