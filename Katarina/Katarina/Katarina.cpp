@@ -1090,7 +1090,7 @@ void Mixed()
 				}
 				if (stuff == false && Dagger == nullptr)
 				{
-					E->CastOnTarget(target);
+					E->CastOnPosition(target->GetPosition().Extend(GEntityList->Player()->GetPosition(), 50));
 				}
 			}
 		}
