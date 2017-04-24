@@ -16,6 +16,7 @@ IMenu* ComboRset;
 IMenuOption* ComboRkill;
 IMenuOption* ComboRalways;
 IMenuOption* ComboRhit;
+IMenuOption* ComboRstack;
 
 IMenuOption* ComboRcancelks;
 IMenuOption* ComboRcancel;
@@ -118,6 +119,7 @@ void Menu()
 		ComboR = ComboRset->CheckBox("Use R", true);
 		ComboRalways = ComboRset->CheckBox("R Always", false);
 		ComboRkill = ComboRset->CheckBox("R Only If Killable", true);
+		ComboRstack = ComboRset->AddFloat("X R Daggers to check damage", 1, 15, 8);
 		ComboRhit = ComboRset->AddFloat("R If Hits", 1, 5, 1);
 		ComboRcancel = ComboRset->CheckBox("Cancel R if no enemies", true);
 		ComboRcancelks = ComboRset->CheckBox("Cancel R for KS", true);
@@ -279,7 +281,7 @@ void psvdmg()
 						{
 							psvlvl = 1;
 						}
-						auto psv = basepsv + (GEntityList->Player()->GetLevel() * 12);
+						auto psv = basepsv + (GEntityList->Player()->GetLevel() * ComboRstack->GetFloat());
 						auto ap = GEntityList->Player()->TotalMagicDamage();
 						auto psvdmg = GEntityList->Player()->TotalMagicDamage()*psvlvl;
 						auto psvdmgad = GEntityList->Player()->PhysicalDamage() * 1;
@@ -385,7 +387,7 @@ void Combo()
 				}
 
 			}
-			if (ComboE->Enabled() && E->IsReady() && !Q->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
+			if (ComboE->Enabled() && E->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
 			{
 				IUnit* Dagger = nullptr;
 				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
@@ -401,10 +403,12 @@ void Combo()
 								{
 									Dagger = dagger;
 									stuff = true;
-									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+									if (CountEnemy(dagger->GetPosition(), 450) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 									{
 
-										E->CastOnPosition(dagger->GetPosition());
+
+										auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 250);
+										E->CastOnPosition(ext);
 									}
 
 
@@ -417,10 +421,9 @@ void Combo()
 							stuff = false;
 						}
 					}
-					if (stuff == false && Dagger != nullptr)
+					if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range() && !Q->IsReady())
 					{
-						auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 150);
-						E->CastOnPosition(ext);
+						E->CastOnTarget(target);
 					}
 					if (stuff == false && Dagger == nullptr && !Q->IsReady())
 					{
@@ -448,10 +451,12 @@ void Combo()
 								{
 									Dagger = dagger;
 									stuff = true;
-									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+									if (CountEnemy(dagger->GetPosition(), 450) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 									{
 
-										E->CastOnPosition(dagger->GetPosition());
+
+										auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 250);
+										E->CastOnPosition(ext);
 									}
 
 
@@ -464,12 +469,9 @@ void Combo()
 							stuff = false;
 						}
 					}
-					if (stuff == false && Dagger != nullptr)
+					if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range())
 					{
-
-
-						auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 150);
-						E->CastOnPosition(ext);
+						E->CastOnPosition(target->GetPosition().Extend(GEntityList->Player()->GetPosition(), 50));
 					}
 					if (stuff == false && Dagger == nullptr)
 					{
@@ -555,10 +557,12 @@ void Combo()
 								{
 									Dagger = dagger;
 									stuff = true;
-									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+									if (CountEnemy(dagger->GetPosition(), 450) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 									{
 
-										E->CastOnPosition(dagger->GetPosition());
+
+										auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 250);
+										E->CastOnPosition(ext);
 									}
 
 
@@ -571,10 +575,9 @@ void Combo()
 							stuff = false;
 						}
 					}
-					if (stuff == false && Dagger != nullptr)
+					if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range() && !Q->IsReady())
 					{
-						auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 150);
-						E->CastOnPosition(ext);
+						E->CastOnTarget(target);
 					}
 					if (stuff == false && Dagger == nullptr && !Q->IsReady())
 					{
@@ -610,10 +613,11 @@ void Combo()
 									{
 										Dagger = dagger;
 										stuff = true;
-										if (damages > target->GetHealth() && E->IsReady() && (dagger->GetPosition() - target->GetPosition()).Length2D() < 360 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+										if (damages > target->GetHealth() && E->IsReady() && (dagger->GetPosition() - target->GetPosition()).Length2D() < 450 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 										{
 
-											E->CastOnPosition(dagger->GetPosition());
+											auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 250);
+											E->CastOnPosition(ext);
 										}
 
 
@@ -626,12 +630,11 @@ void Combo()
 								stuff = false;
 							}
 						}
-						if (stuff == false && Dagger != nullptr && EDamage > target->GetHealth())
+						if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range() && !Q->IsReady())
 						{
-							auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 150);
-							E->CastOnPosition(ext);
+							E->CastOnTarget(target);
 						}
-						if (stuff == false && Dagger == nullptr && EDamage >= target->GetHealth())
+						if (stuff == false && Dagger == nullptr && !Q->IsReady())
 						{
 							E->CastOnTarget(target);
 						}
@@ -656,10 +659,11 @@ void Combo()
 										{
 											Dagger = dagger;
 											stuff = true;
-											if ((dagger->GetPosition() - target->GetPosition()).Length2D() < 360 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+											if ((dagger->GetPosition() - target->GetPosition()).Length2D() < 450 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 											{
 
-												E->CastOnPosition(dagger->GetPosition());
+												auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 250);
+												E->CastOnPosition(ext);
 											}
 
 
@@ -672,12 +676,11 @@ void Combo()
 									stuff = false;
 								}
 							}
-							if (stuff == false && Dagger != nullptr)
+							if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range() && !Q->IsReady())
 							{
-								auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 150);
-								E->CastOnPosition(ext);
+								E->CastOnPosition(target->GetPosition().Extend(GEntityList->Player()->GetPosition(), 50));
 							}
-							if (stuff == false && Dagger == nullptr)
+							if (stuff == false && Dagger == nullptr && !Q->IsReady())
 							{
 								E->CastOnPosition(target->GetPosition().Extend(GEntityList->Player()->GetPosition(), 50));
 							}
@@ -709,14 +712,16 @@ void Combo()
 								{
 									Dagger = dagger;
 									stuff = true;
-									if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+									if (CountEnemy(dagger->GetPosition(), 450) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 									{
 
-										E->CastOnPosition(dagger->GetPosition());
+
+										auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 250);
+										E->CastOnPosition(ext);
 									}
 
-
 								}
+
 
 							}
 						}
@@ -725,12 +730,9 @@ void Combo()
 							stuff = false;
 						}
 					}
-					if (stuff == false && Dagger != nullptr)
+					if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range())
 					{
-
-
-						auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 150);
-						E->CastOnPosition(ext);
+						E->CastOnPosition(target->GetPosition().Extend(GEntityList->Player()->GetPosition(), 50));
 					}
 					if (stuff == false && Dagger == nullptr)
 					{
@@ -785,10 +787,11 @@ void Combo()
 										{
 											Dagger = dagger;
 											stuff = true;
-											if (E->IsReady() &&(dagger->GetPosition() - target->GetPosition()).Length2D() < 360 && stuff == true && damages > target->GetHealth() && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+											if (E->IsReady() &&(dagger->GetPosition() - target->GetPosition()).Length2D() < 450 && stuff == true && damages > target->GetHealth() && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 											{
 
-												E->CastOnPosition(dagger->GetPosition());
+												auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 250);
+												E->CastOnPosition(ext);
 											}
 
 
@@ -801,12 +804,11 @@ void Combo()
 									stuff = false;
 								}
 							}
-							if (stuff == false && Dagger != nullptr && E->IsReady() && EDamage > target->GetHealth())
+							if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range())
 							{
-								auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 150);
-								E->CastOnPosition(ext);
+								E->CastOnTarget(target);
 							}
-							if (stuff == false && Dagger == nullptr && EDamage >= target->GetHealth())
+							if (stuff == false && Dagger == nullptr)
 							{
 								E->CastOnTarget(target);
 							}
@@ -831,10 +833,11 @@ void Combo()
 											{
 												Dagger = dagger;
 												stuff = true;
-												if (CountEnemy(dagger->GetPosition(), 360) && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+												if (CountEnemy(dagger->GetPosition(), 450) && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 												{
 
-													E->CastOnPosition(dagger->GetPosition());
+													auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 250);
+													E->CastOnPosition(ext);
 												}
 
 
@@ -847,10 +850,9 @@ void Combo()
 										stuff = false;
 									}
 								}
-								if (stuff == false && Dagger != nullptr)
+								if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range())
 								{
-									auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 150);
-									E->CastOnPosition(ext);
+									E->CastOnTarget(target);
 								}
 								if (stuff == false && Dagger == nullptr)
 								{
@@ -879,7 +881,7 @@ void Combo()
 			if (ComboRkill->Enabled() && ComboRhit->GetFloat() <= CountEnemy(GEntityList->Player()->GetPosition(), R->Range()))
 			{
 				auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotR);
-				if ((RDamage * 12) >= target->GetHealth())
+				if ((RDamage * ComboRstack->GetFloat()) >= target->GetHealth())
 				{
 					R->CastOnPlayer();
 				}
@@ -925,7 +927,7 @@ void Killsteal()
 			{
 				E->CastOnTarget(Enemy);
 			}
-			if (KSR->Enabled() && E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && EDamage > Enemy->GetHealth() && KSR->Enabled())
+			if (E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && passive > Enemy->GetHealth() && KSE->Enabled())
 			{
 				IUnit* Dagger = nullptr;
 				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
@@ -941,10 +943,11 @@ void Killsteal()
 								{
 									Dagger = dagger;
 									stuff = true;
-									if ((dagger->GetPosition() - target->GetPosition()).Length2D() < 360 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+									if ((dagger->GetPosition() - target->GetPosition()).Length2D() < 450 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 									{
 
-										E->CastOnPosition(dagger->GetPosition());
+										auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 250);
+										E->CastOnPosition(ext);
 									}
 
 
@@ -1018,10 +1021,11 @@ void Mixed()
 							{
 								Dagger = dagger;
 								stuff = true;
-								if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+								if (CountEnemy(dagger->GetPosition(), 450) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 								{
 
-									E->CastOnPosition(dagger->GetPosition());
+									auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 250);
+									E->CastOnPosition(ext);
 								}
 
 
@@ -1034,12 +1038,11 @@ void Mixed()
 						stuff = false;
 					}
 				}
-				if (stuff == false && Dagger != nullptr)
+				if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range() && !Q->IsReady())
 				{
-					auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 150);
-					E->CastOnPosition(ext);
+					E->CastOnTarget(target);
 				}
-				if (stuff == false && Dagger == nullptr)
+				if (stuff == false && Dagger == nullptr && !Q->IsReady())
 				{
 					E->CastOnTarget(target);
 				}
@@ -1065,10 +1068,11 @@ void Mixed()
 							{
 								Dagger = dagger;
 								stuff = true;
-								if (CountEnemy(dagger->GetPosition(), 360) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+								if (CountEnemy(dagger->GetPosition(), 450) != 0 && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 								{
 
-									E->CastOnPosition(dagger->GetPosition());
+									auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 250);
+									E->CastOnPosition(ext);
 								}
 
 
@@ -1081,14 +1085,11 @@ void Mixed()
 						stuff = false;
 					}
 				}
-				if (stuff == false && Dagger != nullptr)
+				if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range() && !Q->IsReady())
 				{
-
-
-					auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 150);
-					E->CastOnPosition(ext);
+					E->CastOnPosition(target->GetPosition().Extend(GEntityList->Player()->GetPosition(), 50));
 				}
-				if (stuff == false && Dagger == nullptr)
+				if (stuff == false && Dagger == nullptr && !Q->IsReady())
 				{
 					E->CastOnPosition(target->GetPosition().Extend(GEntityList->Player()->GetPosition(), 50));
 				}
@@ -1212,7 +1213,7 @@ void dmgdraw()
 			{
 				RDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotR);
 			}
-			auto damage = QDamage + EDamage + (RDamage*12) + damages;
+			auto damage = QDamage + EDamage + (RDamage*ComboRstack->GetFloat()) + damages;
 			float percentHealthAfterDamage = max(0, hero->GetHealth() - float(damage)) / hero->GetMaxHealth();
 			float yPos = barPos.y + yOffset;
 			float xPosDamage = (barPos.x + xOffset) + Width * percentHealthAfterDamage;
@@ -1287,14 +1288,14 @@ PLUGIN_EVENT(void) OnRender()
 			{
 				if ((std::string(dagger->GetObjectName()).find("Katarina_Base_Q") || std::string(dagger->GetObjectName()).find("Katarina_Base_Dagger")) && dagger != nullptr && !dagger->IsDead() && dagger->IsValidObject() && dagger->GetTeam() == GEntityList->Player()->GetTeam() && !dagger->IsDead())
 				{
-					if (CountEnemy(dagger->GetPosition(), 340) != 0)
+					if (CountEnemy(dagger->GetPosition(), 450) != 0)
 					{
-						GPluginSDK->GetRenderer()->DrawOutlinedCircle(dagger->GetPosition(), Vec4(25, 255, 0, 200), 360);
+						GPluginSDK->GetRenderer()->DrawOutlinedCircle(dagger->GetPosition(), Vec4(25, 255, 0, 200), 450);
 						GPluginSDK->GetRenderer()->DrawOutlinedCircle(dagger->GetPosition(), Vec4(25, 255, 0, 200), 150);
 					}
-					if (CountEnemy(dagger->GetPosition(), 340) == 0)
+					if (CountEnemy(dagger->GetPosition(), 450) == 0)
 					{
-						GPluginSDK->GetRenderer()->DrawOutlinedCircle(dagger->GetPosition(), Vec4(255, 0, 0, 200), 360);
+						GPluginSDK->GetRenderer()->DrawOutlinedCircle(dagger->GetPosition(), Vec4(255, 0, 0, 200), 450);
 						GPluginSDK->GetRenderer()->DrawOutlinedCircle(dagger->GetPosition(), Vec4(255, 0, 0, 200), 150);
 					}
 				}
@@ -1358,7 +1359,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
 
 	GGame->PrintChat("<b><font color=\"#FFFFFF\">Katarina<b><font color=\"#f8a101\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
-	GGame->PrintChat("<b><font color=\"#f8a101\">Version: 0.1</font></b>");
+	GGame->PrintChat("<b><font color=\"#f8a101\">Version: 0.2</font></b>");
 
 }
 
