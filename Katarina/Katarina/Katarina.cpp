@@ -480,7 +480,7 @@ void Combo()
 				}
 			}
 		}
-		if (ComboQ->Enabled() && Q->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
+		if (ComboQ->Enabled() && Q->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime) && !E->IsReady())
 		{
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
 			if (target != nullptr && target->IsValidTarget() && !target->IsDead())
@@ -741,7 +741,7 @@ void Combo()
 				}
 			}
 		}
-		if (ComboQ->Enabled() && Q->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
+		if (ComboQ->Enabled() && Q->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime) && !E->IsReady())
 		{
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
 			if (target != nullptr && target->IsValidTarget() && !target->IsDead())
