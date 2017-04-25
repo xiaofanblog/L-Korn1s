@@ -830,8 +830,8 @@ void Combo()
 				E->CastOnTarget(target);
 			}
 		}
+		else GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
 	}
-	else GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
 }
 void LastHit()
 {
