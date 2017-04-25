@@ -787,57 +787,51 @@ void Combo()
 			}
 		}
 	}
-	if (GEntityList->Player()->IsCastingImportantSpell(&endtime) && CountEnemy(GEntityList->Player()->GetPosition(), R->Range()-50) == 0)
+	if (GEntityList->Player()->IsCastingImportantSpell(&endtime) && CountEnemy(GEntityList->Player()->GetPosition(), R->Range() - 50) == 0)
 	{
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
 		if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 		{
-
-			auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotR);
-			if ((RDamage * ComboRstack->GetFloat()) >= target->GetHealth())
+			IUnit* Dagger = nullptr;
+			for (auto dagger : GEntityList->GetAllUnits())
 			{
-				IUnit* Dagger = nullptr;
-				for (auto dagger : GEntityList->GetAllUnits())
+
+				if (std::string(dagger->GetObjectName()) == "HiddenMinion")
 				{
-
-					if (std::string(dagger->GetObjectName()) == "HiddenMinion")
+					if ((std::string(dagger->GetObjectName()).find("Katarina_Base_Q") || std::string(dagger->GetObjectName()).find("Katarina_Base_Dagger")) && !dagger->IsDead() && dagger->IsValidObject() && dagger->GetTeam() == GEntityList->Player()->GetTeam() && !dagger->IsDead())
 					{
-						if ((std::string(dagger->GetObjectName()).find("Katarina_Base_Q") || std::string(dagger->GetObjectName()).find("Katarina_Base_Dagger")) && !dagger->IsDead() && dagger->IsValidObject() && dagger->GetTeam() == GEntityList->Player()->GetTeam() && !dagger->IsDead())
+						if (dagger != nullptr)
 						{
-							if (dagger != nullptr)
+							Dagger = dagger;
+							stuff = true;
+							if (CountEnemy(dagger->GetPosition(), 450) && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 							{
-								Dagger = dagger;
-								stuff = true;
-								if (CountEnemy(dagger->GetPosition(), 450) && stuff == true && (dagger->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
-								{
 
-									auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 250);
-									E->CastOnPosition(ext);
-								}
-
-
+								auto ext = Extend(target->GetPosition(), Dagger->GetPosition(), 250);
+								E->CastOnPosition(ext);
 							}
 
+
 						}
-					}
-					if (std::string(dagger->GetObjectName()) != "HiddenMinion")
-					{
-						stuff = false;
+
 					}
 				}
-				if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range())
+				if (std::string(dagger->GetObjectName()) != "HiddenMinion")
 				{
-					E->CastOnTarget(target);
-				}
-				if (stuff == false && Dagger == nullptr)
-				{
-					E->CastOnTarget(target);
+					stuff = false;
 				}
 			}
+			if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range())
+			{
+				E->CastOnTarget(target);
+			}
+			if (stuff == false && Dagger == nullptr)
+			{
+				E->CastOnTarget(target);
+			}
 		}
-		else GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
 	}
-
+	else GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
 }
 void LastHit()
 {
