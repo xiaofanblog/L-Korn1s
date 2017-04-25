@@ -344,9 +344,6 @@ void Auto()
 }
 void Combo()
 {
-	std::string s = std::to_string(damages);
-	char const *pchar = s.c_str();
-	GGame->PrintChat(pchar);
 	float endtime;
 	if (!ComboRcancelks->Enabled())
 	{
