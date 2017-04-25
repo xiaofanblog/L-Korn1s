@@ -261,31 +261,32 @@ void psvdmg()
 			{
 				if ((std::string(dagger->GetObjectName()).find("Katarina_Base_Q") || std::string(dagger->GetObjectName()).find("Katarina_Base_Dagger")) && dagger != nullptr && !dagger->IsDead() && dagger->IsValidObject() && dagger->GetTeam() == GEntityList->Player()->GetTeam() && !dagger->IsDead())
 				{
-					if ((target->GetPosition() - dagger->GetPosition()).Length2D() < 360)
+					if ((target->GetPosition() - dagger->GetPosition()).Length2D() < 450)
 					{
-						double basepsv = 75;
+						double basepsv = 35;
 						double psvlvl = 0;
-						if (GEntityList->Player()->GetLevel() == 1)
+						if (GEntityList->Player()->GetLevel() >= 1 && GEntityList->Player()->GetLevel() < 6)
 						{
 							psvlvl = 0.55;
 						}
-						if (GEntityList->Player()->GetLevel() == 6)
+						if (GEntityList->Player()->GetLevel() >= 6 && GEntityList->Player()->GetLevel() < 11)
 						{
 							psvlvl = 0.7;
 						}
-						if (GEntityList->Player()->GetLevel() == 11)
+						if (GEntityList->Player()->GetLevel() >= 11 && GEntityList->Player()->GetLevel() < 16)
 						{
 							psvlvl = 0.85;
 						}
-						if (GEntityList->Player()->GetLevel() == 16)
+						if (GEntityList->Player()->GetLevel() >= 16)
 						{
 							psvlvl = 1;
 						}
-						auto psv = basepsv + (GEntityList->Player()->GetLevel() * ComboRstack->GetFloat());
+						auto psv = basepsv + (GEntityList->Player()->GetLevel() * 12);
 						auto ap = GEntityList->Player()->TotalMagicDamage();
 						auto psvdmg = GEntityList->Player()->TotalMagicDamage()*psvlvl;
-						auto psvdmgad = GEntityList->Player()->PhysicalDamage() * 1;
+						auto psvdmgad = GEntityList->Player()->BonusDamage() * 1;
 						auto full = psvdmg + psv + psvdmgad;
+						
 						damages = GDamage->CalcMagicDamage(GEntityList->Player(), target, full);
 					}
 				}
@@ -343,6 +344,9 @@ void Auto()
 }
 void Combo()
 {
+	std::string s = std::to_string(damages);
+	char const *pchar = s.c_str();
+	GGame->PrintChat(pchar);
 	float endtime;
 	if (!ComboRcancelks->Enabled())
 	{
