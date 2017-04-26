@@ -641,6 +641,10 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Farm();
 	}
+	if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
+	{
+		Harass();
+	}
 	if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
 	{
 		LastHit();
@@ -666,9 +670,12 @@ PLUGIN_EVENT(void) OnInterruptible(InterruptibleSpell const& Args)
 			R->CastOnTarget(Args.Source);
 	}
 }
+inline float Distance(Vec3 from, Vec3 to)
+{
+	return (from - to).Length2D();
+}
 PLUGIN_EVENT(void) OnGapCloser(GapCloserSpell const& Args)
 {
-
 	if (Args.Source != nullptr && Args.Source != GEntityList->Player()
 		&& Args.Source->IsEnemy(GEntityList->Player())
 		&& GEntityList->Player()->IsValidTarget(Args.Source, W->Range() + Args.Source->BoundingRadius())
