@@ -670,18 +670,21 @@ PLUGIN_EVENT(void) OnInterruptible(InterruptibleSpell const& Args)
 			R->CastOnTarget(Args.Source);
 	}
 }
-inline float Distance(Vec3 from, Vec3 to)
+float GetDistance(IUnit* Player, Vec3 pos)
 {
-	return (from - to).Length2D();
+	return (Player->GetPosition() - pos).Length2D();
 }
 PLUGIN_EVENT(void) OnGapCloser(GapCloserSpell const& Args)
 {
 	if (Args.Source != nullptr && Args.Source != GEntityList->Player()
 		&& Args.Source->IsEnemy(GEntityList->Player())
-		&& GEntityList->Player()->IsValidTarget(Args.Source, W->Range() + Args.Source->BoundingRadius())
 		&& AntiGapW->Enabled() && W->IsReady())
 	{
-		W->CastOnTarget(Args.Source);
+		if (GetDistance(GEntityList->Player(), Args.EndPosition) <= 700)
+		{
+			W->CastOnPosition(Args.EndPosition);
+		}
+
 	}
 }
 
