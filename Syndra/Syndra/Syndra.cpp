@@ -187,7 +187,6 @@ inline float GetDistanceVectors(Vec3 from, Vec3 to)
 	return static_cast<float>(sqrt(pow((x2 - x1), 2.0) + pow((y2 - y1), 2.0) + pow((z2 - z1), 2.0)));
 }
 
-
 static void CastQELogic(IUnit* target)
 {
 	if ((GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D() < 800)
@@ -921,7 +920,7 @@ static void OnProcessSpellCast(CastedSpell const& Args)
 	{
 		if (std::string(Args.Name_) == "SyndraQ")
 		{
-			if (GOrbwalking->GetOrbwalkingMode() == kModeCombo && lastw < GGame->TickCount())
+			if (GOrbwalking->GetOrbwalkingMode() == kModeCombo && lastw < GGame->TickCount() && ComboE->Enabled())
 			{
 				EndPos = Args.EndPosition_;
 				GPluginSDK->DelayFunctionCall(lastqE, []()
