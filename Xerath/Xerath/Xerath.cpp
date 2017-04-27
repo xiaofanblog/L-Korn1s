@@ -23,6 +23,7 @@ IMenuOption* HarassE;
 IMenuOption* HarassMana;
 IMenu* Tip;
 IMenuOption* ForceQ;
+IMenuOption* SemiQkey;
 
 
 
@@ -129,6 +130,7 @@ void Menu()
 	}
 	Tip = MainMenu->AddMenu("Semi Q");
 	{
+		SemiQkey = Tip->AddKey("Semi Q Key", 'G');
 		ForceQ = Tip->CheckBox("Use Semi Q", true);
 	}
 }
@@ -328,9 +330,9 @@ void ForcingQ()
 {
 	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
 	{
-		GGame->IssueOrder(Player, kMoveTo, GGame->CursorPosition());
 		if (ForceQ->Enabled())
 		{
+		GGame->IssueOrder(Player, kMoveTo, GGame->CursorPosition());
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
 			if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead() && !target->IsDashing())
 			{
@@ -549,7 +551,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		RCastTapo();
 	}
-	if (GetAsyncKeyState('G') & 0x8000)
+	if (GetAsyncKeyState(SemiQkey->GetInteger()) & 0x8000)
 	{
 		ForcingQ();
 	}
