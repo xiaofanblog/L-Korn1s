@@ -23,7 +23,7 @@ auto Rembrandt::IsInRange(Vec3 PositionA, Vec3 PositionB, float Range) -> bool
 }
 
 // Credits: LeagueSharp Farm Protocols
-auto Rembrandt::FindBestLineCastPosition(std::vector<Vec3> RangeCheckFroms, float range, float castrange, float radius, bool Minions, bool Heroes, FarmLocation& Output) -> void
+auto Rembrandt::FindBestLineCastPosition(std::vector<Vec3> RangeCheckFroms, float range, float castrange, float radius, float jungle, bool Minions, bool Heroes, FarmLocation& Output) -> void
 {
 	FarmLocation result;
 	result.HitCount = 0;
@@ -31,6 +31,17 @@ auto Rembrandt::FindBestLineCastPosition(std::vector<Vec3> RangeCheckFroms, floa
 	{
 		std::vector<IUnit*> targets, casttargets;
 
+		if (jungle)
+		{
+			for (auto Minion : GEntityList->GetAllMinions(false, false, true))
+			{
+				if (!Minion->IsValidTarget() || Minion->IsWard())
+					continue;
+
+				if (IsInRange(RangeCheckFrom, Minion->GetPosition(), range)) targets.push_back(Minion);
+				if (IsInRange(RangeCheckFrom, Minion->GetPosition(), castrange)) casttargets.push_back(Minion);
+			}
+		}
 		if (Minions)
 		{
 			for (auto Minion : GEntityList->GetAllMinions(false, true, false))

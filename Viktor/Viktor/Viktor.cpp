@@ -23,6 +23,7 @@ IMenuOption* ComboRtickdmg;
 IMenuOption* ComboRkillable;
 IMenuOption* ComboRfollow;
 IMenuOption* ComboRfollowset;
+IMenuOption* ComboRcheck;
 
 
 IMenu* HarassMenu;
@@ -41,7 +42,8 @@ IMenuOption* FarmMana;
 IMenuOption* FarmKey;
 IMenuOption* FarmQ;
 IMenuOption* FarmE;
-
+IMenuOption* FarmQJ;
+IMenuOption* FarmEJ;
 IMenu* FleeMenu;
 IMenuOption* FleeKey;
 IMenuOption* FleeQ;
@@ -113,6 +115,7 @@ void Menu()
 		ComboRmin = SetR->AddFloat("Use R only if Hits X", 1, 5, 1);
 		ComboRfollow = SetR->CheckBox("Auto R Follow", true);
 		ComboRfollowset = SetR->CheckBox("^- If no enemies, move to minions", true);
+		ComboRcheck = SetR->AddFloat("Dont waste R if Enemy HP lower than", 0, 500, 100);
 
 	}
 	HarassMenu = MainMenu->AddMenu("Harass");
@@ -138,7 +141,9 @@ void Menu()
 		FarmMana = FarmMenu->AddFloat("Mana Percent", 10, 100, 50);
 		FarmKey = FarmMenu->AddKey("Farm Toggle", 'T');
 		FarmQ = FarmMenu->CheckBox("Use Q to Last Hit", true);
-		FarmE = FarmMenu->CheckBox("Use E to Farm", true);
+		FarmE = FarmMenu->CheckBox("Use E to LaneClear", true);
+		FarmEJ = FarmMenu->CheckBox("Use E to JungleClear", true);
+		FarmQJ = FarmMenu->CheckBox("Use Q to JungleClear", true);
 	}
 	Drawings = MainMenu->AddMenu("Drawings");
 	{
@@ -397,7 +402,7 @@ void Farm()
 							std::vector<Vec3> CastPos;
 							CastPos.push_back(Minion->ServerPosition());
 							FarmLocation Farmlocation;
-							Rembrandt::FindBestLineCastPosition(CastPos, E->Range(), E->Range(), E->Radius(), true, true, Farmlocation);
+							Rembrandt::FindBestLineCastPosition(CastPos, E->Range(), E->Range(), E->Radius(), false, true, true, Farmlocation);
 							if (Minion->IsValidTarget(GEntityList->Player(), 550))
 							{
 								E->CastFrom(Minion->ServerPosition(), Farmlocation.CastPosition);
@@ -417,6 +422,54 @@ void Farm()
 						{
 							Q->CastOnUnit(Minion);
 						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void Jungle()
+{
+	if (Farmenable == true)
+	{
+		if (FarmMana->GetFloat() <= GEntityList->Player()->ManaPercent())
+		{
+			for (auto Minion : GEntityList->GetAllMinions(false, false, true))
+			{
+				if (FarmEJ->Enabled())
+				{
+					if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() &&  Minion->IsJungleCreep())
+					{
+						Vec3 pos;
+						int hit;
+						if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && Minion->IsValidTarget(GEntityList->Player(), E->Range()))
+						{
+							auto castStartPos = Minion->ServerPosition();
+							E->SetRangeCheckFrom(castStartPos);
+							E->SetFrom(castStartPos);
+							std::vector<Vec3> CastPos;
+							CastPos.push_back(Minion->ServerPosition());
+							FarmLocation Farmlocation;
+							Rembrandt::FindBestLineCastPosition(CastPos, E->Range(), E->Range(), E->Radius(), true, false, true, Farmlocation);
+							if (Minion->IsValidTarget(GEntityList->Player(), 550))
+							{
+								E->CastFrom(Minion->ServerPosition(), Farmlocation.CastPosition);
+								E->SetFrom(Vec3(0, 0, 0));
+							}
+
+
+
+						}
+					}
+				}
+				if (FarmQJ->Enabled())
+				{
+					if (Minion->IsValidTarget(GEntityList->Player(), Q->Range()) && Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && (Minion->IsCreep() || Minion->IsJungleCreep()))
+					{
+
+						Q->CastOnUnit(Minion);
+
 					}
 				}
 			}
@@ -518,7 +571,7 @@ void Combo()
 			{
 				double QDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotQ);
 				double EDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotE);
-				if ((GetRDamage(target) + QDamage + EDamage) >= target->GetHealth())
+				if ((GetRDamage(target) + QDamage + EDamage) >= target->GetHealth() && target->GetHealth() > ComboRcheck->GetFloat())
 				{
 					R->CastOnTarget(target);
 				}
@@ -640,6 +693,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
 	{
 		Farm();
+		Jungle();
 	}
 	if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
 	{
