@@ -738,7 +738,7 @@ void Combo()
 				{
 					auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotQ);
 					auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotE);
-					if ((GetQE(target) + EDamage > target->GetHealth() && GEntityList->Player()->GetSpellRemainingCooldown(kSlotR) < 2) || (EDamage > target->GetHealth()))
+					if ((GetQE(target) + EDamage > target->GetHealth() && GEntityList->Player()->GetSpellRemainingCooldown(kSlotR) < 4) || (EDamage > target->GetHealth()))
 					{
 						E->CastOnTarget(target);
 					}
