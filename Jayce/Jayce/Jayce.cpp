@@ -70,6 +70,9 @@ IMenuOption* KSQM;
 IMenu* MiscMenu;
 IMenuOption* AntiGapE;
 IMenuOption* InterruptE;
+IMenu* InsecMenu;
+IMenuOption* InsecQ;
+IMenuOption* InsecQproc;
 
 IMenu* FleeMenu;
 IMenuOption* FleeE; 
@@ -94,6 +97,7 @@ ISpell* Flash;
 int delay;
 
 IUnit* Player;
+int helalmoney = 0;
 
 
 int xOffset = 10;
@@ -157,7 +161,6 @@ void Menu()
 		ComboESemi = Eset->CheckBox("Use E on Q", true);
 		ComboR = ComboMenu->CheckBox("Use R Switch", true);
 		ComboSemiQE = ComboMenu->AddKey("QE To Mouse", 'T');
-		Insec = ComboMenu->AddKey("Insec", 17);
 	}
 	HarassMenu = MainMenu->AddMenu("Harass");
 	{
@@ -188,14 +191,13 @@ void Menu()
 		KSQE = KillstealMenu->CheckBox("Killsteal with QE", true);
 		KSEM = KillstealMenu->CheckBox("Killsteal with E Melee", true);
 	}
-	FarmMenu = MainMenu->AddMenu("LaneClear");
+	InsecMenu = MainMenu->AddMenu("Insec");
 	{
-		FarmMana = FarmMenu->AddFloat("Mana Percent", 10, 100, 50);
-		FarmQ = FarmMenu->CheckBox("Use Q Melee", true);
-		FarmW = FarmMenu->AddFloat("^- if Hits", 1, 6, 3);
-		FarmE = FarmMenu->CheckBox("Use W Melee", true);
-		FarmWR = FarmMenu->AddFloat("^- if in W Range", 1, 6, 3);
+		Insec = InsecMenu->AddKey("Insec", 17);
+		InsecQ = InsecMenu->CheckBox("Use Q to Gap", true);
+		InsecQproc = InsecMenu->CheckBox("Wait for Q proc damage", false);
 	}
+
 	JFarmMenu = MainMenu->AddMenu("JungeClear");
 	{
 		JFarmMana = JFarmMenu->AddFloat("Mana Percent", 10, 100, 50);
@@ -204,6 +206,15 @@ void Menu()
 		JFarmWR = JFarmMenu->CheckBox("Use W Ranged", true);
 		JFarmWM = JFarmMenu->CheckBox("Use W Melee", true);
 		JFarmEM = JFarmMenu->CheckBox("Use E Melee", true);
+	}
+	
+	FarmMenu = MainMenu->AddMenu("LaneClear");
+	{
+		FarmMana = FarmMenu->AddFloat("Mana Percent", 10, 100, 50);
+		FarmQ = FarmMenu->CheckBox("Use Q Melee", true);
+		FarmW = FarmMenu->AddFloat("^- if Hits", 1, 6, 3);
+		FarmE = FarmMenu->CheckBox("Use W Melee", true);
+		FarmWR = FarmMenu->AddFloat("^- if in W Range", 1, 6, 3);
 	}
 	FleeMenu = MainMenu->AddMenu("Flee");
 	{
@@ -446,30 +457,42 @@ void insec()
 			GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
 			for (auto Enemy : GEntityList->GetAllHeros(false, true))
 			{
-				if (Enemy->IsValidTarget() && Enemy != nullptr && ((Player->GetPosition() - Enemy->GetPosition()).Length()) < 380 && !Enemy->IsDead())
+				if (Enemy->IsValidTarget() && Enemy != nullptr  && !Enemy->IsDead())
 				{
-
-					if (Flash != nullptr && Flash->IsReady() && E->IsReady())
+					if (((Player->GetPosition() - Enemy->GetPosition()).Length()) < 380)
 					{
-						for (auto Ally : GEntityList->GetAllHeros(true, false))
+						if (Flash != nullptr && Flash->IsReady() && E->IsReady())
 						{
-							if (Ally != GEntityList->Player() && Ally != nullptr && !Ally->IsDead() && Ally->IsValidTarget())
+							for (auto Ally : GEntityList->GetAllHeros(true, false))
 							{
-
-								if (((Player->GetPosition() - Ally->GetPosition()).Length2D()) < 1000)
+								if (Ally != GEntityList->Player() && Ally != nullptr && !Ally->IsDead() && Ally->IsValidTarget())
 								{
-									if (Flash->CastOnPosition(Enemy->GetPosition().Extend(Ally->GetPosition(), -100)))
-									{
-										E->CastOnTarget(Enemy);
-									}
-								}
 
+									if (((Player->GetPosition() - Ally->GetPosition()).Length2D()) < 1000)
+									{
+										if (helalmoney < GGame->TickCount())
+										{
+											if (Flash->CastOnPosition(Enemy->GetPosition().Extend(Ally->GetPosition(), -100)))
+											{
+												E->CastOnTarget(Enemy);
+												helalmoney = 0;
+
+											}
+										}
+									}
+
+								}
 							}
 							if (GetAlliesInRange(GEntityList->Player(), 1000) == 0)
 							{
-								if (Flash->CastOnPosition(Enemy->GetPosition().Extend(GEntityList->Player()->GetPosition(), -100)))
+								if (helalmoney < GGame->TickCount())
 								{
-									E->CastOnTarget(Enemy);
+									if (Flash->CastOnPosition(Enemy->GetPosition().Extend(GEntityList->Player()->GetPosition(), -100)))
+									{
+										E->CastOnTarget(Enemy);
+										helalmoney = 0;
+
+									}
 								}
 							}
 
@@ -477,7 +500,32 @@ void insec()
 
 						}
 					}
+					
+					if (InsecQ->Enabled())
+					{
+						if (InsecQproc->Enabled())
+						{
+								if (((Player->GetPosition() - Enemy->GetPosition()).Length()) > 380 && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+								{
+									if (Q->CastOnTarget(Enemy))
+									{
+										helalmoney = GGame->TickCount() + 600;
+									}
+								}
+						}
+						if (!InsecQproc->Enabled())
+						{
+							if (((Player->GetPosition() - Enemy->GetPosition()).Length()) > 380 && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+							{
+								if (Q->CastOnTarget(Enemy))
+								{
+									helalmoney = 0;
+								}
+							}
+						}
+					}
 				}
+
 			}
 		}
 	}
