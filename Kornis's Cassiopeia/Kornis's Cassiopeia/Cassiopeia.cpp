@@ -227,7 +227,7 @@ void dmgdraw()
 	for (auto hero : GEntityList->GetAllHeros(false, true))
 	{
 		Vec2 barPos = Vec2();
-		if (hero->GetHPBarPosition(barPos) && !hero->IsDead())
+		if (hero->GetHPBarPosition(barPos) && !hero->IsDead() && hero->IsValidTarget())
 		{
 			auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotQ);
 			auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotE);
@@ -599,7 +599,7 @@ void LastHit()
 		{
 			if (GEntityList->Player()->IsValidTarget(minion, E->Range()))
 			{
-				if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed())-125, static_cast<int>(E->GetDelay()*1000)))
+				if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed())-125, static_cast<int>(E->GetDelay()*800)))
 				{
 					E->CastOnUnit(minion);
 				}
@@ -643,8 +643,7 @@ void Mixed()
 				{
 					if (GEntityList->Player()->IsValidTarget(minion, E->Range()))
 					{
-						if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, static_cast<int>(E->GetDelay() * 1000)))
-						{
+						if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, static_cast<int>(E->GetDelay() * 800))) {
 							E->CastOnUnit(minion);
 						}
 					}
@@ -726,8 +725,7 @@ void Farm()
 		{
 			if (GEntityList->Player()->IsValidTarget(minion, E->Range()))
 			{
-				if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, static_cast<int>(E->GetDelay() * 1000)))
-				{
+				if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, static_cast<int>(E->GetDelay() * 800))) {
 					E->CastOnUnit(minion);
 				}
 			}
@@ -967,7 +965,7 @@ PLUGIN_EVENT(void) OnRender()
 			{
 				auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), minionE, kSlotE);
 				{
-					if (EDamage > minionE->GetHealth() && minionE != nullptr && !minionE->IsDead())
+					if (GDamage->GetSpellDamage(GEntityList->Player(), minionE, kSlotE) > GHealthPrediction->GetPredictedHealth(minionE, kLastHitPrediction, static_cast<int>(((minionE->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, static_cast<int>(E->GetDelay() * 800)) && minionE != nullptr && !minionE->IsDead())
 					{
 						GRender->DrawOutlinedCircle(minionE->GetPosition(), Vec4(255, 255, 0, 255), 80.f);
 					}
