@@ -11,6 +11,7 @@ IMenuOption* ComboQ;
 IMenuOption* ComboW;
 IMenuOption* ComboMode;
 IMenuOption* ComboE;
+IMenuOption* SaveE;
 IMenuOption* ComboR;
 IMenu* ComboRset;
 IMenuOption* ComboRkill;
@@ -85,6 +86,8 @@ IUnit* dmga = nullptr;
 IInventoryItem* Gunblade;
 IInventoryItem* Cutlass;
 
+int hello;
+
 int xOffset = 10;
 int yOffset = 20;
 int Width = 103;
@@ -115,6 +118,7 @@ void Menu()
 		ComboQ = ComboMenu->CheckBox("Use Q", true);
 		ComboW = ComboMenu->CheckBox("Use W", true);
 		ComboE = ComboMenu->CheckBox("Use E", true);
+		SaveE = ComboMenu->CheckBox("Save E if no Daggers", false);
 		ComboRset = ComboMenu->AddMenu("R Settings");
 		ComboR = ComboRset->CheckBox("Use R", true);
 		ComboRalways = ComboRset->CheckBox("R Always", false);
@@ -369,7 +373,7 @@ void Combo()
 				Cutlass->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, SpellDamage, 550));
 			}
 		}
-		if (ComboMode->GetInteger() == 0)
+		if (ComboMode->GetInteger() == 0 && GGame->TickCount() > hello)
 		{
 			if (ComboQ->Enabled() && Q->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
 			{
@@ -422,18 +426,19 @@ void Combo()
 							stuff = false;
 						}
 					}
-					if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range() && !Q->IsReady())
+					if (!SaveE->Enabled() && Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range() && !Q->IsReady())
 					{
 						E->CastOnTarget(target);
 					}
-					if (stuff == false && Dagger == nullptr && !Q->IsReady())
+					if (!SaveE->Enabled() && stuff == false && Dagger == nullptr && !Q->IsReady())
 					{
 						E->CastOnTarget(target);
 					}
+
 				}
 			}
 		}
-		if (ComboMode->GetInteger() == 1)
+		if (ComboMode->GetInteger() == 1 && GGame->TickCount() > hello)
 		{
 			if (ComboE->Enabled() && E->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
 			{
@@ -470,33 +475,34 @@ void Combo()
 							stuff = false;
 						}
 					}
-					if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range())
+					if (!SaveE->Enabled() && Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range())
 					{
 						E->CastOnPosition(target->GetPosition().Extend(GEntityList->Player()->GetPosition(), 50));
 					}
-					if (stuff == false && Dagger == nullptr)
+					if (!SaveE->Enabled() && stuff == false && Dagger == nullptr)
 					{
 						E->CastOnPosition(target->GetPosition().Extend(GEntityList->Player()->GetPosition(), 50));
 					}
 				}
 			}
-		}
-		if (ComboQ->Enabled() && Q->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime) && !E->IsReady())
-		{
-			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
-			if (target != nullptr && target->IsValidTarget() && !target->IsDead())
-			{
-				Q->CastOnTarget(target);
-			}
-		}
-		if (ComboW->Enabled() && W->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
-		{
-			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 350);
-			if (target != nullptr && target->IsValidTarget() && !target->IsDead())
-			{
-				W->CastOnPlayer();
-			}
 
+			if (ComboQ->Enabled() && Q->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime) && !E->IsReady())
+			{
+				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+				if (target != nullptr && target->IsValidTarget() && !target->IsDead())
+				{
+					Q->CastOnTarget(target);
+				}
+			}
+			if (ComboW->Enabled() && W->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
+			{
+				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 350);
+				if (target != nullptr && target->IsValidTarget() && !target->IsDead())
+				{
+					W->CastOnPlayer();
+				}
+
+			}
 		}
 	}
 	if (ComboRcancelks->Enabled())
@@ -523,7 +529,7 @@ void Combo()
 				Cutlass->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, SpellDamage, 550));
 			}
 		}
-		if (ComboMode->GetInteger() == 0)
+		if (ComboMode->GetInteger() == 0 && GGame->TickCount() > hello)
 		{
 			if (ComboQ->Enabled() && Q->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
 			{
@@ -576,11 +582,11 @@ void Combo()
 							stuff = false;
 						}
 					}
-					if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range() && !Q->IsReady())
+					if (!SaveE->Enabled() && Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range() && !Q->IsReady())
 					{
 						E->CastOnTarget(target);
 					}
-					if (stuff == false && Dagger == nullptr && !Q->IsReady())
+					if (!SaveE->Enabled() && stuff == false && Dagger == nullptr && !Q->IsReady())
 					{
 						E->CastOnTarget(target);
 					}
@@ -627,11 +633,11 @@ void Combo()
 								stuff = false;
 							}
 						}
-						if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range() && !Q->IsReady())
+						if (!SaveE->Enabled() && Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range() && !Q->IsReady())
 						{
 							E->CastOnTarget(target);
 						}
-						if (stuff == false && Dagger == nullptr && !Q->IsReady())
+						if (!SaveE->Enabled() && stuff == false && Dagger == nullptr && !Q->IsReady())
 						{
 							E->CastOnTarget(target);
 						}
@@ -644,7 +650,7 @@ void Combo()
 				}
 			}
 		}
-		if (ComboMode->GetInteger() == 1)
+		if (ComboMode->GetInteger() == 1 && GGame->TickCount() > hello)
 		{
 			if (ComboE->Enabled() && E->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
 			{
@@ -681,33 +687,34 @@ void Combo()
 							stuff = false;
 						}
 					}
-					if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range())
+					if (!SaveE->Enabled() && Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range())
 					{
 						E->CastOnPosition(target->GetPosition().Extend(GEntityList->Player()->GetPosition(), 50));
 					}
-					if (stuff == false && Dagger == nullptr)
+					if (!SaveE->Enabled() && stuff == false && Dagger == nullptr)
 					{
 						E->CastOnPosition(target->GetPosition().Extend(GEntityList->Player()->GetPosition(), 50));
 					}
 				}
 			}
-		}
-		if (ComboQ->Enabled() && Q->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime) && !E->IsReady())
-		{
-			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
-			if (target != nullptr && target->IsValidTarget() && !target->IsDead())
-			{
-				Q->CastOnTarget(target);
-			}
-		}
-		if (ComboW->Enabled() && W->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
-		{
-			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 350);
-			if (target != nullptr && target->IsValidTarget() && !target->IsDead())
-			{
-				W->CastOnPlayer();
-			}
 
+			if (ComboQ->Enabled() && Q->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime) && !E->IsReady())
+			{
+				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+				if (target != nullptr && target->IsValidTarget() && !target->IsDead())
+				{
+					Q->CastOnTarget(target);
+				}
+			}
+			if (ComboW->Enabled() && W->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
+			{
+				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 350);
+				if (target != nullptr && target->IsValidTarget() && !target->IsDead())
+				{
+					W->CastOnPlayer();
+				}
+
+			}
 		}
 		if (GEntityList->Player()->IsCastingImportantSpell(&endtime))
 		{
@@ -750,11 +757,11 @@ void Combo()
 								stuff = false;
 							}
 						}
-						if (Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range() && !Q->IsReady())
+						if (EDamage >= Enemy->GetHealth() && Dagger != nullptr && (GEntityList->Player()->GetPosition() - Dagger->GetPosition()).Length2D() > E->Range() && !Q->IsReady())
 						{
 							E->CastOnTarget(target);
 						}
-						if (stuff == false && Dagger == nullptr && !Q->IsReady())
+						if (EDamage >= Enemy->GetHealth() && stuff == false && Dagger == nullptr && !Q->IsReady())
 						{
 							E->CastOnTarget(target);
 						}
@@ -776,6 +783,7 @@ void Combo()
 			if (ComboRalways->Enabled())
 			{
 				R->CastOnPlayer();
+				hello = GGame->TickCount() + 100;
 			}
 			if (ComboRkill->Enabled() && ComboRhit->GetFloat() <= CountEnemy(GEntityList->Player()->GetPosition(), R->Range()))
 			{
@@ -783,11 +791,12 @@ void Combo()
 				if ((RDamage * ComboRstack->GetFloat()) >= target->GetHealth())
 				{
 					R->CastOnPlayer();
+					hello = GGame->TickCount() + 100;
 				}
 			}
 		}
 	}
-	if (GEntityList->Player()->IsCastingImportantSpell(&endtime) && CountEnemy(GEntityList->Player()->GetPosition(), R->Range() - 50) == 0)
+	if (GEntityList->Player()->IsCastingImportantSpell(&endtime) && CountEnemy(GEntityList->Player()->GetPosition(), R->Range()) == 0)
 	{
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
 		if (target != nullptr && target->IsValidTarget() && !target->IsDead())
