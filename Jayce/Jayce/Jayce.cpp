@@ -767,7 +767,10 @@ void Combo()
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
 			if (target != nullptr && target->IsValidTarget(GEntityList->Player(), E->Range()) && ComboEM->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 			{
-				E->CastOnTarget(target);
+				if (GEntityList->Player()->GetSpellRemainingCooldown(kSlotR) < 0.5)
+				{
+					E->CastOnTarget(target);
+				}
 			}
 		}
 	}
