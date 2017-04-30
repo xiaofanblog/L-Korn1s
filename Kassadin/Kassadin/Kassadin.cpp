@@ -108,7 +108,7 @@ void Menu()
 
 	MiscMenu = MainMenu->AddMenu("Misc");
 	{
-		InterruptQ = FleeMenu->CheckBox("Interrupt with Q", true);
+		InterruptQ = MiscMenu->CheckBox("Interrupt with Q", true);
 	}
 	LastMenu = MainMenu->AddMenu("Last Hit");
 	{
@@ -164,15 +164,6 @@ void Combo()
 
 	}
 }
-PLUGIN_EVENT(void) OnInterruptible(InterruptibleSpell const& Args)
-
-{
-	if (Args.Source != nullptr && InterruptQ->Enabled() && (Args.Source->GetPosition() - GEntityList->Player()->GetPosition()).Length() < Q->Range() && Q->IsReady() && Args.Source->IsValidTarget())
-	{
-		Q->CastOnTarget(Args.Source);
-	}
-}
-
 void LastHit()
 {
 	for (auto Minion : GEntityList->GetAllMinions(false, true, true))
@@ -234,6 +225,14 @@ void Killsteal()
 	}
 }
 
+PLUGIN_EVENT(void) OnInterruptible(InterruptibleSpell const& Args)
+
+{
+	if (Args.Source != nullptr && InterruptQ->Enabled() && (Args.Source->GetPosition() - GEntityList->Player()->GetPosition()).Length() < Q->Range() && Q->IsReady() && Args.Source->IsValidTarget())
+	{
+		Q->CastOnTarget(Args.Source);
+	}
+}
 void Flee()
 {
 	if (!GGame->IsChatOpen())
@@ -346,7 +345,6 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
 	GEventManager->AddEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
 	GEventManager->AddEventHandler(kEventOnInterruptible, OnInterruptible);
-
 
 }
 
