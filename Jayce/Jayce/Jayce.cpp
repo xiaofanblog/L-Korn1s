@@ -45,6 +45,7 @@ IMenuOption* DrawWRange;
 IMenuOption* DrawRRange;
 IMenuOption* DrawQERange;
 IMenuOption* DrawDamage;
+IMenuOption* DrawTime;
 
 IMenu* FarmMenu;
 IMenuOption* FarmQ;
@@ -93,6 +94,7 @@ ISpell2* E2;
 ISpell2* R2;
 ISpell* Flash;
 
+int qdelay;
 
 int delay;
 
@@ -183,6 +185,7 @@ void Menu()
 		DrawERange = DrawingMenu->CheckBox("Draw E Ranged", true);
 		DrawQERange = DrawingMenu->CheckBox("Draw Q+E Range", true);
 		DrawDamage = DrawingMenu->CheckBox("Draw Damage", true);
+		DrawTime = DrawingMenu->CheckBox("Draw Q Timer", true);
 	}
 	KillstealMenu = MainMenu->AddMenu("Killsteal");
 	{
@@ -242,6 +245,7 @@ void SemiQ()
 		}
 	}
 }
+
 static int CountMinionsNearMe(IUnit* Source, float range)
 {
 	auto minion = GEntityList->GetAllMinions(false, true, true);
@@ -274,7 +278,7 @@ void Farm()
 					if (CountMinionsNearMe(GEntityList->Player(), Q->Range()) >= FarmW->GetFloat())
 					{
 						Q->CastOnTarget(Minion);
-
+						qdelay = GGame->Time() + GEntityList->Player()->GetSpellBook()->GetTotalCooldown(kSlotQ);
 					}
 				}
 
@@ -387,6 +391,7 @@ void Jungle()
 				if (JFarmQM->Enabled() && Q->IsReady() && Minion->IsValidTarget() && !Minion->IsDead() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
 				{
 					Q->CastOnTarget(Minion);
+					qdelay = GGame->Time() + GEntityList->Player()->GetSpellBook()->GetTotalCooldown(kSlotQ);
 				}
 
 				if (JFarmWM->Enabled() && W->IsReady() && Minion->IsValidTarget() && !Minion->IsDead() && Minion->IsValidTarget(GEntityList->Player(), W->Range()))
@@ -510,6 +515,7 @@ void insec()
 									if (Q->CastOnTarget(Enemy))
 									{
 										helalmoney = GGame->TickCount() + 600;
+										qdelay = GGame->Time() + GEntityList->Player()->GetSpellBook()->GetTotalCooldown(kSlotQ);
 									}
 								}
 						}
@@ -520,6 +526,7 @@ void insec()
 								if (Q->CastOnTarget(Enemy))
 								{
 									helalmoney = 0;
+									qdelay = GGame->Time() + GEntityList->Player()->GetSpellBook()->GetTotalCooldown(kSlotQ);
 								}
 							}
 						}
@@ -682,7 +689,14 @@ void Combo()
 			{
 				if (target->IsValidTarget(GEntityList->Player(), Q->Range()) && !GEntityList->Player()->HasBuff("jaycestancehammer") && !W->IsReady() && !GEntityList->Player()->HasBuff("JayceHyperCharge"))
 				{
-					R->CastOnPlayer();
+					if (qdelay - GGame->Time() < 1)
+					{
+						R->CastOnPlayer();
+					}
+					if (qdelay - GGame->Time() > 1 && target->IsValidTarget(GEntityList->Player(), 200))
+					{
+						R->CastOnPlayer();
+					}
 				}
 				if (GEntityList->Player()->HasBuff("jaycestancehammer") && !Q->IsReady() && !W->IsReady())
 				{
@@ -765,6 +779,7 @@ void Combo()
 			if (target != nullptr && target->IsValidTarget(GEntityList->Player(), Q->Range()) && ComboQM->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 			{
 				Q->CastOnTarget(target);
+				qdelay = GGame->Time() + GEntityList->Player()->GetSpellBook()->GetTotalCooldown(kSlotQ);
 			}
 		}
 	}
@@ -913,6 +928,7 @@ void Killsteal()
 				if (KSQM->Enabled() && Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && QMDamage > Enemy->GetHealth())
 				{
 					Q->CastOnTarget(Enemy);
+					qdelay = GGame->Time() + GEntityList->Player()->GetSpellBook()->GetTotalCooldown(kSlotQ);
 				}
 				if (KSEM->Enabled() && E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && EDamage > Enemy->GetHealth())
 				{
@@ -1109,6 +1125,36 @@ PLUGIN_EVENT(void) OnRender()
 	if (DrawDamage->Enabled())
 	{
 		dmgdraw();
+	}
+	if (DrawTime->Enabled() && (qdelay - GGame->Time()) > 0)
+	{
+
+		static IFont* pFont = nullptr;
+
+		if (pFont == nullptr)
+		{
+			pFont = GRender->CreateFont("Arial", 15.f, kFontWeightHeavy);
+			pFont->SetOutline(true);
+			pFont->SetLocationFlags(kFontLocationNormal);
+		}
+		Vec2 pos;
+		if (GGame->Projection(GEntityList->Player()->GetPosition(), &pos))
+		{
+			if (!GEntityList->Player()->HasBuff("jaycestancehammer"))
+			{
+				std::string text1 = std::string("Q Melee CD: ");
+				Vec4 clr1 = Vec4(255, 255, 255, 255);
+				pFont->SetColor(clr1);
+				pFont->Render(pos.x + -50, pos.y + 70, text1.c_str());
+				int smth = qdelay - GGame->Time();
+				std::string text = std::to_string(smth);
+				Vec4 clr = Vec4(255, 255, 255, 255);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x + 30, pos.y + 70, text.c_str());
+				
+			}
+
+		}
 	}
 }
 
