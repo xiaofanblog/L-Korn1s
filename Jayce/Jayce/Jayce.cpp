@@ -400,7 +400,7 @@ void Jungle()
 			}
 			if (!GEntityList->Player()->HasBuff("jaycestancehammer"))
 			{
-				if (JFarmQR->Enabled() && Q->IsReady() && Minion->IsValidTarget() && !Minion->IsDead() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+				if (JFarmQR->Enabled() && Q->IsReady() && Minion->IsValidTarget() && !Minion->IsDead() && Minion->IsValidTarget(GEntityList->Player(), Q2->Range()))
 				{
 					Q2->CastOnTarget(Minion);
 				}
@@ -410,14 +410,14 @@ void Jungle()
 					W2->CastOnPlayer();
 				}
 			}
-			if (!GEntityList->Player()->HasBuff("jaycestancehammer"))
+			if (!GEntityList->Player()->HasBuff("jaycestancehammer") && Minion->IsValidTarget() && !Minion->IsDead() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
 			{
 				if (!Q->IsReady() && !E->IsReady())
 				{
 					R->CastOnPlayer();
 				}
 			}
-			if (GEntityList->Player()->HasBuff("jaycestancehammer"))
+			if (GEntityList->Player()->HasBuff("jaycestancehammer") && Minion->IsValidTarget() && !Minion->IsDead() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
 			{
 				if (!Q2->IsReady() && !W2->IsReady() && GEntityList->Player()->HasBuff("JayceHyperCharge"))
 				{
@@ -680,7 +680,7 @@ void Combo()
 
 			if (target != nullptr && target->IsValidTarget(GEntityList->Player(), 1200) && ComboR->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 			{
-				if (target->IsValidTarget(GEntityList->Player(), Q->Range()+100) && !GEntityList->Player()->HasBuff("jaycestancehammer") && !W->IsReady() && !GEntityList->Player()->HasBuff("JayceHyperCharge"))
+				if (target->IsValidTarget(GEntityList->Player(), Q->Range()) && !GEntityList->Player()->HasBuff("jaycestancehammer") && !W->IsReady() && !GEntityList->Player()->HasBuff("JayceHyperCharge"))
 				{
 					R->CastOnPlayer();
 				}
