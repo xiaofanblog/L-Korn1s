@@ -42,6 +42,8 @@ IMenuOption* LastW;
 
 IMenu* FleeMenu;
 IMenuOption* FleeKey;
+IMenu* MiscMenu;
+IMenuOption* InterruptQ;
 
 
 
@@ -104,6 +106,10 @@ void Menu()
 		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
 	}
 
+	MiscMenu = MainMenu->AddMenu("Misc");
+	{
+		InterruptQ = FleeMenu->CheckBox("Interrupt with Q", true);
+	}
 	LastMenu = MainMenu->AddMenu("Last Hit");
 	{
 		LastQ = LastMenu->CheckBox("Last hit Q", true);
@@ -156,6 +162,14 @@ void Combo()
 			}
 		}
 
+	}
+}
+PLUGIN_EVENT(void) OnInterruptible(InterruptibleSpell const& Args)
+
+{
+	if (Args.Source != nullptr && InterruptQ->Enabled() && (Args.Source->GetPosition() - GEntityList->Player()->GetPosition()).Length() < Q->Range() && Q->IsReady() && Args.Source->IsValidTarget())
+	{
+		Q->CastOnTarget(Args.Source);
 	}
 }
 
@@ -331,6 +345,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
 	GEventManager->AddEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
+	GEventManager->AddEventHandler(kEventOnInterruptible, OnInterruptible);
 
 
 }
@@ -341,4 +356,5 @@ PLUGIN_API void OnUnload()
 	GEventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->RemoveEventHandler(kEventOnRender, OnRender);
 	GEventManager->RemoveEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
+	GEventManager->RemoveEventHandler(kEventOnInterruptible, OnInterruptible);
 }
