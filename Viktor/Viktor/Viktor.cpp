@@ -24,6 +24,7 @@ IMenuOption* ComboRkillable;
 IMenuOption* ComboRfollow;
 IMenuOption* ComboRfollowset;
 IMenuOption* ComboRcheck;
+IMenuOption* ComboAllIn;
 
 
 IMenu* HarassMenu;
@@ -116,6 +117,7 @@ void Menu()
 		ComboRfollow = SetR->CheckBox("Auto R Follow", true);
 		ComboRfollowset = SetR->CheckBox("^- If no enemies, move to minions", true);
 		ComboRcheck = SetR->AddFloat("Dont waste R if Enemy HP lower than", 0, 500, 100);
+		ComboAllIn = ComboMenu->AddKey("All In Combo Key", 'Z');
 
 	}
 	HarassMenu = MainMenu->AddMenu("Harass");
@@ -428,6 +430,62 @@ void Farm()
 		}
 	}
 }
+void AllIn()
+{
+	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
+	{
+
+		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		if (E->IsReady())
+		{
+			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+			if (target != nullptr && target->IsValidTarget(GEntityList->Player(), E->Range()) && ComboE->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+			{
+				if ((target->ServerPosition() - GEntityList->Player()->ServerPosition()).Length2D() < E->Range() && (target->ServerPosition() - GEntityList->Player()->ServerPosition()).Length2D() > 500)
+				{
+					auto castStartPos = GEntityList->Player()->ServerPosition().Extend(target->GetPosition(), 500);
+					E->SetRangeCheckFrom(castStartPos);
+					E->SetFrom(castStartPos);
+					AdvPredictionOutput outputfam;
+					E->RunPrediction(target, true, kCollidesWithYasuoWall, &outputfam);
+					if (outputfam.HitChance >= kHitChanceHigh)
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+						E->CastFrom(castStartPos, pred);
+						E->SetFrom(Vec3(0, 0, 0));
+					}
+				}
+				if ((target->ServerPosition() - GEntityList->Player()->ServerPosition()).Length2D() < 500)
+				{
+					Vec3 pred;
+					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+					E->CastOnPosition(pred);
+				}
+			}
+		}
+		if (ComboQ->Enabled())
+		{
+			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+			if (target != nullptr && target->IsValidTarget(GEntityList->Player(), Q->Range()) && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+			{
+				Q->CastOnTarget(target);
+			}
+
+		}
+		if (ComboR->Enabled() && !GEntityList->Player()->HasBuff("viktorchaosstormtimer"))
+		{
+			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
+			if (target != nullptr && target->IsValidTarget(GEntityList->Player(), R->Range()) && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+			{
+
+				R->CastOnTarget(target);
+
+			}
+
+		}
+	}
+}
 
 void Jungle()
 {
@@ -707,6 +765,10 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Flee();
 	}
+	if (GetAsyncKeyState(ComboAllIn->GetInteger()) & 0x8000)
+	{
+		AllIn();
+	}
 	Killsteals();
 	AutoWLogic();
 }
@@ -794,7 +856,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
 	GGame->PrintChat("<b><font color=\"#FFFFFF\">Viktor<b><font color=\"#f8a101\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
-	GGame->PrintChat("<b><font color=\"#f8a101\">Version: 0.1</font></b>");
+	GGame->PrintChat("<b><font color=\"#f8a101\">Version: <b><font color=\"#FFFFFF\">0.2</font></b>");
 	GEventManager->AddEventHandler(kEventOnInterruptible, OnInterruptible);
 	GEventManager->AddEventHandler(kEventOnGapCloser, OnGapCloser);
 
