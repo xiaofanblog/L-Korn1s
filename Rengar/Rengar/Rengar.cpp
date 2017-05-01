@@ -16,6 +16,7 @@ IMenuOption* PriorityEcombo;
 IMenuOption* ComboItems;
 IMenuOption* ComboModeChange; 
 IMenuOption* ComboSmite;
+IMenuOption* SmiteSave;
 
 
 IMenu* HarassMenu;
@@ -135,6 +136,7 @@ void Menu()
 	SmiteMenu = MainMenu->AddMenu("Smite menu");
 	{
 		SmiteUse = SmiteMenu->CheckBox("Use Smite", true);
+		SmiteSave = SmiteMenu->CheckBox("Save Smite 1 stack", true);
 		SmiteKey = SmiteMenu->AddKey("Smite toggle", 'M');
 		Smitedraw = SmiteMenu->CheckBox("Use Draw", true);
 	}
@@ -224,20 +226,40 @@ int EnemiesInRange(IUnit* Source, float range)
 
 void Combo()
 {
-
+	std::string s = std::to_string(GEntityList->Player()->GetSpellBook()->GetAmmo(Smite->GetSlot()));
+	char const *pchar = s.c_str();
+	GGame->PrintChat(pchar);
 	if (!GEntityList->Player()->HasBuff("RengarR"))
 	{
 		if (Smite != nullptr && Smite->IsReady() && ComboSmite->Enabled()) // AUTO SMITE PRO BY REMBRANDT
 		{
 
-			if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
+			if (!SmiteSave->Enabled())
 			{
+				if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
+				{
 
-				Smite->CastOnTarget(GTargetSelector->GetFocusedTarget());
+					Smite->CastOnTarget(GTargetSelector->GetFocusedTarget());
+				}
+				else
+				{
+					Smite->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, 700));
+				}
 			}
-			else
+			if (SmiteSave->Enabled())
 			{
-				Smite->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, 700));
+				if (GEntityList->Player()->GetSpellBook()->GetAmmo(Smite->GetSlot()) == 2)
+				{
+					if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
+					{
+
+						Smite->CastOnTarget(GTargetSelector->GetFocusedTarget());
+					}
+					else
+					{
+						Smite->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, 700));
+					}
+				}
 			}
 		}
 		if (Youmuus->IsOwned() && Youmuus->IsReady() && ComboItems->Enabled() && !(Player->IsDead()))
@@ -373,7 +395,8 @@ void Mixed()
 
 void Killsteal()
 {
-	if (!GEntityList->Player()->HasBuff("RengarR")) {
+	if (!GEntityList->Player()->HasBuff("RengarR"))
+	{
 		for (auto Enemy : GEntityList->GetAllHeros(false, true))
 		{
 			auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotQ);
