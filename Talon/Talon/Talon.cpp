@@ -882,5 +882,5 @@ PLUGIN_API void OnUnload()
 	GEventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->RemoveEventHandler(kEventOnRender, OnRender);
 	GEventManager->RemoveEventHandler(kEventOrbwalkAfterAttack, OnAfterAttack);
-	GGame->PrintChat("<b><font color=\"#FFFFFF\">Viktor<b><font color=\"#f8a101\"> by</font></b> Kornis<font color=\"#FF0000\"> - Unloaded</font></b>");
+	GGame->PrintChat("<b><font color=\"#FFFFFF\">Talon<b><font color=\"#f8a101\"> by</font></b> Kornis<font color=\"#FF0000\"> - Unloaded</font></b>");
 }
