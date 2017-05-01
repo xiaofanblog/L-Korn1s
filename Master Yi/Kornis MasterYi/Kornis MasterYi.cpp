@@ -39,6 +39,9 @@ IMenuOption* KSQ;
 IMenu* SkinMenu;
 IMenuOption* SkinChange;
 IMenuOption* SkinChangeEnable;
+IMenuOption* SaveStacks;
+IMenuOption* WAAToggle;
+IMenuOption* DrawToggle;
 
 
 IInventoryItem* Cutlass;
@@ -59,6 +62,8 @@ IInventoryItem* Ravenous_Hydra;
 
 
 IUnit* Player;
+float KeyPres;
+bool Tog = true;
 
 
 void LoadSpells()
@@ -88,6 +93,7 @@ void Menu()
 		ComboQSmart = ComboMenu->CheckBox("Use Smart Q", true);
 		ComboQAlways = ComboMenu->CheckBox("Use Q Always", false);
 		ComboWAA = ComboMenu->CheckBox("Use W AA reset", true);
+		WAAToggle = ComboMenu->AddKey("W AA Toggle Key", 'G');
 		ComboE = ComboMenu->CheckBox("Use E in Combo", true);
 		ComboR = ComboMenu->CheckBox("Use R in Combo", true);
 		ComboItems = ComboMenu->CheckBox("Use Items", true);
@@ -105,6 +111,7 @@ void Menu()
 	{
 		DrawQRange = DrawingMenu->CheckBox("Draw Q Range", true);
 		DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
+		DrawToggle = DrawingMenu->CheckBox("Draw W AA Status", true);
 	}
 	FarmMenu = MainMenu->AddMenu("Farming");
 	{
@@ -120,6 +127,7 @@ void Menu()
 	SmiteMenu = MainMenu->AddMenu("Smite menu");
 	{
 		SmiteUse = SmiteMenu->CheckBox("Use Smite", true);
+		SaveStacks = SmiteMenu->CheckBox("Save Smite 1 stack", true);
 	}
 
 	SkinMenu = MainMenu->AddMenu("Skin Changer");
@@ -131,6 +139,7 @@ void Menu()
 	{
 		DodgeQ = DodgeMenu->CheckBox("Dodge Targeted with Q", true);
 		DodgeW = DodgeMenu->CheckBox("Use W if Q down", false);
+
 	}
 }
 
@@ -171,14 +180,32 @@ void Combo()
 	if (Smite != nullptr && Smite->IsReady()) // AUTO SMITE PRO BY REMBRANDT
 	{
 
-		if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
+		if (!SaveStacks->Enabled())
 		{
+			if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
+			{
 
-			Smite->CastOnTarget(GTargetSelector->GetFocusedTarget());
+				Smite->CastOnTarget(GTargetSelector->GetFocusedTarget());
+			}
+			else
+			{
+				Smite->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, 700));
+			}
 		}
-		else
+		if (SaveStacks->Enabled())
 		{
-			Smite->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, 700));
+			if (GEntityList->Player()->GetSpellBook()->GetAmmo(Smite->GetSlot()) == 2)
+			{
+				if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
+				{
+
+					Smite->CastOnTarget(GTargetSelector->GetFocusedTarget());
+				}
+				else
+				{
+					Smite->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, 700));
+				}
+			}
 		}
 	}
 	if (Cutlass->IsOwned() && Cutlass->IsReady() && ComboItems->Enabled() && !(Player->IsDead()))
@@ -373,8 +400,28 @@ void Farm()
 }
 
 
+void WTog()
+{
+	if (GetAsyncKeyState(WAAToggle->GetInteger()))
+	{
+		if (Tog == true && GGame->Time() > KeyPres)
+		{
+			Tog = false;
+			KeyPres = GGame->Time() + 0.250;
+
+		}
+		if (Tog == false && GGame->Time() > KeyPres)
+		{
+			Tog = true;
+			KeyPres = GGame->Time() + 0.250;
+
+		}
+
+	}
+}
 PLUGIN_EVENT(void) OnGameUpdate()
 {
+	WTog();
 	if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 	{
 		Combo();
@@ -419,7 +466,6 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	Killsteal();
 	SkinChanger();
 }
-
 int EnemiesInRange(IUnit* Source, float range)
 {
 	auto Targets = GEntityList->GetAllHeros(false, true);
@@ -449,9 +495,12 @@ PLUGIN_EVENT(void) OnAfterAttack(IUnit* source, IUnit* target)
 		for (auto hero : GEntityList->GetAllHeros(false, true)) {
 			if (ComboWAA->Enabled() && W->IsReady() && (hero->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 280)
 			{
-				if (W->CastOnPlayer())
+				if (Tog == true)
 				{
-					GOrbwalking->ResetAA();
+					if (W->CastOnPlayer())
+					{
+						GOrbwalking->ResetAA();
+					}
 				}
 			}
 			if (!W->IsReady() && (hero->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 300)
@@ -529,6 +578,35 @@ PLUGIN_EVENT(void) OnRender()
 {
 	if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range()); }
 	if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(50, 200, 100, 255), 1400); }
+	if (DrawToggle->Enabled())
+	{
+		static IFont* pFont = nullptr;
+
+		if (pFont == nullptr)
+		{
+			pFont = GRender->CreateFont("Tahoma", 16.f, kFontWeightNormal);
+			pFont->SetOutline(true);
+			pFont->SetLocationFlags(kFontLocationNormal);
+		}
+		Vec2 pos;
+		if (GGame->Projection(GEntityList->Player()->GetPosition(), &pos))
+		{
+			if (Tog == true)
+			{
+				std::string text = std::string("W AA ON");
+				Vec4 clr = Vec4(188, 255, 50, 255);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x, pos.y, text.c_str());
+			}
+			if (Tog == false)
+			{
+				std::string text = std::string("W AA OFF");
+				Vec4 clr = Vec4(188, 255, 50, 255);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x, pos.y, text.c_str());
+			}
+		}
+	}
 }
 
 
