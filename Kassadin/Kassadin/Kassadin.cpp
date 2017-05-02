@@ -23,6 +23,8 @@ IMenu* DrawingMenu;
 IMenuOption* DrawQRange;
 IMenuOption* DrawERange;
 IMenuOption* DrawRRange;
+IMenuOption* DrawDamage;
+
 
 IMenu* FarmMenu;
 IMenuOption* FarmQ;
@@ -44,6 +46,9 @@ IMenu* FleeMenu;
 IMenuOption* FleeKey;
 IMenu* MiscMenu;
 IMenuOption* InterruptQ;
+IMenu* BurstMenu;
+IMenuOption* BurstKey;
+IMenuOption* BurstE;
 
 
 
@@ -52,12 +57,24 @@ ISpell2* W;
 ISpell2* E;
 ISpell2* R;
 
+ISpell* Flash;
+
 
 IUnit* Player;
+int xOffset = 10;
+int yOffset = 20;
+int Width = 103;
+int Height = 8;
+Vec4 Color = Vec4(105, 198, 5, 255);
+Vec4 FillColor = Vec4(198, 176, 5, 255);
+Vec4 Color2 = Vec4(25, 255, 0, 200);
+
 
 
 void LoadSpells()
 {
+	if (GEntityList->Player()->GetSpellSlot("SummonerFlash") != kSlotUnknown)
+		Flash = GPluginSDK->CreateSpell(GEntityList->Player()->GetSpellSlot("SummonerFlash"), 425);
 	Q = GPluginSDK->CreateSpell2(kSlotQ, kTargetCast, false, false, kCollidesWithYasuoWall);
 	W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, kCollidesWithNothing);
 	E = GPluginSDK->CreateSpell2(kSlotE, kConeCast, false, false, kCollidesWithNothing);
@@ -90,6 +107,7 @@ void Menu()
 		DrawQRange = DrawingMenu->CheckBox("Draw Q Range", true);
 		DrawERange = DrawingMenu->CheckBox("Draw E Range", true);
 		DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
+		DrawDamage = DrawingMenu->CheckBox("Draw Damage", true);
 	}
 	KillstealMenu = MainMenu->AddMenu("Killsteal");
 	{
@@ -119,9 +137,75 @@ void Menu()
 	{
 		FleeKey = FleeMenu->AddKey("Flee with R", 'G');
 	}
+	BurstMenu = MainMenu->AddMenu("Burst Settings");
+	{
+		BurstKey = BurstMenu->AddKey("Burst Key", 'T');
+		BurstE = BurstMenu->CheckBox("Wait for E", true);
+	}
+
 }
 
 
+void dmgdraw()
+{
+	for (auto hero : GEntityList->GetAllHeros(false, true))
+	{
+		Vec2 barPos = Vec2();
+		if (hero->GetHPBarPosition(barPos) && !hero->IsDead())
+		{
+			auto QDamage = 0;
+
+			if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotQ) > 0)
+			{
+				QDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotQ);
+			}
+
+
+			auto WDamage = 0;
+			if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotW) > 0)
+			{
+				WDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotW);
+			}
+			auto EDamage = 0;
+			if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotW) > 0)
+			{
+				EDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotE);
+			}
+			auto RDamage = 0;
+			if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotR) > 0)
+			{
+				RDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotR);
+			}
+			auto damage = QDamage + EDamage + RDamage +WDamage;
+			float percentHealthAfterDamage = max(0, hero->GetHealth() - float(damage)) / hero->GetMaxHealth();
+			float yPos = barPos.y + yOffset;
+			float xPosDamage = (barPos.x + xOffset) + Width * percentHealthAfterDamage;
+			float xPosCurrentHp = barPos.x + xOffset + Width * (hero->GetHealth() / hero->GetMaxHealth());
+			if (!hero->IsDead() && hero->IsValidTarget())
+			{
+				float differenceInHP = xPosCurrentHp - xPosDamage;
+				float pos1 = barPos.x + 9 + (107 * percentHealthAfterDamage);
+
+				for (int i = 0; i < differenceInHP; i++)
+				{
+					if (damage < hero->GetHealth())
+					{
+						GRender->DrawLine(Vec2(pos1 + i, yPos), Vec2(pos1 + i, yPos + Height), FillColor);
+					}
+					if (damage > hero->GetHealth())
+					{
+						GRender->DrawLine(Vec2(pos1 + i, yPos), Vec2(pos1 + i, yPos + Height), Color2);
+					}
+
+				}
+				if (!hero->IsVisible())
+				{
+
+				}
+			}
+		}
+	}
+}
 void Combo()
 {
 	{
@@ -162,6 +246,173 @@ void Combo()
 			}
 		}
 
+	}
+}
+void Burst()
+{
+	if (GUtility->IsLeagueWindowFocused() && !GGame->IsChatOpen())
+	{
+		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		for (auto Enemy : GEntityList->GetAllHeros(false, true))
+		{
+			if (Enemy->IsValidTarget() && Enemy != nullptr && !Enemy->IsDead())
+			{
+
+				if (BurstE->Enabled() && GEntityList->Player()->HasBuff("forcepulsecancast"))
+				{
+					if (R->IsReady() && Flash != nullptr && Flash->IsReady())
+					{
+						if (Enemy->IsValidTarget() && Enemy != nullptr && ((Player->GetPosition() - Enemy->GetPosition()).Length()) < R->Range() + 550 && !Enemy->IsDead())
+						{
+							if ((Player->GetPosition() - Enemy->GetPosition()).Length() > R->Range())
+							{
+								if (R->CastOnPosition(Enemy->ServerPosition()))
+								{
+									Flash->CastOnPosition(Enemy->ServerPosition());
+								}
+							}
+						}
+					}
+					{
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 250);
+						if (target != nullptr)
+						{
+							W->CastOnPlayer();
+						}
+					}
+					{
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+						if (target != nullptr)
+						{
+							E->CastOnTarget(target);
+						}
+					}
+					{
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+						if (target != nullptr)
+						{
+							Q->CastOnTarget(target);
+						}
+					}
+
+
+					if ((Player->GetPosition() - Enemy->GetPosition()).Length() < R->Range())
+					{
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
+						if (target != nullptr && target->IsValidTarget() && !target->IsDead())
+						{
+							R->CastOnTarget(target);
+						}
+					}
+					{
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 250);
+						if (target != nullptr)
+						{
+							W->CastOnPlayer();
+						}
+					}
+					{
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+						if (target != nullptr)
+						{
+							E->CastOnTarget(target);
+						}
+					}
+					{
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+						if (target != nullptr)
+						{
+							Q->CastOnTarget(target);
+						}
+					}
+
+
+				}
+
+
+				if (!BurstE->Enabled())
+				{
+					if (R->IsReady() && Flash != nullptr && Flash->IsReady())
+					{
+						if (Enemy->IsValidTarget() && Enemy != nullptr && ((Player->GetPosition() - Enemy->GetPosition()).Length()) < R->Range() + 550 && !Enemy->IsDead())
+						{
+							if ((Player->GetPosition() - Enemy->GetPosition()).Length() > R->Range())
+							{
+								if (R->CastOnPosition(Enemy->ServerPosition()))
+								{
+									Flash->CastOnPosition(Enemy->ServerPosition());
+								}
+							}
+						}
+						{
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 250);
+							if (target != nullptr)
+							{
+								W->CastOnPlayer();
+							}
+						}
+						{
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+							if (target != nullptr)
+							{
+								E->CastOnTarget(target);
+							}
+						}
+						{
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+							if (target != nullptr)
+							{
+								Q->CastOnTarget(target);
+							}
+						}
+					}
+
+
+					if ((Player->GetPosition() - Enemy->GetPosition()).Length() < R->Range())
+					{
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
+						if (target != nullptr && target->IsValidTarget() && !target->IsDead())
+						{
+							R->CastOnTarget(target);
+						}
+
+					}
+
+					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 250);
+					if (target != nullptr)
+					{
+						W->CastOnPlayer();
+					}
+					{
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+						if (target != nullptr)
+						{
+							E->CastOnTarget(target);
+						}
+					}
+					{
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+						if (target != nullptr)
+						{
+							Q->CastOnTarget(target);
+						}
+					}
+
+				}
+
+
+			}
+
+
+			if (GEntityList->Player()->HasBuff("NetherBlade"))
+			{
+				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 250);
+				if (target != nullptr)
+				{
+					GGame->IssueOrder(GEntityList->Player(), kAttackUnit, target);
+				}
+			}
+		}
 	}
 }
 void LastHit()
@@ -322,6 +573,10 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Flee();
 	}
+	if (GetAsyncKeyState(BurstKey->GetInteger()) & 0x8000)
+	{
+		Burst();
+	}
 	Killsteal();
 }
 
@@ -331,6 +586,10 @@ PLUGIN_EVENT(void) OnRender()
 	if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range()); }
 	if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), R->Range()); }
 	if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
+	if (DrawDamage->Enabled())
+	{
+		dmgdraw();
+	}
 }
 
 
