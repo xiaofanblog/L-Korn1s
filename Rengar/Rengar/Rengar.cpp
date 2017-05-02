@@ -226,9 +226,6 @@ int EnemiesInRange(IUnit* Source, float range)
 
 void Combo()
 {
-	std::string s = std::to_string(GEntityList->Player()->GetSpellBook()->GetAmmo(Smite->GetSlot()));
-	char const *pchar = s.c_str();
-	GGame->PrintChat(pchar);
 	if (!GEntityList->Player()->HasBuff("RengarR"))
 	{
 		if (Smite != nullptr && Smite->IsReady() && ComboSmite->Enabled()) // AUTO SMITE PRO BY REMBRANDT
