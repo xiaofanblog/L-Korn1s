@@ -83,7 +83,7 @@ Vec4 Color2 = Vec4(25, 255, 0, 200);
 void LoadSpells()
 {
 	Q = GPluginSDK->CreateSpell2(kSlotQ, kTargetCast, false, false, (kCollidesWithNothing));
-	Q->SetSkillshot(0.25f, 0.f, 1000.f, 660.f);
+	Q->SetSkillshot(0.25f, 0.f, 1000.f, 710.f);
 
 	W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, false, false, (kCollidesWithNothing));
 	W->SetSkillshot(0.25f, 300.f, 1000.f, 700.f);
