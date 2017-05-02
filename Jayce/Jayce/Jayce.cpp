@@ -277,7 +277,10 @@ void Farm()
 				{
 					if (CountMinionsNearMe(GEntityList->Player(), Q->Range()) >= FarmW->GetFloat())
 					{
-						Q->CastOnTarget(Minion);
+						if (Q->CastOnTarget(Minion))
+						{
+							W->CastOnPlayer();
+						}
 						qdelay = GGame->Time() + GEntityList->Player()->GetSpellBook()->GetTotalCooldown(kSlotQ);
 					}
 				}
