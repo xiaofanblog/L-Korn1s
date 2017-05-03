@@ -28,6 +28,7 @@ IMenuOption* DrawDamage;
 
 IMenu* FarmMenu;
 IMenuOption* FarmQ;
+IMenuOption* FarmQL;
 IMenuOption* FarmE;
 IMenuOption* FarmW;
 IMenuOption* FarmMana;
@@ -122,6 +123,7 @@ void Menu()
 		FarmQ = FarmMenu->CheckBox("Lane Clear with Q", true);
 		FarmW = FarmMenu->CheckBox("Lane Clear with W", true);
 		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
+		FarmQL = FarmMenu->CheckBox("Last Hit Q", true);
 	}
 
 	MiscMenu = MainMenu->AddMenu("Misc");
@@ -145,7 +147,36 @@ void Menu()
 
 }
 
+static double GetWdmg(IUnit* target)
+{
+	int qedmg = 0;	
+	if (GEntityList->Player()->GetSpellLevel(kSlotW) == 1)
+	{
+		qedmg = 80;
+	}
+	if (GEntityList->Player()->GetSpellLevel(kSlotW) == 2)
+	{
+		qedmg = 105;
+	}
+	if (GEntityList->Player()->GetSpellLevel(kSlotW) == 3)
+	{
+		qedmg = 130;
+	}
+	if (GEntityList->Player()->GetSpellLevel(kSlotW) == 4)
+	{
+		qedmg = 155;
+	}
+	if (GEntityList->Player()->GetSpellLevel(kSlotW) == 5)
+	{
+		qedmg = 180;
 
+	}
+	auto calc = GEntityList->Player()->TotalMagicDamage() * 0.7 ;
+	auto full = calc + qedmg;
+	auto damage = GDamage->CalcMagicDamage(GEntityList->Player(), target, full);
+	return damage;
+
+}
 void dmgdraw()
 {
 	for (auto hero : GEntityList->GetAllHeros(false, true))
@@ -164,7 +195,7 @@ void dmgdraw()
 			auto WDamage = 0;
 			if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotW) > 0)
 			{
-				WDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotW);
+				WDamage = GetWdmg(hero);
 			}
 			auto EDamage = 0;
 			if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotW) > 0)
@@ -209,7 +240,6 @@ void dmgdraw()
 void Combo()
 {
 	{
-
 		bool hasIgnite = GEntityList->Player()->GetSpellState(GEntityList->Player()->GetSpellSlot("SummonerDot")) == Ready;
 		if (ComboQ->Enabled() && Q->IsReady())
 		{
@@ -419,13 +449,13 @@ void LastHit()
 {
 	for (auto Minion : GEntityList->GetAllMinions(false, true, true))
 	{
-		if (!Minion->IsDead() && Minion != nullptr)
+		if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget())
 		{
 			if (LastQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()) && GDamage->GetSpellDamage(GEntityList->Player(), Minion, kSlotQ) >= Minion->GetHealth())
 			{
 				Q->CastOnUnit(Minion);
 			}
-			if (LastW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range() + 200) && GDamage->GetSpellDamage(GEntityList->Player(), Minion, kSlotW) >= Minion->GetHealth())
+			if (LastW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range() + 200) && GDamage->GetSpellDamage(GEntityList->Player(), Minion, GetWdmg(Minion)) >= Minion->GetHealth())
 			{
 				if (W->CastOnPlayer())
 				{
@@ -516,17 +546,24 @@ void Farm()
 	{
 		for (auto Minion : GEntityList->GetAllMinions(false, true, true))
 		{
-			if (FarmQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+			if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && (Minion->IsCreep() || Minion->IsJungleCreep()))
 			{
-				Q->CastOnUnit(Minion);
-			}
-			if (FarmE->Enabled() && E->IsReady() && Minion->IsValidTarget(GEntityList->Player(), R->Range()))
-			{
-				E->CastOnUnit(Minion);
-			}
-			if (FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), 200))
-			{
-				W->CastOnPlayer();
+				if (FarmQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+				{
+					Q->CastOnTarget(Minion);
+				}
+				if (FarmQL->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()) && GDamage->GetSpellDamage(GEntityList->Player(), Minion, kSlotQ) >= Minion->GetHealth())
+				{
+					Q->CastOnTarget(Minion);
+				}
+				if (FarmE->Enabled() && E->IsReady() && Minion->IsValidTarget(GEntityList->Player(), R->Range()))
+				{
+					E->CastOnTarget(Minion);
+				}
+				if (FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), 200))
+				{
+					W->CastOnPlayer();
+				}
 			}
 		}
 	}
