@@ -582,14 +582,26 @@ void Combo()
 			}
 		}
 	}
-	if (ComboQ->Enabled())
+	if (Q->IsReady())
 	{
-		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
-		if (target != nullptr && target->IsValidTarget(GEntityList->Player(), Q->Range()) && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+		
+		if (ComboQ->Enabled())
 		{
-			Q->CastOnTarget(target);
-		}
+			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+			if (target != nullptr && target->IsValidTarget(GEntityList->Player(), Q->Range()) && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+			{
+				GOrbwalking->SetAttacksAllowed(false);
+				if (Q->CastOnTarget(target))
+				{
+					GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+				}
+			}
 
+		}
+	}
+	if (GEntityList->Player()->HasBuff("ViktorPowerTransferReturn"))
+	{
+		GOrbwalking->SetAttacksAllowed(true);
 	}
 	if (ComboW->Enabled() && ComboWAlways->Enabled() && !ComboWSlow->Enabled())
 	{
