@@ -58,6 +58,8 @@ IMenu* FarmMenu;
 IMenuOption* FarmMana;
 IMenuOption* FarmQ;
 IMenuOption* FarmE;
+IMenuOption* FarmEallow;
+IMenuOption* FarmEsmooth;
 IMenuOption* FarmELH;
 IMenuOption* FarmEpoison;
 IMenuOption* FarmQhit;
@@ -78,7 +80,7 @@ ISpell2* E;
 ISpell2* R;
 ISpell* Flash;
 
-std::vector<std::string> FarmEType = { "Block AA(Smooth)", "With AA" };
+//std::vector<std::string> FarmEType = { "Block AA(Smooth)", "With AA" };
 
 IUnit* Player;
 
@@ -161,7 +163,7 @@ void Menu()
 		FarmQ = FarmMenu->CheckBox("Lane Clear with Q", true);
 		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
 		FarmELH = FarmMenu->CheckBox("Last hit E in Lane Clear", false);
-		FarmETypeChoose = FarmMenu->AddSelection("Last Hit E Type", 0, FarmEType);
+		FarmEsmooth = FarmMenu->CheckBox("^- Block AA(Smooth)", true);
 		FarmEpoison = FarmMenu->CheckBox("E only if poison", false);
 		Jungle = FarmMenu->CheckBox("Use in Jungle", true);
 	}
@@ -777,7 +779,7 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 		if (minion->IsCreep() || minion->IsJungleCreep())
 		{
 			auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE);
-			if (FarmETypeChoose->GetInteger() == 0)
+			if (FarmEsmooth->Enabled())
 			{
 				if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
 				{
