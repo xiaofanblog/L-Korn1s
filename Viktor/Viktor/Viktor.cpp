@@ -68,7 +68,11 @@ ISpell2* R;
 bool Farmenable = true;
 float KeyPre;
 
+int stuff;
 IUnit* Player;
+
+bool hello = false;
+int helalmoney;
 
 int xOffset = 10;
 int yOffset = 20;
@@ -83,7 +87,7 @@ Vec4 Color2 = Vec4(25, 255, 0, 200);
 void LoadSpells()
 {
 	Q = GPluginSDK->CreateSpell2(kSlotQ, kTargetCast, false, false, (kCollidesWithNothing));
-	Q->SetSkillshot(0.25f, 0.f, 1000.f, 710.f);
+	Q->SetSkillshot(0.25f, 0.f, 1000.f, 730.f);
 
 	W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, false, false, (kCollidesWithNothing));
 	W->SetSkillshot(0.25f, 300.f, 1000.f, 700.f);
@@ -594,14 +598,19 @@ void Combo()
 				if (Q->CastOnTarget(target))
 				{
 					GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+					hello = true;
+					stuff = GGame->TickCount() + 100;
+					helalmoney = GGame->TickCount() + 500;
 				}
 			}
 
 		}
 	}
-	if (GEntityList->Player()->HasBuff("ViktorPowerTransferReturn"))
+	if (hello == true && stuff < GGame->TickCount())
 	{
+		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range()-80);
 		GOrbwalking->SetAttacksAllowed(true);
+		GGame->IssueOrder(GEntityList->Player(), kAttackTo, target);
 	}
 	if (ComboW->Enabled() && ComboWAlways->Enabled() && !ComboWSlow->Enabled())
 	{
@@ -651,6 +660,20 @@ void Combo()
 	}
 
 
+}
+void checks()
+{
+	if (helalmoney < GGame->TickCount())
+	{
+		hello = false;
+	}			
+	for (auto Enemy : GEntityList->GetAllHeros(false, true))
+	{
+		if ((Enemy->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() > Q->Range())
+		{
+			GOrbwalking->SetAttacksAllowed(true);
+		}
+	}
 }
 void RFollow()
 {
@@ -739,6 +762,7 @@ void dmgdraw()
 
 PLUGIN_EVENT(void) OnGameUpdate()
 {
+	checks();
 	if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 	{
 		Combo();
