@@ -25,6 +25,9 @@ IMenuOption* DrawRRange;
 
 IMenu* SmiteMenu;
 IMenuOption* SmiteUse;
+IMenuOption* SmiteKey;
+IMenuOption* SmiteDraw;
+IMenuOption* SmiteSave;
 
 IMenu* FarmMenu;
 IMenuOption* FarmQ;
@@ -44,18 +47,20 @@ ISpell2* Q;
 ISpell2* W;
 ISpell2* E;
 ISpell2* R;
-ISpell* Smite;
+ISpell2* Smite;
 
 
 IUnit* Player;
+short keystate;
 
+bool smiteKeyWasDown = false;
 
 void LoadSpells()
 {
 	auto PlayerSum1 = GPluginSDK->GetEntityList()->Player()->GetSpellName(kSummonerSlot1);
 	auto PlayerSum2 = GPluginSDK->GetEntityList()->Player()->GetSpellName(kSummonerSlot2);
-	if (strstr(PlayerSum1, "SummonerSmite")) { Smite = GPluginSDK->CreateSpell(kSummonerSlot1, 500); }
-	if (strstr(PlayerSum2, "SummonerSmite")) { Smite = GPluginSDK->CreateSpell(kSummonerSlot2, 500); }
+	if (strstr(PlayerSum1, "SummonerSmite")) { Smite = GPluginSDK->CreateSpell2(kSummonerSlot1, kTargetCast, false, false, kCollidesWithNothing); }
+	if (strstr(PlayerSum2, "SummonerSmite")) { Smite = GPluginSDK->CreateSpell2(kSummonerSlot2, kTargetCast, false, false, kCollidesWithNothing); }
 	Q = GPluginSDK->CreateSpell2(kSlotQ, kTargetCast, false, false, kCollidesWithYasuoWall);
 	W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, kCollidesWithNothing);
 	E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, kCollidesWithNothing);
@@ -107,10 +112,36 @@ void Menu()
 	SmiteMenu = MainMenu->AddMenu("Smite menu");
 	{
 		SmiteUse = SmiteMenu->CheckBox("Use Smite", true);
+		SmiteSave = SmiteMenu->CheckBox("Save Smite 1 stack", true);
+		SmiteKey = SmiteMenu->AddKey("Smite toggle", 'M');
+		SmiteDraw = SmiteMenu->CheckBox("Use Draw", true);
 	}
 }
+void CheckKeyPresses()
+{
+	keystate = GetAsyncKeyState(SmiteKey->GetInteger()); //Rembrandt
 
-void AutoSmite() // AUTO SMITE PRO BY REMBRANDT
+	if (GUtility->IsLeagueWindowFocused() && !GGame->IsChatOpen())
+	{
+		if (keystate < 0)
+		{
+			
+			if (smiteKeyWasDown == false)
+			{
+				
+				if (SmiteUse->GetInteger() == 0) { SmiteUse->UpdateInteger(1); }
+				else { SmiteUse->UpdateInteger(0); }
+				smiteKeyWasDown = true;
+			}
+		}
+		else
+		{
+			
+			smiteKeyWasDown = false;
+		}
+	}
+}
+void AutoSmite() //REMBRANDT
 {
 	if (Smite != nullptr && Smite->IsReady() && SmiteUse->Enabled()) {
 		auto minions = GEntityList->GetAllMinions(false, false, true);
@@ -148,6 +179,37 @@ int GetEnemiesInRange(float range)
 
 void Combo()
 {
+	if (Smite != nullptr && Smite->IsReady() && SmiteUse->Enabled())
+	{
+
+		if (!SmiteSave->Enabled())
+		{
+			if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
+			{
+
+				Smite->CastOnTarget(GTargetSelector->GetFocusedTarget());
+			}
+			else
+			{
+				Smite->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, 700));
+			}
+		}
+		if (SmiteSave->Enabled())
+		{
+			if (GEntityList->Player()->GetSpellBook()->GetAmmo(Smite->GetSlot()) == 2)
+			{
+				if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
+				{
+
+					Smite->CastOnTarget(GTargetSelector->GetFocusedTarget());
+				}
+				else
+				{
+					Smite->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, 700));
+				}
+			}
+		}
+	}
 	if (Cutlass->IsOwned() && Cutlass->IsReady() && ItemsCombo->Enabled() && !(Player->IsDead()))
 	{
 		if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && Cutlass->IsTargetInRange(GTargetSelector->GetFocusedTarget()))
@@ -299,6 +361,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 		Mixed();
 	}
 	AutoSmite();
+	CheckKeyPresses();
 }
 
 
@@ -307,6 +370,37 @@ PLUGIN_EVENT(void) OnRender()
 	if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range()); }
 	if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), R->Range()); }
 	if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range() + 70); }
+	if (Smite != nullptr && SmiteDraw->Enabled())
+	{
+
+		static IFont* pFont = nullptr;
+
+		if (pFont == nullptr)
+		{
+			pFont = GRender->CreateFont("Tahoma", 20.f, kFontWeightNormal);
+			pFont->SetOutline(true);
+			pFont->SetLocationFlags(kFontLocationNormal);
+		}
+		Vec2 pos;
+		if (GGame->Projection(GEntityList->Player()->GetPosition(), &pos))
+		{
+			if (SmiteUse->Enabled())
+			{
+
+				std::string text = std::string("AUTOSMITE ON");
+				Vec4 clr = Vec4(25, 255, 0, 200);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x + 30, pos.y + 70, text.c_str());
+			}
+			else
+			{
+				std::string text = std::string("AUTOSMITE OFF");
+				Vec4 clr = Vec4(255, 0, 0, 200);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x + 30, pos.y + 70, text.c_str());
+			}
+		}
+	}
 }
 
 
