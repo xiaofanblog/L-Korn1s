@@ -13,7 +13,7 @@ IMenuOption* ComboWAA;
 IMenuOption* ComboE;
 IMenuOption* ComboR;
 IMenuOption* ComboItems;
-
+IMenuOption* ComboMagnet;
 
 IMenu* HarassMenu;
 IMenuOption* HarassQ;
@@ -97,6 +97,7 @@ void Menu()
 		ComboE = ComboMenu->CheckBox("Use E in Combo", true);
 		ComboR = ComboMenu->CheckBox("Use R in Combo", true);
 		ComboItems = ComboMenu->CheckBox("Use Items", true);
+		ComboMagnet = ComboMenu->CheckBox("Magnet to Target", false);
 
 	}
 	HarassMenu = MainMenu->AddMenu("Harass");
@@ -177,6 +178,31 @@ static void SkinChanger()
 
 void Combo()
 {
+	if (ComboMagnet->Enabled())
+	{
+		auto target = GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, Q->Range());
+		if (target != nullptr && target->IsValidTarget() && !target->IsDead())
+		{
+			if ((target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < Q->Range())
+			{
+
+				if ((target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() > 190)
+				{
+					GOrbwalking->SetOverridePosition(target->GetPosition());
+
+				}
+				if ((target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < 190)
+				{
+					GOrbwalking->SetOverridePosition(Vec3(0, 0, 0));
+
+				}
+
+			}
+
+		}
+		else GOrbwalking->SetOverridePosition(Vec3(0, 0, 0));
+	}
+	else GOrbwalking->SetOverridePosition(Vec3(0, 0, 0));
 	if (Smite != nullptr && Smite->IsReady()) // AUTO SMITE PRO BY REMBRANDT
 	{
 
