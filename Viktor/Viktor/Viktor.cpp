@@ -169,7 +169,7 @@ void Menu()
 		FleeKey = FleeMenu->AddKey("Flee key", 'G');
 		FleeQ = FleeMenu->CheckBox("Use Q", true);
 	}
-	MiscMenu = MainMenu->AddMenu("AA Disabler");
+	AAdisable = MainMenu->AddMenu("AA Disabler");
 	{
 		ComboAALevel = MiscMenu->AddInteger("At what level disable AA", 1, 18, 6);
 		ComboAA = MiscMenu->CheckBox("Disable AA", true);
