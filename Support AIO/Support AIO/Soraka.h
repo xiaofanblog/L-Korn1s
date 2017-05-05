@@ -47,7 +47,7 @@ public:
 			BlacklistMenuR->CheckBox(ally->ChampionName(), false);
 		}
 		BlacklistMenuW = MainMenu->AddMenu("W Priority");
-		Wpriority();
+		Wprioritya();
 	}
 
 	void LoadSpells()
@@ -128,7 +128,7 @@ public:
 	{
 		if (ComboE->Enabled() && E->IsReady() && E->Range())
 		{
-			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
 			if (target != nullptr)
 			{
 				E->CastOnTarget(target, kHitChanceHigh);
@@ -497,7 +497,7 @@ public:
 		}
 	}
 
-	void Wpriority()
+	void Wprioritya()
 	{
 		int indx = 0;
 		auto Teamates = GEntityList->GetAllHeros(true, false);

@@ -601,7 +601,7 @@ public:
 		{
 			for (auto Enemy : GEntityList->GetAllHeros(false, true))
 			{
-				if (!Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), R->Range() - 100) && !Enemy->IsDead())
+				if (!Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), R->Range() - 100) && !Enemy->IsDead() && Enemy->IsValidTarget())
 				{
 					Vec3 EstimatedEnemyPos;
 					GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, EstimatedEnemyPos);

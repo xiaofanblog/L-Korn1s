@@ -1273,7 +1273,7 @@ public:
 		VelKozBase().AutoE();
 		VelKozBase().AAdisable();
 		VelKozBase().autoQ();
-		VelKozBase().setQ();
+		//VelKozBase().setQ();
 		VelKozBase().Killsteal();
 		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
@@ -1323,7 +1323,7 @@ public:
 	}
 	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
 	{
-		VelKozBase().OnUpdateChargedSpell(Slot, Position, ReleaseCast, TriggerEvent);
+		//VelKozBase().OnUpdateChargedSpell(Slot, Position, ReleaseCast, TriggerEvent);
 	}
 	void OnPauseAnimation(IUnit* Source) override
 	{
@@ -1492,6 +1492,15 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 			LuxBase().AutoW();
 		});
 	}
+	if (playerHero == "Karma")
+	{
+		eventManager = PluginSDK->GetEventManager();
+		eventmanager::RegisterEvents(eventManager);
+		eventmanager::GameEventManager::RegisterUpdateEvent([&](event_id_t id) -> void
+		{
+			KarmaBase().AutoE();
+		});
+	}
 	MalachitePredOnload();
 	
 
@@ -1523,6 +1532,10 @@ PLUGIN_API void OnUnload()
 		eventmanager::UnregisterEvents(eventManager);
 	}
 	if (playerHero == "Lux")
+	{
+		eventmanager::UnregisterEvents(eventManager);
+	}
+	if (playerHero == "Karma")
 	{
 		eventmanager::UnregisterEvents(eventManager);
 	}
