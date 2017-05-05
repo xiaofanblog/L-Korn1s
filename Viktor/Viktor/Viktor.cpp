@@ -171,9 +171,9 @@ void Menu()
 	}
 	AAdisable = MainMenu->AddMenu("AA Disabler");
 	{
-		ComboAALevel = MiscMenu->AddInteger("At what level disable AA", 1, 18, 6);
-		ComboAA = MiscMenu->CheckBox("Disable AA", true);
-		ComboAAkey = MiscMenu->AddKey("Disable key", 32);
+		ComboAALevel = AAdisable->AddInteger("At what level disable AA", 1, 18, 6);
+		ComboAA = AAdisable->CheckBox("Disable AA", true);
+		ComboAAkey = AAdisable->AddKey("Disable key", 32);
 	}
 
 
@@ -928,7 +928,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 	GEventManager->AddEventHandler(kEventOnRender, OnRender);
 	GGame->PrintChat("<b><font color=\"#FFFFFF\">Viktor<b><font color=\"#f8a101\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
-	GGame->PrintChat("<b><font color=\"#f8a101\">Version: <b><font color=\"#FFFFFF\">0.2</font></b>");
+	GGame->PrintChat("<b><font color=\"#f8a101\">Version: <b><font color=\"#FFFFFF\">0.3</font></b>");
 	GEventManager->AddEventHandler(kEventOnInterruptible, OnInterruptible);
 	GEventManager->AddEventHandler(kEventOnGapCloser, OnGapCloser);
 
