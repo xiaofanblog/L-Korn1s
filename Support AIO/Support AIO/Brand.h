@@ -26,6 +26,7 @@ public:
 
 		HarassMenu = MainMenu->AddMenu("Harass");
 		{
+			HarassMana = HarassMenu->AddFloat("Mana Percent", 1, 100, 50);
 			HarassQ = HarassMenu->CheckBox("Use Q in Harass", true);
 			HarassQMode = HarassMenu->AddSelection("Q Mode", 1, { "Always", "Only Stun" });
 			HarassW = HarassMenu->CheckBox("Use E in Combo", true);
@@ -179,35 +180,26 @@ public:
 
 	void Harass()
 	{
-		Enemy = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
-		for (auto Enemy : GEntityList->GetAllHeros(false, true))
+		if (HarassMana->GetFloat() < GEntityList->Player()->ManaPercent())
 		{
-			if (Enemy != nullptr && Enemy->IsValidTarget() && Enemy->IsHero() && Enemy->IsValidTarget())
+			Enemy = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+			for (auto Enemy : GEntityList->GetAllHeros(false, true))
 			{
-				if (!Enemy->IsDead())
+				if (Enemy != nullptr && Enemy->IsValidTarget() && Enemy->IsHero() && Enemy->IsValidTarget())
 				{
-					if (HarassMode->GetInteger() == 1)
+					if (!Enemy->IsDead())
 					{
-
-						if (E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && HarassE->Enabled())
+						if (HarassMode->GetInteger() == 1)
 						{
-							E->CastOnTarget(Enemy);
-						}
 
-						if (Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && HarassQ->Enabled())
-						{
-							if (HarassQMode->GetInteger() == 0)
+							if (E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && HarassE->Enabled())
 							{
-								AdvPredictionOutput outputfam;
-								Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
-								if (outputfam.HitChance >= kHitChanceHigh)
-								{
-									Q->CastOnTarget(Enemy);
-								}
+								E->CastOnTarget(Enemy);
 							}
-							if (HarassQMode->GetInteger() == 1)
+
+							if (Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && HarassQ->Enabled())
 							{
-								if (Enemy->HasBuff("brandablaze"))
+								if (HarassQMode->GetInteger() == 0)
 								{
 									AdvPredictionOutput outputfam;
 									Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
@@ -216,47 +208,47 @@ public:
 										Q->CastOnTarget(Enemy);
 									}
 								}
+								if (HarassQMode->GetInteger() == 1)
+								{
+									if (Enemy->HasBuff("brandablaze"))
+									{
+										AdvPredictionOutput outputfam;
+										Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+										if (outputfam.HitChance >= kHitChanceHigh)
+										{
+											Q->CastOnTarget(Enemy);
+										}
+									}
+								}
+							}
+
+							if (W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()) && HarassW->Enabled())
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
+								W->CastOnPosition(pred);
 							}
 						}
-
-						if (W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()) && HarassW->Enabled())
-						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-							W->CastOnPosition(pred);
-						}
 					}
 				}
-			}
 
-			if (HarassMode->GetInteger() == 0)
-			{
-				if (E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && HarassE->Enabled())
+				if (HarassMode->GetInteger() == 0)
 				{
-					E->CastOnTarget(Enemy);
-				}
-
-				if (W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()) && HarassW->Enabled())
-				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-					W->CastOnPosition(pred);
-				}
-
-				if (Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && HarassQ->Enabled())
-				{
-					if (HarassQMode->GetInteger() == 0)
+					if (E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && HarassE->Enabled())
 					{
-						AdvPredictionOutput outputfam;
-						Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
-						if (outputfam.HitChance >= kHitChanceHigh)
-						{
-							Q->CastOnTarget(Enemy);
-						}
+						E->CastOnTarget(Enemy);
 					}
-					if (HarassQMode->GetInteger() == 1)
+
+					if (W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()) && HarassW->Enabled())
 					{
-						if (Enemy->HasBuff("brandablaze"))
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
+						W->CastOnPosition(pred);
+					}
+
+					if (Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && HarassQ->Enabled())
+					{
+						if (HarassQMode->GetInteger() == 0)
 						{
 							AdvPredictionOutput outputfam;
 							Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
@@ -265,39 +257,39 @@ public:
 								Q->CastOnTarget(Enemy);
 							}
 						}
-					}
-				}
-			}
-
-			if (HarassMode->GetInteger() == 2)
-			{
-
-				if (W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()) && HarassW->Enabled())
-				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-					W->CastOnPosition(pred);
-				}
-
-				if (E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && HarassE->Enabled())
-				{
-					E->CastOnTarget(Enemy);
-				}
-
-				if (Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && HarassQ->Enabled())
-				{
-					if (HarassQMode->GetInteger() == 0)
-					{
-						AdvPredictionOutput outputfam;
-						Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
-						if (outputfam.HitChance >= kHitChanceHigh)
+						if (HarassQMode->GetInteger() == 1)
 						{
-							Q->CastOnTarget(Enemy);
+							if (Enemy->HasBuff("brandablaze"))
+							{
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Q->CastOnTarget(Enemy);
+								}
+							}
 						}
 					}
-					if (HarassQMode->GetInteger() == 1)
+				}
+
+				if (HarassMode->GetInteger() == 2)
+				{
+
+					if (W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()) && HarassW->Enabled())
 					{
-						if (Enemy->HasBuff("brandablaze"))
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
+						W->CastOnPosition(pred);
+					}
+
+					if (E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && HarassE->Enabled())
+					{
+						E->CastOnTarget(Enemy);
+					}
+
+					if (Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && HarassQ->Enabled())
+					{
+						if (HarassQMode->GetInteger() == 0)
 						{
 							AdvPredictionOutput outputfam;
 							Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
@@ -306,33 +298,33 @@ public:
 								Q->CastOnTarget(Enemy);
 							}
 						}
-					}
-				}
-			}
-
-			if (HarassMode->GetInteger() == 3)
-			{
-				if (W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()) && HarassW->Enabled())
-				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
-					W->CastOnPosition(pred);
-				}
-
-				if (Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && HarassQ->Enabled())
-				{
-					if (HarassQMode->GetInteger() == 0)
-					{
-						AdvPredictionOutput outputfam;
-						Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
-						if (outputfam.HitChance >= kHitChanceHigh)
+						if (HarassQMode->GetInteger() == 1)
 						{
-							Q->CastOnTarget(Enemy);
+							if (Enemy->HasBuff("brandablaze"))
+							{
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Q->CastOnTarget(Enemy);
+								}
+							}
 						}
 					}
-					if (HarassQMode->GetInteger() == 1)
+				}
+
+				if (HarassMode->GetInteger() == 3)
+				{
+					if (W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()) && HarassW->Enabled())
 					{
-						if (Enemy->HasBuff("brandablaze"))
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
+						W->CastOnPosition(pred);
+					}
+
+					if (Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && HarassQ->Enabled())
+					{
+						if (HarassQMode->GetInteger() == 0)
 						{
 							AdvPredictionOutput outputfam;
 							Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
@@ -341,14 +333,26 @@ public:
 								Q->CastOnTarget(Enemy);
 							}
 						}
+						if (HarassQMode->GetInteger() == 1)
+						{
+							if (Enemy->HasBuff("brandablaze"))
+							{
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Q->CastOnTarget(Enemy);
+								}
+							}
+						}
 					}
-				}
 
-				if (E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && HarassE->Enabled())
-				{
-					E->CastOnTarget(Enemy);
-				}
+					if (E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && HarassE->Enabled())
+					{
+						E->CastOnTarget(Enemy);
+					}
 
+				}
 			}
 		}
 	}
