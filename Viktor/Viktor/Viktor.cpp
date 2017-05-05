@@ -37,6 +37,10 @@ IMenuOption* AntiGapW;
 IMenuOption* InterruptW;
 IMenuOption* InterruptR;
 IMenuOption* AutoW;
+IMenu* AAdisable;
+IMenuOption* ComboAA;
+IMenuOption* ComboAAkey;
+IMenuOption* ComboAALevel;
 
 IMenu* FarmMenu;
 IMenuOption* FarmMana;
@@ -164,6 +168,12 @@ void Menu()
 	{
 		FleeKey = FleeMenu->AddKey("Flee key", 'G');
 		FleeQ = FleeMenu->CheckBox("Use Q", true);
+	}
+	MiscMenu = MainMenu->AddMenu("AA Disabler");
+	{
+		ComboAALevel = MiscMenu->AddInteger("At what level disable AA", 1, 18, 6);
+		ComboAA = MiscMenu->CheckBox("Disable AA", true);
+		ComboAAkey = MiscMenu->AddKey("Disable key", 32);
 	}
 
 
@@ -477,6 +487,17 @@ void AllIn()
 			}
 
 		}
+		if (ComboW->Enabled())
+		{
+			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
+			if (target != nullptr && target->IsValidTarget(GEntityList->Player(), W->Range()) && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+			{
+				Vec3 pred;
+				GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+				W->CastOnPosition(pred);
+			}
+
+		}
 		if (ComboR->Enabled() && !GEntityList->Player()->HasBuff("viktorchaosstormtimer"))
 		{
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
@@ -608,9 +629,10 @@ void Combo()
 	}
 	if (hello == true && stuff < GGame->TickCount())
 	{
-		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range()-80);
+		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range() - 80);
 		GOrbwalking->SetAttacksAllowed(true);
-		GGame->IssueOrder(GEntityList->Player(), kAttackTo, target);
+		GGame->IssueOrder(GEntityList->Player(), kAttackUnit, target);
+
 	}
 	if (ComboW->Enabled() && ComboWAlways->Enabled() && !ComboWSlow->Enabled())
 	{
@@ -804,6 +826,20 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	if (GetAsyncKeyState(ComboAllIn->GetInteger()) & 0x8000)
 	{
 		AllIn();
+	}
+	if (GetAsyncKeyState(ComboAAkey->GetInteger()))
+	{
+		auto level = Player->GetLevel();
+		if (ComboAA->Enabled() && level >= ComboAALevel->GetInteger() && Player->GetMana() > 100)
+		{
+			GOrbwalking->SetAttacksAllowed(false);
+		}
+	}
+	if (!GetAsyncKeyState(ComboAAkey->GetInteger()) || Player->GetMana() < 100)
+	{
+		{
+			GOrbwalking->SetAttacksAllowed(true);
+		}
 	}
 	Killsteals();
 	AutoWLogic();
