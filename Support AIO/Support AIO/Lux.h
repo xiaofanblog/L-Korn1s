@@ -508,7 +508,7 @@ public:
 							{
 
 								AdvPredictionOutput outputfam;
-								Q->RunPrediction(target, false, kCollidesWithMinions, &outputfam);
+								Q->RunPrediction(Target, false, kCollidesWithMinions, &outputfam);
 								if (outputfam.HitChance >= kHitChanceHigh)
 								{
 									Vec3 EstimatedEnemyPos;
@@ -551,12 +551,12 @@ public:
 						{
 							if (GEntityList->Player()->IsValidTarget(Target, Q->Range()))
 							{
-								if (target != nullptr && !target->IsDead() && target->IsValidTarget())
+								if (Target != nullptr && !Target->IsDead() && Target->IsValidTarget())
 								{
 									if (Q->IsReady() && E->IsReady() && R->IsReady())
 									{
 										AdvPredictionOutput outputfam;
-										Q->RunPrediction(target, false, kCollidesWithMinions, &outputfam);
+										Q->RunPrediction(Target, false, kCollidesWithMinions, &outputfam);
 										if (outputfam.HitChance >= kHitChanceHigh)
 										{
 											Vec3 EstimatedEnemyPos;
@@ -700,7 +700,7 @@ public:
 								{
 
 									AdvPredictionOutput outputfam;
-									Q->RunPrediction(target, false, kCollidesWithMinions, &outputfam);
+									Q->RunPrediction(Target, false, kCollidesWithMinions, &outputfam);
 									if (outputfam.HitChance >= kHitChanceHigh)
 									{
 										Vec3 EstimatedEnemyPos;
