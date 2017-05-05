@@ -572,7 +572,7 @@ public:
 										}
 										if (ESkillToggle())
 										{
-											if (target->HasBuffOfType(BUFF_Slow) || target->HasBuffOfType(BUFF_Stun) || target->HasBuffOfType(BUFF_Snare) || target->HasBuffOfType(BUFF_Fear) || target->HasBuffOfType(BUFF_Knockup) || target->HasBuffOfType(BUFF_Knockback) || target->HasBuffOfType(BUFF_Charm) || target->HasBuffOfType(BUFF_Taunt) || target->HasBuffOfType(BUFF_Suppression))
+											if (Target->HasBuffOfType(BUFF_Slow) || Target->HasBuffOfType(BUFF_Stun) || Target->HasBuffOfType(BUFF_Snare) || Target->HasBuffOfType(BUFF_Fear) || Target->HasBuffOfType(BUFF_Knockup) || Target->HasBuffOfType(BUFF_Knockback) || Target->HasBuffOfType(BUFF_Charm) || Target->HasBuffOfType(BUFF_Taunt) || Target->HasBuffOfType(BUFF_Suppression))
 											{
 												Vec3 EstimatedEnemyPos;
 												GPrediction->GetFutureUnitPosition(Target, 0.2f, true, EstimatedEnemyPos);
