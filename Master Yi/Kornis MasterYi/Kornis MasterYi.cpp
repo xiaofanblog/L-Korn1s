@@ -31,6 +31,7 @@ IMenuOption* SmiteUse;
 IMenu* FarmMenu;
 IMenuOption* FarmQ;
 IMenuOption* FarmE;
+IMenuOption* FarmItems;
 IMenuOption* FarmMana;
 
 IMenu* KillstealMenu;
@@ -116,9 +117,10 @@ void Menu()
 	}
 	FarmMenu = MainMenu->AddMenu("Farming");
 	{
-		FarmMana = FarmMenu->AddInteger("Mana percent for clear", 10, 100, 30);
-		FarmQ = FarmMenu->CheckBox("Lane Clear with Q", true);
-		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
+		FarmMana = FarmMenu->AddInteger("Mana percent for Farm", 10, 100, 30);
+		FarmQ = FarmMenu->CheckBox("Farm with Q", true);
+		FarmE = FarmMenu->CheckBox("Farm with E", true);
+		FarmItems = FarmMenu->CheckBox("Use Items", true);
 	}
 
 	KillstealMenu = MainMenu->AddMenu("Killsteal");
@@ -176,33 +178,40 @@ static void SkinChanger()
 	}
 }
 
-void Combo()
+void LoveMagnet()
 {
-	if (ComboMagnet->Enabled())
+	if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 	{
-		auto target = GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, Q->Range());
-		if (target != nullptr && target->IsValidTarget() && !target->IsDead())
+		if (ComboMagnet->Enabled())
 		{
-			if ((target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < Q->Range())
+			auto target = GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, Q->Range());
+			if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 			{
-
-				if ((target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() > 190)
+				if ((target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < Q->Range())
 				{
-					GOrbwalking->SetOverridePosition(target->GetPosition());
 
-				}
-				if ((target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < 190)
-				{
-					GOrbwalking->SetOverridePosition(Vec3(0, 0, 0));
+					if ((target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() > 190)
+					{
+						GOrbwalking->SetOverridePosition(target->GetPosition());
+
+					}
+					if ((target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < 190)
+					{
+						GOrbwalking->SetOverridePosition(Vec3(0, 0, 0));
+
+					}
 
 				}
 
 			}
-
+			else GOrbwalking->SetOverridePosition(Vec3(0, 0, 0));
 		}
 		else GOrbwalking->SetOverridePosition(Vec3(0, 0, 0));
 	}
 	else GOrbwalking->SetOverridePosition(Vec3(0, 0, 0));
+}
+void Combo()
+{
 	if (Smite != nullptr && Smite->IsReady()) // AUTO SMITE PRO BY REMBRANDT
 	{
 
@@ -401,7 +410,23 @@ void Killsteal()
 		}
 	}
 }
-
+static int GetMinionsItem(float range)
+{
+	auto minions = GEntityList->GetAllMinions(false, true, true);
+	auto minionsInRange = 0;
+	for (auto minion : minions)
+	{
+		if (minion != nullptr && minion->IsValidTarget() && minion->IsEnemy(GEntityList->Player()) && !minion->IsDead())
+		{
+			auto minionDistance = (minion->GetPosition() - GEntityList->Player()->GetPosition()).Length2D();
+			if (minionDistance < range)
+			{
+				minionsInRange++;
+			}
+		}
+	}
+	return minionsInRange;
+}
 
 void Farm()
 {
@@ -420,6 +445,30 @@ void Farm()
 					E->CastOnPlayer();
 				}
 
+			}
+		}
+	}
+	if (FarmItems->Enabled())
+	{
+		if (Ravenous_Hydra->IsOwned() && Ravenous_Hydra->IsReady() && !(Player->IsDead()))
+		{
+			if (GetMinionsItem(385) > 0)
+			{
+				Ravenous_Hydra->CastOnPlayer();
+			}
+		}
+		if (Tiamat->IsOwned() && Tiamat->IsReady() && !(Player->IsDead()))
+		{
+			if (GetMinionsItem(385) > 0)
+			{
+				Tiamat->CastOnPlayer();
+			}
+		}
+		if (Titanic_Hydra->IsOwned() && Titanic_Hydra->IsReady() && !(Player->IsDead()))
+		{
+			if (GetMinionsItem(385) > 0)
+			{
+				Titanic_Hydra->CastOnPlayer();
 			}
 		}
 	}
@@ -448,6 +497,7 @@ void WTog()
 PLUGIN_EVENT(void) OnGameUpdate()
 {
 	WTog();
+	LoveMagnet();
 	if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 	{
 		Combo();
