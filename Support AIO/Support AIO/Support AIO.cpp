@@ -1273,7 +1273,7 @@ public:
 		VelKozBase().AutoE();
 		VelKozBase().AAdisable();
 		VelKozBase().autoQ();
-		//VelKozBase().setQ();
+		VelKozBase().setQ();
 		VelKozBase().Killsteal();
 		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
