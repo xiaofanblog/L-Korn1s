@@ -10,6 +10,7 @@ IMenu* MainMenu;
 IMenu* ComboMenu;
 IMenuOption* ComboQ;
 IMenuOption* ComboW;
+IMenuOption* ComboWmax;
 IMenuOption* ComboE;
 IMenuOption* HarassLast;
 IMenuOption* ComboWstart;
@@ -35,6 +36,8 @@ IMenu* HarassMenu;
 IMenuOption* HarassMana;
 IMenuOption* HarassAuto;
 IMenuOption* HarassQ;
+IMenuOption* HarassE;
+IMenuOption* HarassEonlyPoison;
 
 IMenu* MiscMenu;
 IMenuOption* ComboAA;
@@ -120,6 +123,7 @@ void Menu()
 		WSettings = ComboMenu->AddMenu("W Settings");
 		ComboW = WSettings->CheckBox("Use W in Combo", true);
 		ComboWstart = WSettings->CheckBox("Start combo with W", true);
+		ComboWmax = WSettings->AddFloat("W Max Range", 400, 800, 800);
 		ESettings = ComboMenu->AddMenu("E Settings");
 		ComboE = ESettings->CheckBox("Use E in Combo", true);
 		ComboEonlyPoison = ESettings->CheckBox("Only E if POISONED", false);
@@ -142,6 +146,8 @@ void Menu()
 		HarassMana = HarassMenu->AddInteger("Min Mana. for Harass", 10, 100, 50);
 		HarassAuto = HarassMenu->CheckBox("Use AUTO Harass", false);
 		HarassQ = HarassMenu->CheckBox("Use Q to harass", true);
+		HarassE = HarassMenu->CheckBox("Use E to harass", true);
+		HarassEonlyPoison = HarassMenu->CheckBox("Only E if POISONED", false);
 	}
 
 
@@ -322,7 +328,7 @@ void Combo()
 					if (Wtarget != nullptr)
 					{
 						auto distance = (Player->GetPosition() - Wtarget->GetPosition()).Length();
-						if (distance >= 400)
+						if (distance >= 400 && distance <= ComboWmax->GetFloat())
 						{
 							W->CastOnTarget(Wtarget, kHitChanceHigh);
 						}
@@ -349,7 +355,7 @@ void Combo()
 					if (Wtarget != nullptr)
 					{
 						auto distance = (Player->GetPosition() - Wtarget->GetPosition()).Length();
-						if (distance >= 400)
+						if (distance >= 400 && distance <= ComboWmax->GetFloat())
 						{
 							W->CastOnTarget(Wtarget, kHitChanceHigh);
 						}
@@ -480,7 +486,7 @@ void Combo()
 					if (Wtarget != nullptr)
 					{
 						auto distance = (Player->GetPosition() - Wtarget->GetPosition()).Length();
-						if (distance >= 400)
+						if (distance >= 400 && distance <= ComboWmax->GetFloat())
 						{
 							W->CastOnTarget(Wtarget, kHitChanceHigh);
 						}
@@ -633,6 +639,18 @@ void Mixed()
 						Vec3 pred;
 						GPrediction->GetFutureUnitPosition(target, 0.3f, true, pred);
 						Q->CastOnTarget(target, kHitChanceDashing);
+					}
+				}
+			}
+			if (HarassE->Enabled())
+			{
+				if (E->IsReady())
+				{
+					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
+					if (target != nullptr)
+					{
+						if (!(HarassEonlyPoison->Enabled()) || target->HasBuffOfType(BUFF_Poison))
+							E->CastOnTarget(target);
 					}
 				}
 			}
@@ -842,7 +860,7 @@ void JungleClear()
 		{
 			if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget() && Minion->IsJungleCreep())
 			{
-				if (Jungle && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+				if (Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
 				{
 					Vec3 vecCastPosition;
 					int iMinionsHit = 0;
@@ -852,6 +870,10 @@ void JungleClear()
 					if (Q->IsReady() && iMinionsHit >= 1) {
 						Q->CastOnPosition(vecCastPosition);
 					}
+				}
+				if (Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+				{
+					E->CastOnTarget(Minion);
 				}
 
 			}
@@ -867,19 +889,17 @@ void Auto()
 			if (HarassQ->Enabled())
 			{
 				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
-				if (target->IsValidTarget(GEntityList->Player(), Q->Range()  && !target->IsDead()))
+				if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 				{
-					if (target != nullptr)
-					{
-						if (Q->IsReady())
-						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-							Q->CastOnPosition(pred);
-						}
-					}
 
+					if (Q->IsReady())
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+						Q->CastOnPosition(pred);
+					}
 				}
+
 			}
 		}
 	}
@@ -956,7 +976,7 @@ PLUGIN_EVENT(void) OnRender()
 	if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), Q->Range()); }
 	if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(211, 255, 0, 255), float(ComboRRANGE->GetInteger())); }
 	if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
-	if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(120, 255, 0, 255), W->Range()); }
+	if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(120, 255, 0, 255), ComboWmax->GetFloat()); }
 	if (DrawRFlash->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 100, 255), ComboRRANGE->GetInteger() + 410); }
 	dmgdraw();
 	if (DrawEkill->Enabled())
