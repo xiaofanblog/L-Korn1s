@@ -29,6 +29,7 @@ IMenu* WSettings;
 IMenu* ESettings;
 IMenuOption* SemiR;
 IMenuOption* ComboRFacing;
+IMenuOption* LastEDelay;
 
 
 
@@ -82,6 +83,7 @@ ISpell2* W;
 ISpell2* E;
 ISpell2* R;
 ISpell* Flash;
+int delaystuff;
 
 //std::vector<std::string> FarmEType = { "Block AA(Smooth)", "With AA" };
 
@@ -171,6 +173,7 @@ void Menu()
 		FarmELH = FarmMenu->CheckBox("Last hit E in Lane Clear", false);
 		FarmEsmooth = FarmMenu->CheckBox("^- Block AA(Smooth)", true);
 		FarmEpoison = FarmMenu->CheckBox("E only if poison", false);
+		LastEDelay = FarmMenu->AddFloat("Last Hit E Delay", 0, 1500, 0);
 		//Jungle = FarmMenu->CheckBox("Use in Jungle", true);
 	}
 
@@ -569,7 +572,7 @@ void Rflash()
 {
 	if (GUtility->IsLeagueWindowFocused() && !GGame->IsChatOpen())
 	{
-	GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
 		for (auto Enemy : GEntityList->GetAllHeros(false, true))
 		{
 			if (R->IsReady() && Flash != nullptr && Flash->IsReady() && ComboRRANGE->GetInteger() + 410 && ComboREnable->Enabled())
@@ -607,7 +610,7 @@ void LastHit()
 		{
 			if (GEntityList->Player()->IsValidTarget(minion, E->Range()))
 			{
-				if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed())-125, static_cast<int>(E->GetDelay()*800)))
+				if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed())-125, LastEDelay->GetFloat()))
 				{
 					E->CastOnUnit(minion);
 				}
@@ -663,7 +666,7 @@ void Mixed()
 				{
 					if (GEntityList->Player()->IsValidTarget(minion, E->Range()))
 					{
-						if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, static_cast<int>(E->GetDelay() * 800))) {
+						if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125,LastEDelay->GetFloat())) {
 							E->CastOnUnit(minion);
 						}
 					}
@@ -745,7 +748,7 @@ void Farm()
 		{
 			if (GEntityList->Player()->IsValidTarget(minion, E->Range()))
 			{
-				if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, static_cast<int>(E->GetDelay() * 800))) {
+				if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125,LastEDelay->GetFloat())) {
 					E->CastOnUnit(minion);
 				}
 			}
@@ -958,7 +961,8 @@ PLUGIN_EVENT(void) OnRender()
 			{
 				auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), minionE, kSlotE);
 				{
-					if (GDamage->GetSpellDamage(GEntityList->Player(), minionE, kSlotE) > GHealthPrediction->GetPredictedHealth(minionE, kLastHitPrediction, static_cast<int>(((minionE->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, static_cast<int>(E->GetDelay() * 800)) && minionE != nullptr && !minionE->IsDead())
+
+					if (GDamage->GetSpellDamage(GEntityList->Player(), minionE, kSlotE) > GHealthPrediction->GetPredictedHealth(minionE, kLastHitPrediction, static_cast<int>(((minionE->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, LastEDelay->GetFloat()) && minionE != nullptr && !minionE->IsDead())
 					{
 						GRender->DrawOutlinedCircle(minionE->GetPosition(), Vec4(255, 255, 0, 255), 80.f);
 					}
