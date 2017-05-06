@@ -18,6 +18,8 @@ IMenuOption* ComboWSlow;
 IMenuOption* ComboE;
 IMenu* SetR;
 IMenuOption* ComboR;
+IMenuOption* ComboRTF;
+IMenuOption* ComboRminh;
 IMenuOption* ComboRmin;
 IMenuOption* ComboRtickdmg;
 IMenuOption* ComboRkillable;
@@ -125,6 +127,8 @@ void Menu()
 		ComboRfollow = SetR->CheckBox("Auto R Follow", true);
 		ComboRfollowset = SetR->CheckBox("^- If no enemies, move to minions", true);
 		ComboRcheck = SetR->AddFloat("Dont waste R if Enemy HP lower than", 0, 500, 100);
+		ComboRTF = SetR->CheckBox("Force R in Teamfights", true);
+		ComboRminh = SetR->AddFloat("^- if Hits ", 1, 5, 3);
 		ComboAllIn = ComboMenu->AddKey("All In Combo Key", 'Z');
 
 	}
@@ -675,6 +679,18 @@ void Combo()
 				if ((GetRDamage(target) + QDamage + EDamage) >= target->GetHealth() && target->GetHealth() > ComboRcheck->GetFloat())
 				{
 					R->CastOnTarget(target);
+				}
+			}
+			if (ComboRTF->Enabled())
+			{
+				int hit;
+				Vec3 pos;
+				GPrediction->FindBestCastPosition(R->Range(), R->Radius(), false, false, true, pos, hit);
+				{
+					if (hit >= ComboRminh->GetFloat())
+					{
+						R->CastOnPosition(pos);
+					}
 				}
 			}
 		}
