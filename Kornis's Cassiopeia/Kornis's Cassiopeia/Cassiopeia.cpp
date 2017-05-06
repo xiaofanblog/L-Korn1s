@@ -171,7 +171,7 @@ void Menu()
 		FarmELH = FarmMenu->CheckBox("Last hit E in Lane Clear", false);
 		FarmEsmooth = FarmMenu->CheckBox("^- Block AA(Smooth)", true);
 		FarmEpoison = FarmMenu->CheckBox("E only if poison", false);
-		Jungle = FarmMenu->CheckBox("Use in Jungle", true);
+		//Jungle = FarmMenu->CheckBox("Use in Jungle", true);
 	}
 
 	LastHitMenu = MainMenu->AddMenu("Last Hit");
@@ -715,7 +715,7 @@ void Killsteal()
 
 static int GetMinionsQ(float range)
 {
-	auto minions = GEntityList->GetAllMinions(false, true, false);
+	auto minions = GEntityList->GetAllMinions(false, true, true);
 	auto minionsInRange = 0;
 	for (auto minion : minions)
 	{
@@ -733,7 +733,7 @@ static int GetMinionsQ(float range)
 void Farm()
 {
 
-	minions = GEntityList->GetAllMinions(false, true, false);
+	minions = GEntityList->GetAllMinions(false, true, true);
 	for (IUnit* minion : minions)
 	{
 		if (FarmELH->Enabled() && FarmE->Enabled() && GGame->Time() > delay)
@@ -772,7 +772,7 @@ void Farm()
 				}
 			}
 
-			if (FarmQ->Enabled() && Q->IsReady() && minion->IsCreep())
+			if (FarmQ->Enabled() && Q->IsReady() && (minion->IsCreep() || minion->IsJungleCreep()))
 			{
 				Vec3 pos;
 				int hit;
@@ -852,34 +852,6 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 	}
 
 }
-void JungleClear()
-{
-	for (auto Minion : GEntityList->GetAllMinions(false, false, true))
-	{
-		if (Jungle->Enabled())
-		{
-			if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget() && Minion->IsJungleCreep())
-			{
-				if (Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
-				{
-					Vec3 vecCastPosition;
-					int iMinionsHit = 0;
-
-					Q->FindBestCastPosition(true, false, vecCastPosition, iMinionsHit);
-
-					if (Q->IsReady() && iMinionsHit >= 1) {
-						Q->CastOnPosition(vecCastPosition);
-					}
-				}
-				if (Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
-				{
-					E->CastOnTarget(Minion);
-				}
-
-			}
-		}
-	}
-}
 void Auto()
 {
 	if (HarassAuto->Enabled())
@@ -915,7 +887,6 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
 	{
 		Farm();
-		JungleClear();
 
 	}
 	if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
