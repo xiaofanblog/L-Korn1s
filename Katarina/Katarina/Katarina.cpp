@@ -21,6 +21,7 @@ IMenuOption* ComboRstack;
 
 IMenuOption* ComboRcancelks;
 IMenuOption* ComboRcancel;
+IMenuOption* ComboRcheck;
 
 
 IMenu* HarassMenu;
@@ -126,6 +127,7 @@ void Menu()
 		ComboRstack = ComboRset->AddFloat("X R Daggers to check damage", 1, 15, 8);
 		ComboRhit = ComboRset->AddFloat("R If Hits", 1, 5, 1);
 		ComboRcancel = ComboRset->CheckBox("Cancel R if no enemies", true);
+		ComboRcheck = ComboRset->AddFloat("Dont waste R if Enemy HP lower than", 0, 500, 100);
 		ComboRcancelks = ComboRset->CheckBox("Cancel R for KS", true);
 
 
@@ -780,7 +782,7 @@ void Combo()
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range() - 100);
 		if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 		{
-			if (ComboRalways->Enabled())
+			if (ComboRalways->Enabled() && target->GetHealth() > ComboRcheck->GetFloat())
 			{
 				R->CastOnPlayer();
 				hello = GGame->TickCount() + 100;
@@ -788,7 +790,7 @@ void Combo()
 			if (ComboRkill->Enabled() && ComboRhit->GetFloat() <= CountEnemy(GEntityList->Player()->GetPosition(), R->Range()))
 			{
 				auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotR);
-				if ((RDamage * ComboRstack->GetFloat()) >= target->GetHealth())
+				if ((RDamage * ComboRstack->GetFloat()) >= target->GetHealth() && target->GetHealth() > ComboRcheck->GetFloat())
 				{
 					R->CastOnPlayer();
 					hello = GGame->TickCount() + 100;
