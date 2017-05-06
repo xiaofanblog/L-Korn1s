@@ -17,6 +17,9 @@
 #include "Lux.h"
 #include "MalachitePred.h"
 #include "VelKoz.h"
+#include "Nautilus.h"
+#include "Taric.h"
+#include "Rakan.h"
 PluginSetup("Support AIO by Kornis");
 
 class zHero
@@ -1273,7 +1276,7 @@ public:
 		VelKozBase().AutoE();
 		VelKozBase().AAdisable();
 		VelKozBase().autoQ();
-		VelKozBase().setQ();
+		//VelKozBase().setQ();
 		VelKozBase().Killsteal();
 		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
@@ -1340,6 +1343,248 @@ private:
 	}
 };
 
+class Nautilus : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		NautilusBase().DrawMenu();
+		NautilusBase().LoadSpells();
+	}
+
+	void OnRender() override
+	{
+		NautilusBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			NautilusBase().Combo();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			NautilusBase().Farm();
+		}
+
+		if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
+		{
+			NautilusBase().Harass();
+		}
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+		NautilusBase().AntiGapclose(Args);
+	}
+
+
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+		NautilusBase().Interrupt(Args);
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+	}
+
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+	}
+
+	void OnCreateObject(IUnit* Source) override
+	{
+	
+	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+		
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+		//VelKozBase().OnUpdateChargedSpell(Slot, Position, ReleaseCast, TriggerEvent);
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Nautilus</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
+class Taric : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		TaricBase().DrawMenu();
+		TaricBase().LoadSpells();
+	}
+
+	void OnRender() override
+	{
+		TaricBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		TaricBase().QHeal();
+		TaricBase().AutoELogic();
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			TaricBase().Combo();
+		}
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+		TaricBase().AntiGapclose(Args);
+	}
+
+
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+		TaricBase().Interrupt(Args);
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+	}
+
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+	}
+
+	void OnCreateObject(IUnit* Source) override
+	{
+
+	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+		//VelKozBase().OnUpdateChargedSpell(Slot, Position, ReleaseCast, TriggerEvent);
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Taric</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
+class Rakan : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		RakanBase().DrawMenu();
+		RakanBase().LoadSpells();
+	}
+
+	void OnRender() override
+	{
+		RakanBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		RakanBase().AutoE();
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			RakanBase().Combo();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
+		{
+			RakanBase().Harass();
+		}
+	
+		if (GetAsyncKeyState(FleeKey->GetInteger()) & 0x8000)
+		{
+			RakanBase().Flee();
+		}
+		if (GetAsyncKeyState(ComboEgapclose->GetInteger()) & 0x8000)
+		{
+			RakanBase().Engage();
+		}
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+		RakanBase().AntiGapclose(Args);
+	}
+
+
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+		RakanBase().Interrupt(Args);
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+		
+	}
+
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+	}
+
+	void OnCreateObject(IUnit* Source) override
+	{
+
+	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+		//VelKozBase().OnUpdateChargedSpell(Slot, Position, ReleaseCast, TriggerEvent);
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Rakan</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
 zHero* yHero = nullptr;
 
 PLUGIN_EVENT(void) OnRender()
@@ -1438,6 +1683,12 @@ void LoadChampion()
 		yHero = new Lux;
 	else if (playerHero == "Velkoz")
 		yHero = new VelKoz;
+	else if (playerHero == "Nautilus")
+		yHero = new Nautilus;
+	else if (playerHero == "Taric")
+		yHero = new Taric;
+	else if (playerHero == "Rakan")
+		yHero = new Rakan;
 	else
 	{
 		GGame->PrintChat("<b><font color=\"#FFFFFF\">This champion isn't supported.</b></font>");
@@ -1501,6 +1752,33 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 			KarmaBase().AutoE();
 		});
 	}
+	if (playerHero == "Nautilus")
+	{
+		eventManager = PluginSDK->GetEventManager();
+		eventmanager::RegisterEvents(eventManager);
+		eventmanager::GameEventManager::RegisterUpdateEvent([&](event_id_t id) -> void
+		{
+			NautilusBase().AutoW();
+		});
+	}
+	if (playerHero == "Taric")
+	{
+		eventManager = PluginSDK->GetEventManager();
+		eventmanager::RegisterEvents(eventManager);
+		eventmanager::GameEventManager::RegisterUpdateEvent([&](event_id_t id) -> void
+		{
+			TaricBase().AutoW();
+		});
+	}
+	if (playerHero == "Rakan")
+	{
+		eventManager = PluginSDK->GetEventManager();
+		eventmanager::RegisterEvents(eventManager);
+		eventmanager::GameEventManager::RegisterUpdateEvent([&](event_id_t id) -> void
+		{
+			RakanBase().AutoE();
+		});
+	}
 	MalachitePredOnload();
 	
 
@@ -1527,6 +1805,10 @@ PLUGIN_API void OnUnload()
 	{
 		eventmanager::UnregisterEvents(eventManager);
 	}
+	if (playerHero == "Rakan")
+	{
+		eventmanager::UnregisterEvents(eventManager);
+	}
 	if (playerHero == "TahmKench")
 	{
 		eventmanager::UnregisterEvents(eventManager);
@@ -1536,6 +1818,14 @@ PLUGIN_API void OnUnload()
 		eventmanager::UnregisterEvents(eventManager);
 	}
 	if (playerHero == "Karma")
+	{
+		eventmanager::UnregisterEvents(eventManager);
+	}
+	if (playerHero == "Nautilus")
+	{
+		eventmanager::UnregisterEvents(eventManager);
+	}
+	if (playerHero == "Taric")
 	{
 		eventmanager::UnregisterEvents(eventManager);
 	}
