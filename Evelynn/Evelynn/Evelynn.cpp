@@ -25,6 +25,8 @@ IMenuOption* DrawRRange;
 
 IMenu* SmiteMenu;
 IMenuOption* SmiteUse;
+IMenuOption* SmiteE;
+IMenuOption* SmiteM;
 IMenuOption* SmiteKey;
 IMenuOption* SmiteDraw;
 IMenuOption* SmiteSave;
@@ -38,6 +40,7 @@ IMenu* KillstealMenu;
 IMenuOption* KSQ;
 IMenuOption* KSR;
 IMenuOption* KSE;
+IMenuOption* Semikey;
 
 IInventoryItem* Gunblade;
 IInventoryItem* Cutlass;
@@ -82,7 +85,7 @@ void Menu()
 		ComboR = ComboMenu->CheckBox("Use R in Combo", true);
 		ComboRmin = ComboMenu->AddInteger("Use R if enemies X >",1,5,2);
 		ItemsCombo = ComboMenu->CheckBox("Use Items", true);
-
+		Semikey = ComboMenu->AddKey("Semi R", 'T');
 	}
 	HarassMenu = MainMenu->AddMenu("Harass");
 	{
@@ -98,7 +101,7 @@ void Menu()
 	}
 	FarmMenu = MainMenu->AddMenu("Farming");
 	{
-		FarmMana = FarmMenu->AddInteger("Mana percent for clear", 10, 100, 50);
+		FarmMana = FarmMenu->AddInteger("Mana percent for clear", 0, 100, 50);
 		FarmQ = FarmMenu->CheckBox("Lane Clear with Q", true);
 		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
 	}
@@ -112,6 +115,8 @@ void Menu()
 	SmiteMenu = MainMenu->AddMenu("Smite menu");
 	{
 		SmiteUse = SmiteMenu->CheckBox("Use Smite", true);
+		SmiteE = SmiteMenu->CheckBox("Smite Enemies", true);
+		SmiteM = SmiteMenu->CheckBox("Smite Jungle", true);
 		SmiteSave = SmiteMenu->CheckBox("Save Smite 1 stack", true);
 		SmiteKey = SmiteMenu->AddKey("Smite toggle", 'M');
 		SmiteDraw = SmiteMenu->CheckBox("Use Draw", true);
@@ -143,15 +148,18 @@ void CheckKeyPresses()
 }
 void AutoSmite() //REMBRANDT
 {
-	if (Smite != nullptr && Smite->IsReady() && SmiteUse->Enabled()) {
-		auto minions = GEntityList->GetAllMinions(false, false, true);
-		for (IUnit* minion : minions)
-		{
-			if (strstr(minion->GetObjectName(), "Red") || strstr(minion->GetObjectName(), "Blue") || strstr(minion->GetObjectName(), "Dragon") || strstr(minion->GetObjectName(), "Rift") || strstr(minion->GetObjectName(), "Baron"))
+	if (SmiteM->Enabled())
+	{
+		if (Smite != nullptr && Smite->IsReady() && SmiteUse->Enabled()) {
+			auto minions = GEntityList->GetAllMinions(false, false, true);
+			for (IUnit* minion : minions)
 			{
-				if (minion != nullptr && !minion->IsDead() && minion->GetHealth() <= GDamage->GetSummonerSpellDamage(GEntityList->Player(), minion, kSummonerSpellSmite))
+				if (strstr(minion->GetObjectName(), "Red") || strstr(minion->GetObjectName(), "Blue") || strstr(minion->GetObjectName(), "Dragon") || strstr(minion->GetObjectName(), "Rift") || strstr(minion->GetObjectName(), "Baron"))
 				{
-					Smite->CastOnUnit(minion);
+					if (minion != nullptr && !minion->IsDead() && minion->GetHealth() <= GDamage->GetSummonerSpellDamage(GEntityList->Player(), minion, kSummonerSpellSmite))
+					{
+						Smite->CastOnUnit(minion);
+					}
 				}
 			}
 		}
@@ -179,24 +187,12 @@ int GetEnemiesInRange(float range)
 
 void Combo()
 {
-	if (Smite != nullptr && Smite->IsReady() && SmiteUse->Enabled())
+	if (SmiteE->Enabled())
 	{
-
-		if (!SmiteSave->Enabled())
+		if (Smite != nullptr && Smite->IsReady() && SmiteUse->Enabled())
 		{
-			if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
-			{
 
-				Smite->CastOnTarget(GTargetSelector->GetFocusedTarget());
-			}
-			else
-			{
-				Smite->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, 700));
-			}
-		}
-		if (SmiteSave->Enabled())
-		{
-			if (GEntityList->Player()->GetSpellBook()->GetAmmo(Smite->GetSlot()) == 2)
+			if (!SmiteSave->Enabled())
 			{
 				if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
 				{
@@ -206,6 +202,21 @@ void Combo()
 				else
 				{
 					Smite->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, 700));
+				}
+			}
+			if (SmiteSave->Enabled())
+			{
+				if (GEntityList->Player()->GetSpellBook()->GetAmmo(Smite->GetSlot()) == 2)
+				{
+					if (GTargetSelector->GetFocusedTarget() != nullptr && GTargetSelector->GetFocusedTarget()->IsValidTarget() && !(GTargetSelector->GetFocusedTarget()->IsDead()) && (GTargetSelector->GetFocusedTarget()->GetPosition() - GEntityList->Player()->GetPosition()).Length() < 500)
+					{
+
+						Smite->CastOnTarget(GTargetSelector->GetFocusedTarget());
+					}
+					else
+					{
+						Smite->CastOnTarget(GTargetSelector->FindTarget(QuickestKill, PhysicalDamage, 700));
+					}
 				}
 			}
 		}
@@ -278,7 +289,19 @@ void Combo()
 	}
 }
 
-
+void Semi()
+{
+	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
+	{
+		for (auto Enemy : GEntityList->GetAllHeros(false, true))
+		{
+			if (!Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), R->Range()) && Enemy != nullptr && Enemy->IsValidTarget() && Enemy->IsHero() && !Enemy->IsDead())
+			{
+				R->CastOnTarget(Enemy);
+			}
+		}
+	}
+}
 
 
 
@@ -359,6 +382,10 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
 	{
 		Mixed();
+	}
+	if (GetAsyncKeyState(Semikey->GetInteger()))
+	{
+		Semi();
 	}
 	AutoSmite();
 	CheckKeyPresses();
