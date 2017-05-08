@@ -1,6 +1,6 @@
 #include "PluginSDK.h"
 #include <string>
-#include "SimpleLib.h"
+#include "Rembrandt.h"
 
 PluginSetup("Xerath by Kornis")
 
@@ -15,6 +15,15 @@ IMenu* ComboR;
 IMenuOption* ComboRAut;
 IMenuOption* ComboRTap;
 IMenuOption* ComboRTapa;
+IMenu* RCustom;
+IMenuOption* DelEn;
+IMenuOption* R1;
+IMenuOption* R2;
+IMenuOption* R3;
+IMenuOption* R4;
+IMenuOption* R5;
+IMenuOption* SemiE;
+
 
 
 IMenu* HarassMenu;
@@ -67,6 +76,8 @@ int lastqcast;
 int LastPingTime2 = 0.f;
 
 
+int helalmoney;
+
 void LoadSpells()
 {
 	Q = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, false, false, kCollidesWithNothing);
@@ -75,7 +86,7 @@ void LoadSpells()
 	W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, true, false, kCollidesWithNothing);
 	W->SetSkillshot(0.2f, 100, FLT_MAX, 1100);
 	E = GPluginSDK->CreateSpell2(kSlotE, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall | kCollidesWithMinions));
-	E->SetSkillshot(0.f, 60, 1400, 950);
+	E->SetSkillshot(0.25f, 70, 2000, 1050);
 	R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, true, false, kCollidesWithNothing);
 	R->SetOverrideDelay(0.2);
 	R->SetOverrideRadius(130);
@@ -94,6 +105,13 @@ void Menu()
 		ComboRTap = ComboR->CheckBox("Use charges on Tap", true);
 		ComboRTapa = ComboR->AddKey("Tap key:", 'T');
 		pingonks = ComboR->CheckBox("Ping on Killable with R", true);
+		RCustom = ComboR->AddMenu("R Custom Delays");
+		DelEn = RCustom->CheckBox("Enable Custom Delays", false);
+		R1 = RCustom->AddFloat("R1 Delay: ", 0, 1500, 300);
+		R2 = RCustom->AddFloat("R2 Delay: ", 0, 1500, 300);
+		R3 = RCustom->AddFloat("R3 Delay: ", 0, 1500, 300);
+		R4 = RCustom->AddFloat("R4 Delays: ", 0, 1500, 300);
+		R5 = RCustom->AddFloat("R5 Delay: ", 0, 1500, 300);
 
 
 
@@ -119,11 +137,13 @@ void Menu()
 		AntiGap = MiscMenu->CheckBox("AntiGapclose E", true);
 		IntSpells = MiscMenu->CheckBox("Interrupt spells with E", true);
 		AutoELogica = MiscMenu->CheckBox("Use E on CC", true);
+		SemiE = MiscMenu->AddKey("Semi E", 'Z');
 
 	}
 	FarmMenu = MainMenu->AddMenu("Farm.");
 	{
 		FarmMana = FarmMenu->AddInteger("Mana Percent", 10, 100, 50);
+		FarmQ = FarmMenu->CheckBox("Use Q ", true);
 		FarmW = FarmMenu->CheckBox("Use W", true);
 		FarmWmin = FarmMenu->AddInteger("Min minions for W", 1, 6, 3);
 
@@ -132,6 +152,24 @@ void Menu()
 	{
 		SemiQkey = Tip->AddKey("Semi Q Key", 'G');
 		ForceQ = Tip->CheckBox("Use Semi Q", true);
+	}
+}
+void Semi()
+{
+	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
+	{
+		for (auto Enemy : GEntityList->GetAllHeros(false, true))
+		{
+			if (!Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && Enemy != nullptr && Enemy->IsValidTarget() && Enemy->IsHero() && !Enemy->IsDead())
+			{
+				AdvPredictionOutput outputfam;
+				E->RunPrediction(Enemy, false, kCollidesWithMinions, &outputfam);
+				if (outputfam.HitChance >= kHitChanceHigh)
+				{
+					E->CastOnTarget(Enemy);
+				}
+			}
+		}
 	}
 }
 
@@ -162,6 +200,23 @@ void PingKS()
 		}
 	}
 }
+static int GetMinionsQ(float range)
+{
+	auto minions = GEntityList->GetAllMinions(false, true, true);
+	auto minionsInRange = 0;
+	for (auto minion : minions)
+	{
+		if (minion != nullptr && minion->IsValidTarget() && minion->IsEnemy(GEntityList->Player()) && !minion->IsDead())
+		{
+			auto minionDistance = (minion->GetPosition() - GEntityList->Player()->GetPosition()).Length2D();
+			if (minionDistance < range)
+			{
+				minionsInRange++;
+			}
+		}
+	}
+	return minionsInRange;
+}
 
 void Farm()
 {
@@ -169,24 +224,73 @@ void Farm()
 	{
 		for (auto Minion : GEntityList->GetAllMinions(false, true, false))
 		{
-			if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && Minion->IsCreep())
+			if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && (Minion->IsCreep() || Minion->IsJungleCreep()))
 			{
-				if (FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range()))
+				Vec3 pos;
+				int hit;
+				if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget())
 				{
-					
-					Vec3 pos;
-					int hit;
-					GPrediction->FindBestCastPosition(W->Range(), 200, false, true, false, pos, hit);
-					if (hit >= FarmWmin->GetInteger())
-						W->CastOnPosition(pos);
-					
+				if (Player->HasBuff("XerathArcanopulseChargeUp"))
+				{
+					if (Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+					{
+						if (Q->GetChargePercent() > 30)
+						{
+							std::vector<Vec3> CastPos;
+							CastPos.push_back(GEntityList->Player()->GetPosition());
+							FarmLocation Farmlocation;
+							Rembrandt::FindBestLineCastPosition(CastPos, Q->Range(), Q->Range(), 150, false, true, true, Farmlocation);
+							if (FarmQ->Enabled())
+							{
+								if (Farmlocation.HitCount > 1)
+								{
+									Q->CastOnPosition(Farmlocation.CastPosition);
+								}
+							}
+
+						}
+					}
 				}
-				
+				if (!Player->HasBuff("XerathArcanopulseChargeUp"))
+				{
+					if (Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+					{
+						if (GetMinionsQ(Q->Range()) > 1)
+						{
+							std::vector<Vec3> CastPos;
+							CastPos.push_back(GEntityList->Player()->GetPosition());
+							FarmLocation Farmlocation;
+							Rembrandt::FindBestLineCastPosition(CastPos, Q->Range(), Q->Range(), Q->Radius(), false, true, true, Farmlocation);
+							if (FarmQ->Enabled())
+							{
+								Q->StartCharging(Farmlocation.CastPosition);
+							}
+						}
+					}
+					}
+					if (FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+
+						Vec3 pos;
+						int hit;
+						if (GetMinionsQ(W->Range()) < 7 && Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && Minion->IsValidTarget(GEntityList->Player(), W->Range()))
+						{
+							GPrediction->FindBestCastPosition(W->Range(), 200, false, true, false, pos, hit);
+							W->CastOnPosition(pos);
+						}
+						if (GetMinionsQ(W->Range()) > 7 && Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && Minion->IsValidTarget(GEntityList->Player(), W->Range()))
+						{
+							W->CastOnUnit(Minion);
+						}
+
+					}
+
+				}
 			}
 		}
 	}
-}
 
+}
 int GetEnemiesInRange(float range)
 {
 	auto enemies = GEntityList->GetAllHeros(false, true);
@@ -221,20 +325,401 @@ bool CastingR()
 
 void RCastAuto()
 {
-	if (ComboRAut->Enabled()) {
+	if (!DelEn->Enabled())
+	{
+		if (ComboRAut->Enabled()) {
 
+			if (GEntityList->Player()->GetSpellLevel(kSlotR) == 1)
+			{
+				if (CastingR() == true)
+				{
+					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+					if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+						R->CastOnPosition(pred);
+
+
+					}
+				}
+			}
+
+
+			if (GEntityList->Player()->GetSpellLevel(kSlotR) == 2)
+			{
+
+				if (CastingR() == true)
+				{
+					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 4400);
+					if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+						R->CastOnPosition(pred);
+					}
+				}
+			}
+			if (GEntityList->Player()->GetSpellLevel(kSlotR) == 3)
+			{
+				if (CastingR() == true)
+				{
+					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 5600);
+					if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+						R->CastOnPosition(pred);
+					}
+				}
+			}
+		}
+	}
+	if (DelEn->Enabled())
+	{
+		if (ComboRAut->Enabled())
+		{
+			if (GEntityList->Player()->GetSpellLevel(kSlotR) == 1)
+			{
+				if (CastingR() == true)
+				{
+					if (GEntityList->Player()->GetBuffCount("xerathrshots") == 3)
+					{
+						if (GGame->TickCount() - helalmoney > R1->GetFloat())
+						{
+
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+							if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								R->CastOnPosition(pred);
+
+
+							}
+
+						}
+					}
+					if (GEntityList->Player()->GetBuffCount("xerathrshots") == 2)
+					{
+						if (GGame->TickCount() - helalmoney > R2->GetFloat())
+						{
+
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+							if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								R->CastOnPosition(pred);
+
+
+							}
+
+						}
+					}
+					if (GEntityList->Player()->GetBuffCount("xerathrshots") == 1)
+					{
+						if (GGame->TickCount() - helalmoney > R3->GetFloat())
+						{
+
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+							if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								R->CastOnPosition(pred);
+
+
+							}
+
+						}
+					}
+				}
+			}
+
+
+			if (GEntityList->Player()->GetSpellLevel(kSlotR) == 2)
+			{
+
+				if (CastingR() == true)
+				{
+					if (GEntityList->Player()->GetBuffCount("xerathrshots") == 4)
+					{
+						if (GGame->TickCount() - helalmoney > R1->GetFloat())
+						{
+
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+							if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								R->CastOnPosition(pred);
+
+
+							}
+
+						}
+					}
+					if (GEntityList->Player()->GetBuffCount("xerathrshots") == 3)
+					{
+						if (GGame->TickCount() - helalmoney > R2->GetFloat())
+						{
+
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+							if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								R->CastOnPosition(pred);
+
+
+							}
+
+						}
+					}
+					if (GEntityList->Player()->GetBuffCount("xerathrshots") == 2)
+					{
+						if (GGame->TickCount() - helalmoney > R3->GetFloat())
+						{
+
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+							if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								R->CastOnPosition(pred);
+
+
+							}
+
+						}
+					}
+					if (GEntityList->Player()->GetBuffCount("xerathrshots") == 1)
+					{
+						if (GGame->TickCount() - helalmoney > R4->GetFloat())
+						{
+
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+							if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								R->CastOnPosition(pred);
+
+
+							}
+
+						}
+					}
+				}
+			}
+			if (GEntityList->Player()->GetSpellLevel(kSlotR) == 3)
+			{
+				if (CastingR() == true)
+				{
+					if (GEntityList->Player()->GetBuffCount("xerathrshots") == 5)
+					{
+						if (GGame->TickCount() - helalmoney > R1->GetFloat())
+						{
+
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+							if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								R->CastOnPosition(pred);
+
+
+							}
+
+						}
+					}
+					if (GEntityList->Player()->GetBuffCount("xerathrshots") == 4)
+					{
+						if (GGame->TickCount() - helalmoney > R2->GetFloat())
+						{
+
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+							if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								R->CastOnPosition(pred);
+
+
+							}
+
+						}
+					}
+					if (GEntityList->Player()->GetBuffCount("xerathrshots") == 3)
+					{
+						if (GGame->TickCount() - helalmoney > R3->GetFloat())
+						{
+
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+							if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								R->CastOnPosition(pred);
+
+
+							}
+
+						}
+					}
+					if (GEntityList->Player()->GetBuffCount("xerathrshots") == 2)
+					{
+						if (GGame->TickCount() - helalmoney > R4->GetFloat())
+						{
+
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+							if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								R->CastOnPosition(pred);
+
+
+							}
+
+						}
+					}
+					if (GEntityList->Player()->GetBuffCount("xerathrshots") == 1)
+					{
+						if (GGame->TickCount() - helalmoney > R5->GetFloat())
+						{
+
+							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+							if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								R->CastOnPosition(pred);
+
+
+							}
+
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void RCastTapo()
+{
+	if (!DelEn->Enabled())
+	{
 		if (GEntityList->Player()->GetSpellLevel(kSlotR) == 1)
 		{
 			if (CastingR() == true)
 			{
-				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
-				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+				if (ComboRTap->Enabled())
 				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-					R->CastOnPosition(pred);
-					
 
+					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+					if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+						R->CastOnPosition(pred);
+					}
+				}
+			}
+		}
+		if (GEntityList->Player()->GetSpellLevel(kSlotR) == 2)
+		{
+			if (CastingR() == true)
+			{
+				if (ComboRTap->Enabled())
+				{
+
+					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 4400);
+					if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+						R->CastOnPosition(pred);
+					}
+				}
+			}
+		}
+		if (GEntityList->Player()->GetSpellLevel(kSlotR) == 3)
+		{
+			if (CastingR() == true)
+			{
+				if (ComboRTap->Enabled())
+				{
+
+					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 5600);
+					if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+						R->CastOnPosition(pred);
+					}
+				}
+			}
+		}
+	}
+	if (DelEn->Enabled())
+	{
+		if (GEntityList->Player()->GetSpellLevel(kSlotR) == 1)
+		{
+			if (CastingR() == true)
+			{
+				if (GEntityList->Player()->GetBuffCount("xerathrshots") == 3)
+				{
+					if (GGame->TickCount() - helalmoney > R1->GetFloat())
+					{
+
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+							R->CastOnPosition(pred);
+
+
+						}
+
+					}
+				}
+				if (GEntityList->Player()->GetBuffCount("xerathrshots") == 2)
+				{
+					if (GGame->TickCount() - helalmoney > R2->GetFloat())
+					{
+
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+							R->CastOnPosition(pred);
+
+
+						}
+
+					}
+				}
+				if (GEntityList->Player()->GetBuffCount("xerathrshots") == 1)
+				{
+					if (GGame->TickCount() - helalmoney > R3->GetFloat())
+					{
+
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+							R->CastOnPosition(pred);
+
+
+						}
+
+					}
 				}
 			}
 		}
@@ -245,12 +730,73 @@ void RCastAuto()
 
 			if (CastingR() == true)
 			{
-				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 4400);
-				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+				if (GEntityList->Player()->GetBuffCount("xerathrshots") == 4)
 				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-					R->CastOnPosition(pred);
+					if (GGame->TickCount() - helalmoney > R1->GetFloat())
+					{
+
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+							R->CastOnPosition(pred);
+
+
+						}
+
+					}
+				}
+				if (GEntityList->Player()->GetBuffCount("xerathrshots") == 3)
+				{
+					if (GGame->TickCount() - helalmoney > R2->GetFloat())
+					{
+
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+							R->CastOnPosition(pred);
+
+
+						}
+
+					}
+				}
+				if (GEntityList->Player()->GetBuffCount("xerathrshots") == 2)
+				{
+					if (GGame->TickCount() - helalmoney > R3->GetFloat())
+					{
+
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+							R->CastOnPosition(pred);
+
+
+						}
+
+					}
+				}
+				if (GEntityList->Player()->GetBuffCount("xerathrshots") == 1)
+				{
+					if (GGame->TickCount() - helalmoney > R4->GetFloat())
+					{
+
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+							R->CastOnPosition(pred);
+
+
+						}
+
+					}
 				}
 			}
 		}
@@ -258,67 +804,90 @@ void RCastAuto()
 		{
 			if (CastingR() == true)
 			{
-				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 5600);
-				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+				if (GEntityList->Player()->GetBuffCount("xerathrshots") == 5)
 				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-					R->CastOnPosition(pred);
+					if (GGame->TickCount() - helalmoney > R1->GetFloat())
+					{
+
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+							R->CastOnPosition(pred);
+
+
+						}
+
+					}
 				}
-			}
-		}
-	}
-}
-
-void RCastTapo()
-{
-	if (GEntityList->Player()->GetSpellLevel(kSlotR) == 1)
-	{
-		if (CastingR() == true)
-		{
-			if (ComboRTap->Enabled())
-			{
-
-				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
-				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+				if (GEntityList->Player()->GetBuffCount("xerathrshots") == 4)
 				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-					R->CastOnPosition(pred);
+					if (GGame->TickCount() - helalmoney > R2->GetFloat())
+					{
+
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+							R->CastOnPosition(pred);
+
+
+						}
+
+					}
 				}
-			}
-		}
-	}
-	if (GEntityList->Player()->GetSpellLevel(kSlotR) == 2)
-	{
-		if (CastingR() == true)
-		{
-			if (ComboRTap->Enabled())
-			{
-
-				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 4400);
-				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+				if (GEntityList->Player()->GetBuffCount("xerathrshots") == 3)
 				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-					R->CastOnPosition(pred);
+					if (GGame->TickCount() - helalmoney > R3->GetFloat())
+					{
+
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+							R->CastOnPosition(pred);
+
+
+						}
+
+					}
 				}
-			}
-		}
-	}
-	if (GEntityList->Player()->GetSpellLevel(kSlotR) == 3)
-	{
-		if (CastingR() == true)
-		{
-			if (ComboRTap->Enabled())
-			{
-
-				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 5600);
-				if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+				if (GEntityList->Player()->GetBuffCount("xerathrshots") == 2)
 				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-					R->CastOnPosition(pred);
+					if (GGame->TickCount() - helalmoney > R4->GetFloat())
+					{
+
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+							R->CastOnPosition(pred);
+
+
+						}
+
+					}
+				}
+				if (GEntityList->Player()->GetBuffCount("xerathrshots") == 1)
+				{
+					if (GGame->TickCount() - helalmoney > R5->GetFloat())
+					{
+
+						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
+						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+							R->CastOnPosition(pred);
+
+
+						}
+
+					}
 				}
 			}
 		}
@@ -521,12 +1090,15 @@ void AutoELogic()
 
 PLUGIN_EVENT(void) OnGapCloser(GapCloserSpell const& Args)
 {
-	if (Args.Sender != GEntityList->Player()
-		&& Args.Sender->IsEnemy(GEntityList->Player())
-		&& GEntityList->Player()->IsValidTarget(Args.Sender, E->Range() + Args.Sender->BoundingRadius())
+	if (Args.Source != nullptr && Args.Source != GEntityList->Player()
+		&& Args.Source->IsEnemy(GEntityList->Player())
 		&& AntiGap->Enabled() && E->IsReady())
 	{
-		E->CastOnTarget(Args.Sender);
+		if ((Args.EndPosition - GEntityList->Player()->GetPosition()).Length() < E->Range())
+		{
+			E->CastOnTarget(Args.Source);
+		}
+
 	}
 }
 
@@ -555,6 +1127,10 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		ForcingQ();
 	}
+	if (GetAsyncKeyState(SemiE->GetInteger()) & 0x8000)
+	{
+		Semi();
+	}
 	RCastAuto();
 	AutoELogic();
 	PingKS();
@@ -563,9 +1139,9 @@ PLUGIN_EVENT(void) OnGameUpdate()
 
 PLUGIN_EVENT(void) OnInterruptible(InterruptibleSpell const& Args)
 {
-	if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, E->Range()) && IntSpells->Enabled() && E->IsReady())
+	if (Args.Source != nullptr && IntSpells->Enabled() && (Args.Source->GetPosition() - GEntityList->Player()->GetPosition()).Length() < E->Range() && E->IsReady() && Args.Source->IsValidTarget())
 	{
-		E->CastOnTarget(Args.Target);
+		E->CastOnTarget(Args.Source);
 	}
 }
 
@@ -588,6 +1164,18 @@ PLUGIN_EVENT(void) OnRender()
 	if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()); }
 }
 
+PLUGIN_EVENT(void) OnSpellCast(CastedSpell const& Args)
+{
+	if (Args.Caster_ == GEntityList->Player())
+	{
+
+		if (std::string(Args.Name_) == "XerathRMissileWrapper")
+		{
+			helalmoney = GGame->TickCount();
+			
+		}
+	}
+}
 
 PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 {
@@ -601,7 +1189,8 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnGapCloser, OnGapCloser);
 	GEventManager->AddEventHandler(kEventOnInterruptible, OnInterruptible);
 	GGame->PrintChat("<b><font color=\"#FFFFFF\">Xerath<b><font color=\"#f8a101\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
-	GGame->PrintChat("<b><font color=\"#7FFF00\">Use SPred for Best Experience!</font></b>");
+	GGame->PrintChat("<b><font color=\"#f8a101\">Version: <b><font color=\"#FFFFFF\">0.2</font></b>");
+	GEventManager->AddEventHandler(kEventOnSpellCast, OnSpellCast);
 
 }
 
@@ -612,5 +1201,6 @@ PLUGIN_API void OnUnload()
 	GEventManager->RemoveEventHandler(kEventOnRender, OnRender);
 	GEventManager->RemoveEventHandler(kEventOnGapCloser, OnGapCloser);
 	GEventManager->RemoveEventHandler(kEventOnInterruptible, OnInterruptible);
+	GEventManager->RemoveEventHandler(kEventOnSpellCast, OnSpellCast);
 	GGame->PrintChat("<b><font color=\"#FFFFFF\">Xerath<b><font color=\"#f8a101\"> by</font></b> Kornis<font color=\"#FF0000\"> - Unloaded</font></b>");
 }
