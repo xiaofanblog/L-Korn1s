@@ -1,6 +1,55 @@
 #ifndef LPPConstants_h__
 #define LPPConstants_h__
 
+enum eGameObjectClassId
+{
+	kNeutralMinionCamp = 0,
+	kFollowerObject = 1,
+	kFollowerObjectWithLerpMovement = 2,
+	kAIHeroClient = 3,
+	kobj_AI_Marker = 4,
+	kobj_AI_Minion = 5,
+	kLevelPropAI = 6,
+	kobj_AI_Turret = 7,
+	kobj_AI_Base = 8,
+	kobj_GeneralParticleEmitter = 9,
+	kMissileClient = 10,
+	kDrawFX = 11,
+	kUnrevealedTarget = 12,
+	kobj_Barracks = 13,
+	kobj_BarracksDampener = 14,
+	kobj_Lake = 15,
+	kobj_AnimatedBuilding = 16,
+	kobj_Building = 17,
+	kobj_Levelsizer = 18,
+	kobj_NavPoint = 19,
+	kobj_SpawnPoint = 20,
+	kobj_LampBulb = 21,
+	kGrassObject = 22,
+	kobj_HQ = 23,
+	kobj_InfoPoint = 24,
+	kLevelPropGameObject = 25,
+	kLevelPropSpawnerPoint = 26,
+	kobj_Shop = 27,
+	kobj_Turret = 18
+};
+
+enum eTeleportType
+{
+	Teleport_Teleport,
+	Teleport_Recall,
+	Teleport_Shen,
+	Teleport_TwistedFate,
+	Teleport_Unknown
+};
+
+enum eTeleportStatus
+{
+	Teleport_Start,
+	Teleport_Abort,
+	Teleport_Finish
+};
+
 enum eDamageItems
 {
 	kHexgun,
@@ -96,12 +145,17 @@ enum GameObjectCharacterState
 
 enum eSpellState
 {
-	Ready = 0,
-	NotLearned = (1 << 2),
-	DisabledOne = (1 << 3),
-	DisabledTwo = (1 << 4),
-	Cooldown = (1 << 5),
-	NoMana = (1 << 6),
+	Ready = 0,		// 0 Spell is ready but should also be AND'd by UnableToCast for a full check
+	NotReady = (1 << 1), // 2 (Unsure, spell is not ready)
+	NotLearned = (1 << 2), // 4 (Spell has not been leveled yet)
+	Supressed = (1 << 3), // 8 (You are being supressed)
+	Unknown16 = (1 << 4), // 16 (Unsure, used in UnableToCast flags)
+	Cooldown = (1 << 5), // 32 (Spell is on CD)
+	NoMana = (1 << 6), // 64 (You do not have enough mana to cast the spell)
+	Unknown128 = (1 << 7), // 128 (Unsure, used in UnableToCast flags)
+
+						   // if (Spell.Flags == 0 || !(Spell.Flags & UnableToCast)) { Spell.Ready = true; }
+						   UnableToCast = (Unknown128 | Cooldown | NotLearned | NotReady)
 };
 
 enum eUnitTeam
@@ -188,7 +242,10 @@ enum eLeagueEvents
 	kEventOnExitVisible,
 	kEventOnUpdateChargedSpell,
 	kEventOnPlayAnimation,
-	kEventOnPauseAnimation
+	kEventOnPauseAnimation,
+	kEventOnJungleNotification,
+	kEventOnNewPath,
+	kEventOnTeleport
 };
 
 enum eTargetPriority
@@ -196,7 +253,12 @@ enum eTargetPriority
 	QuickestKill,				/* Prioritize the quickest kill based on damage type */
 	ClosestPriority,			/* Prioritize based on distance */
 	ClosestToCursorPriority,	/* Prioritize based on distance from cursor */
-	LowestHealthPriority		/* Prioritize based on lowest health */
+	LowestHealthPriority,		/* Prioritize based on lowest health */
+	MostStacks,					/* Prioritizes based on most stacks (e.g Vayne W, Twitch passive, etc.) */
+	MostAD,						/* Prioritizes based on highest AD */
+	MostAP,						/* Prioritizes based on highest AP */
+	LeastAttacks,				/* Prioritizes based on least number of physical damage attacks to kill */
+	LeastCasts,					/* Prioritizes based on least number of spell cast attacks to kill */
 };
 
 enum eDamageType
@@ -256,45 +318,6 @@ enum eOrbwalkingMode
 	kModeFreeze,
 	kModeCustom,
 	kModeNone
-};
-
-enum eGameUnitClass
-{
-	kClassUnknown,
-	kNeutralMinionCamp,
-	kObj_AI_Base,
-	kFollowerObject,
-	kFollowerObjectWithLerpMovement,
-	kObj_AI_Hero,
-	kObj_AI_Marker,
-	kObj_AI_Minion,
-	kLevelPropAI,
-	kObj_AI_Turret,
-	kObj_GeneralParticleEmitter,
-	kObj_SpellChainMissile,
-	kObj_SpellCircleMissile,
-	kObj_SpellLineMissile,
-	kObj_SpellMissile,
-	kMissile,
-	kMissileClient,
-	kDrawFX,
-	kUnrevealedTarget,
-	kObj_LampBulb,
-	kObj_Barracks,
-	kObj_BarracksDampener,
-	kObj_AnimatedBuilding,
-	kObj_Building,
-	kObj_Levelsizer,
-	kObj_NavPoint,
-	kObj_SpawnPoint,
-	kObj_Lake,
-	kObj_HQ,
-	kObj_InfoPoint,
-	kLevelPropGameObject,
-	kLevelPropSpawnerPoint,
-	kObj_Shop,
-	kObj_Turret,
-	kGrassObject
 };
 
 enum ePingCategory
