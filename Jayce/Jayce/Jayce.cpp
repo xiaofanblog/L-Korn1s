@@ -12,6 +12,7 @@ IMenu* Qset;
 IMenu* Wset;
 IMenu* Eset;
 IMenuOption* ComboQM;
+IMenuOption* ComboWWait;
 IMenuOption* ComboQAOE;
 IMenuOption* ComboWM;
 IMenuOption* ComboEM;
@@ -154,10 +155,11 @@ void Menu()
 		Wset = ComboMenu->AddMenu("W Settings");
 		ComboWM = Wset->CheckBox("Use W Melee", true);
 		ComboWR = Wset->CheckBox("Use W Ranged", true);
+		ComboWWait= Wset->CheckBox("Wait for Ranged W to end", true);
 		Eset = ComboMenu->AddMenu("E Settings");
 		ComboEM = Eset->CheckBox("Use E Melee", true);
 		ComboER = Eset->CheckBox("Use E Ranged", true);
-		ComboModeE = Eset->AddSelection("E Mode", 1, { "Use E Melee only for KS", "Use E Melee only if Killable Combo", "Always" });
+		ComboModeE = Eset->AddSelection("E Mode", 2, { "Use E Melee only for KS", "Use E Melee only if Killable Combo", "Always" });
 		//ComboEKill = Eset->CheckBox("Use E Melee only for KS", true);
 		//ComboEKillcombo = Eset->CheckBox("Use E Melee only if Killable Combo", true);
 		ComboESemi = Eset->CheckBox("Use E on Q", true);
@@ -690,15 +692,34 @@ void Combo()
 
 			if (target != nullptr && target->IsValidTarget(GEntityList->Player(), 1200) && ComboR->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 			{
-				if (target->IsValidTarget(GEntityList->Player(), Q->Range()) && !GEntityList->Player()->HasBuff("jaycestancehammer") && !W->IsReady() && !GEntityList->Player()->HasBuff("JayceHyperCharge"))
+				if (target->IsValidTarget(GEntityList->Player(), Q->Range()) && !GEntityList->Player()->HasBuff("jaycestancehammer"))
 				{
-					if (qdelay - GGame->Time() < 1)
+					if (ComboWWait->Enabled())
 					{
-						R->CastOnPlayer();
+						if (!W->IsReady() && !GEntityList->Player()->HasBuff("JayceHyperCharge"))
+						{
+
+							if (qdelay - GGame->Time() < 1)
+							{
+								R->CastOnPlayer();
+							}
+							if (qdelay - GGame->Time() > 1 && target->IsValidTarget(GEntityList->Player(), 200))
+							{
+								R->CastOnPlayer();
+							}
+
+						}
 					}
-					if (qdelay - GGame->Time() > 1 && target->IsValidTarget(GEntityList->Player(), 200))
+					if (!ComboWWait->Enabled() && GEntityList->Player()->HasBuff("JayceHyperCharge"))
 					{
-						R->CastOnPlayer();
+						if (qdelay - GGame->Time() < 1)
+						{
+							R->CastOnPlayer();
+						}
+						if (qdelay - GGame->Time() > 1 && target->IsValidTarget(GEntityList->Player(), 200))
+						{
+							R->CastOnPlayer();
+						}
 					}
 				}
 				if (GEntityList->Player()->HasBuff("jaycestancehammer") && !Q->IsReady() && !W->IsReady())
