@@ -189,7 +189,7 @@ public:
 								return;
 							if (ShieldKill->Enabled())
 							{
-								if (tracker.getIncomingDamage(ally) >= GEntityList->Player()->GetHealth())
+								if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
 								{
 									E->CastOnPlayer();
 								}
@@ -219,7 +219,7 @@ public:
 							return;
 						if (ShieldKill->Enabled())
 						{
-							if (tracker.getIncomingDamage(ally) >= GEntityList->Player()->GetHealth())
+							if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
 							{
 								E->CastOnPlayer();
 							}

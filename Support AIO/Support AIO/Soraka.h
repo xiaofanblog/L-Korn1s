@@ -174,7 +174,7 @@ public:
 	{
 		for (auto Ally : GEntityList->GetAllHeros(true, false))
 		{
-			if (Ally != GEntityList->Player())
+			if (Ally != GEntityList->Player() && !GEntityList->Player()->IsRecalling())
 			{
 				if (WHeal1 != nullptr && WHeal1->Enabled() && WHeal01->ChampionName() == Ally->ChampionName())
 				{

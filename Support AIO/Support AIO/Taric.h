@@ -405,9 +405,9 @@ public:
 								return;
 							if (ShieldKill->Enabled())
 							{
-								if (tracker.getIncomingDamage(ally) >= GEntityList->Player()->GetHealth())
+								if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
 								{
-									W->CastOnUnit(ally);
+									W->CastOnPlayer();
 								}
 							}
 						}
@@ -435,9 +435,9 @@ public:
 							return;
 						if (ShieldKill->Enabled())
 						{
-							if (tracker.getIncomingDamage(ally) >= GEntityList->Player()->GetHealth() && GEntityList->Player()->IsValidTarget(ally, W->Range()))
+							if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
 							{
-								W->CastOnUnit(ally);
+								W->CastOnPlayer();
 							}
 						}
 

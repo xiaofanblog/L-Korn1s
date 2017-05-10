@@ -25,9 +25,9 @@ public:
 			ShieldHP = ShieldMenu->AddFloat("Auto Shield if X HP", 1, 100, 50);
 			ShieldHPinc = ShieldMenu->AddFloat("Auto Shield if Inc. Damage Percent", 1, 100, 10);
 			ShieldInc = ShieldMenu->CheckBox("Auto Shield only Incoming Damage(sometimes not accurate)", true);
-			ShieldKill = ShieldMenu->CheckBox("Auto Shield if inc. damage will kill", true);
+		ShieldKill = ShieldMenu->CheckBox("Auto Shield if inc. damage will kill", true);
 			ShieldAA = ShieldMenu->CheckBox("Priority Allies over me", true);
-		}
+		}	
 
 		DrawingMenu = MainMenu->AddMenu("Drawings");
 		{
@@ -187,7 +187,7 @@ public:
 								return;
 							if (ShieldKill->Enabled())
 							{
-								if (tracker.getIncomingDamage(ally) >= GEntityList->Player()->GetHealth())
+								if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
 								{
 									E->CastOnPlayer();
 								}
@@ -217,7 +217,7 @@ public:
 							return;
 						if (ShieldKill->Enabled())
 						{
-							if (tracker.getIncomingDamage(ally) >= GEntityList->Player()->GetHealth())
+							if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
 							{
 								E->CastOnPlayer();
 							}
