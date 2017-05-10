@@ -12,6 +12,7 @@ IMenuOption* ComboW;
 IMenuOption* ComboWheal;
 IMenuOption* ComboWcc;
 IMenuOption* ComboE;
+IMenuOption* SemiE;
 IMenuOption* PriorityEcombo;
 IMenuOption* ComboItems;
 IMenuOption* ComboModeChange; 
@@ -80,7 +81,8 @@ void LoadSpells()
 	if (strstr(PlayerSum2, "SummonerSmite")) { Smite = GPluginSDK->CreateSpell2(kSummonerSlot2, kTargetCast, false, false, kCollidesWithNothing); }
 	Q = GPluginSDK->CreateSpell2(kSlotQ, kTargetCast, false, false, kCollidesWithNothing);
 	W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, kCollidesWithNothing);
-	E = GPluginSDK->CreateSpell2(kSlotE, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall, kCollidesWithMinions));
+	E = GPluginSDK->CreateSpell2(kSlotE, kLineCast, true, false, (kCollidesWithYasuoWall | kCollidesWithMinions));
+	E->SetSkillshot(0.25f, 100.f, 5000.f, 1000.f);
 	Q->SetOverrideRange(550);
 
 	Youmuus = GPluginSDK->CreateItemForId(3142, 0);
@@ -104,6 +106,7 @@ void Menu()
 		ComboModeChange = ComboMenu->AddKey("Priority change", 'T');
 		ComboItems = ComboMenu->CheckBox("Use Items", true);
 		ComboSmite = ComboMenu->CheckBox("Use Smite in combo", true);
+		SemiE = ComboMenu->AddKey("Semi E Key", 'G');
 
 
 	}
@@ -145,6 +148,20 @@ void Menu()
 	{
 		SkinChangeEnable = SkinMenu->CheckBox("Use Skin Changer", true);
 		SkinChange = SkinMenu->AddInteger("Skins", 1, 3, 3);
+	}
+}
+
+void Semi()
+{
+	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
+	{
+		for (auto Enemy : GEntityList->GetAllHeros(false, true))
+		{
+			if (!Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && Enemy != nullptr && Enemy->IsValidTarget() && Enemy->IsHero() && !Enemy->IsDead())
+			{
+				E->CastOnTarget(Enemy);
+			}
+		}
 	}
 }
 
@@ -558,6 +575,10 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
 	{
 		Mixed();
+	}
+	if (GetAsyncKeyState(SemiE->GetInteger()) & 0x8000)
+	{
+		Semi();
 	}
 	
 	AutoSmite();
