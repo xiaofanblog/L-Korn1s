@@ -31,7 +31,7 @@ IMenuOption* SemiR;
 IMenuOption* ComboRFacing;
 IMenuOption* LastEDelay;
 
-
+int fixmaybe;
 
 IMenu* HarassMenu;
 IMenuOption* HarassMana;
@@ -132,8 +132,8 @@ void Menu()
 		RMenu = ComboMenu->AddMenu("R Settings");
 		ComboREnable = RMenu->CheckBox("Use R in Combo", true);
 		ComboRkillable = RMenu->CheckBox("Only R if Killabe with Combo", true);
-		ComboRMin = RMenu->AddInteger("R if X enemies >=", 1, 5, 1);
-		ComboRHealth = RMenu->AddInteger("R if Target has Health % > ", 10, 100, 60);
+		ComboRMin = RMenu->AddInteger("R if X enemies", 1, 5, 1);
+		ComboRHealth = RMenu->AddInteger("R if Target has Health Percent ", 10, 100, 60);
 		ComboRRANGE = RMenu->AddInteger("R Range for usage", 125, 825, 750);
 		ComboRFacing = RMenu->CheckBox("Only R if FACING", true);
 		ComboRflash = ComboMenu->AddKey("R Flash", 'T');
@@ -360,53 +360,58 @@ void Combo()
 						auto distance = (Player->GetPosition() - Wtarget->GetPosition()).Length();
 						if (distance >= 400 && distance <= ComboWmax->GetFloat())
 						{
-							W->CastOnTarget(Wtarget, kHitChanceHigh);
-						}
-					}
-				}
-
-
-				if (!ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
-				{
-					if (Qtarget != nullptr)
-					{
-						{
-							AdvPredictionOutput outputfam;
-							Q->RunPrediction(Qtarget, false, kCollidesWithNothing, &outputfam);
-							if (outputfam.HitChance >= kHitChanceHigh)
+							if (W->CastOnTarget(Wtarget, kHitChanceHigh))
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
-								Q->CastOnPosition(pred);
-							}
-							else if (outputfam.HitChance == kHitChanceDashing)
-							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
-								Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								fixmaybe = GGame->TickCount() + 50;
 							}
 						}
 					}
 				}
-				if (ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
+
+				if (fixmaybe < GGame->TickCount())
 				{
-					if (Qtarget != nullptr)
+					if (!ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
 					{
-						if (!Qtarget->HasBuffOfType(BUFF_Poison))
+						if (Qtarget != nullptr)
 						{
-							AdvPredictionOutput outputfam;
-							Q->RunPrediction(Qtarget, false, kCollidesWithNothing, &outputfam);
-							if (outputfam.HitChance >= kHitChanceHigh)
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
-								Q->CastOnPosition(pred);
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Qtarget, false, kCollidesWithNothing, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+									Q->CastOnPosition(pred);
+								}
+								else if (outputfam.HitChance == kHitChanceDashing)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+									Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								}
 							}
-							else if (outputfam.HitChance == kHitChanceDashing)
+						}
+					}
+					if (ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
+					{
+						if (Qtarget != nullptr)
+						{
+							if (!Qtarget->HasBuffOfType(BUFF_Poison))
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
-								Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Qtarget, false, kCollidesWithNothing, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+									Q->CastOnPosition(pred);
+								}
+								else if (outputfam.HitChance == kHitChanceDashing)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+									Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								}
 							}
 						}
 					}
@@ -774,6 +779,7 @@ void Farm()
 					}
 				}
 			}
+			
 
 			if (FarmQ->Enabled() && Q->IsReady() && (minion->IsCreep() || minion->IsJungleCreep()))
 			{
@@ -790,6 +796,16 @@ void Farm()
 				}
 			}
 
+		}
+	}
+}
+void Jungles()
+{
+	for (auto Minion : GEntityList->GetAllMinions(false, false, true))
+	{
+		if (E->IsReady() && Minion->IsValidTarget() && !Minion->IsDead() && Minion->IsValidTarget(GEntityList->Player(), E->Range()))
+		{
+			E->CastOnUnit(Minion);
 		}
 	}
 }
@@ -890,6 +906,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
 	{
 		Farm();
+		Jungles();
 
 	}
 	if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
