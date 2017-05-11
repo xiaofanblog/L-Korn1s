@@ -398,6 +398,7 @@ void Combo()
 							W->CastOnPosition(obj->GetPosition());
 							lastw = GGame->TickCount() + GGame->Latency() + 20;
 							lastwe = GGame->TickCount() + GGame->Latency() + 150;
+							return;
 						}
 					}
 
@@ -412,6 +413,7 @@ void Combo()
 							W->CastOnPosition(obj->GetPosition());
 							lastw = GGame->TickCount() + GGame->Latency() + 20;
 							lastwe = GGame->TickCount() + GGame->Latency() + 150;
+							return;
 						}
 					}
 				}			
@@ -509,6 +511,7 @@ void Killsteal()
 								W->CastOnPosition(obj->GetPosition());
 								lastw = GGame->TickCount() + GGame->Latency() + 20;
 								lastwe = GGame->TickCount() + GGame->Latency() + 150;
+								return;
 							}
 						}
 
@@ -523,6 +526,7 @@ void Killsteal()
 								W->CastOnPosition(obj->GetPosition());
 								lastw = GGame->TickCount() + GGame->Latency() + 20;
 								lastwe = GGame->TickCount() + GGame->Latency() + 150;
+								return;
 							}
 						}
 					}
@@ -689,6 +693,7 @@ void Farm()
 									W->CastOnPosition(obj->GetPosition());
 									lastw = GGame->TickCount() + GGame->Latency() + 20;
 									lastwe = GGame->TickCount() + GGame->Latency() + 150;
+									return;
 								}
 							}
 
@@ -703,6 +708,7 @@ void Farm()
 									W->CastOnPosition(obj->GetPosition());
 									lastw = GGame->TickCount() + GGame->Latency() + 20;
 									lastwe = GGame->TickCount() + GGame->Latency() + 150;
+									return;
 								}
 							}
 						}
@@ -828,6 +834,7 @@ void Harass()
 								W->CastOnPosition(obj->GetPosition());
 								lastw = GGame->TickCount() + GGame->Latency() + 20;
 								lastwe = GGame->TickCount() + GGame->Latency() + 150;
+								return;
 							}
 						}
 
@@ -842,6 +849,7 @@ void Harass()
 								W->CastOnPosition(obj->GetPosition());
 								lastw = GGame->TickCount() + GGame->Latency() + 20;
 								lastwe = GGame->TickCount() + GGame->Latency() + 150;
+								return;
 							}
 						}
 					}
