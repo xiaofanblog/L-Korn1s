@@ -906,7 +906,7 @@ void ForcingQ()
 			{
 				if (Player->HasBuff("XerathArcanopulseChargeUp"))
 				{
-					if (GetEnemiesInRange(Q->Range()) >= 1)
+					if (target->IsValidTarget(GEntityList->Player(), Q->Range()))
 					{
 							Vec3 EstimatedEnemyPos;
 							GPrediction->GetFutureUnitPosition(target, 0.15f, true, EstimatedEnemyPos);
@@ -965,7 +965,7 @@ void Combo()
 			if (Player->HasBuff("XerathArcanopulseChargeUp"))
 			{
 				lastqcast = 0;
-				if (GetEnemiesInRange(Q->Range()) >= 1)
+				if (target->IsValidTarget(GEntityList->Player(), Q->Range()))
 				{
 					Vec3 EstimatedEnemyPos;
 					GPrediction->GetFutureUnitPosition(target, 0.15f, true, EstimatedEnemyPos);
@@ -976,7 +976,7 @@ void Combo()
 			}
 			if (!Player->HasBuff("XerathArcanopulseChargeUp"))
 			{
-				if (GetEnemiesInRange(Q->Range()) >= 1)
+				if (target->IsValidTarget(GEntityList->Player(), Q->Range()))
 				{
 					Q->StartCharging();
 				}
@@ -1031,7 +1031,7 @@ void Mixed()
 		{
 			if (Player->HasBuff("XerathArcanopulseChargeUp"))
 			{
-				if (GetEnemiesInRange(Q->Range()) >= 1)
+				if (target->IsValidTarget(GEntityList->Player(), Q->Range()))
 				{
 						Vec3 EstimatedEnemyPos;
 						GPrediction->GetFutureUnitPosition(target, 0.15f, true, EstimatedEnemyPos);
