@@ -41,6 +41,7 @@ IMenuOption* DrawQRange;
 IMenuOption* DrawERange;
 IMenuOption* DrawRRange;
 IMenuOption* DrawWRange;
+IMenuOption* DrawDamage;
 
 IMenu* MiscMenu;
 IMenuOption* AntiGap;
@@ -75,6 +76,13 @@ int lastw = 0;
 int lastqcast;
 int LastPingTime2 = 0.f;
 
+int xOffset = 10;
+int yOffset = 20;
+int Width = 103;
+int Height = 8;
+Vec4 Color = Vec4(105, 198, 5, 255);
+Vec4 FillColor = Vec4(198, 176, 5, 255);
+Vec4 Color2 = Vec4(25, 255, 0, 200);
 
 int helalmoney;
 
@@ -129,7 +137,7 @@ void Menu()
 		DrawWRange = DrawingMenu->CheckBox("Draw W Range", true);
 		DrawERange = DrawingMenu->CheckBox("Draw E Range", true);
 		DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
-		
+		DrawDamage = DrawingMenu->CheckBox("Draw R Damage", true);
 	}
 
 	MiscMenu = MainMenu->AddMenu("Misc.");
@@ -172,7 +180,56 @@ void Semi()
 		}
 	}
 }
+void dmgdraw()
+{
+	for (auto hero : GEntityList->GetAllHeros(false, true))
+	{
+		Vec2 barPos = Vec2();
+		if (hero->GetHPBarPosition(barPos) && !hero->IsDead())
+		{
+			auto RDamage = 0;
+			if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotR) == 1)
+			{
+				RDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotR) * 3;
+			}
+			if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotR) == 2)
+			{
+				RDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotR) * 4;
+			}
+			if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotR) == 3)
+			{
+				RDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotR) * 5;
+			}
+			auto damage = RDamage;
+			float percentHealthAfterDamage = max(0, hero->GetHealth() - float(damage)) / hero->GetMaxHealth();
+			float yPos = barPos.y + yOffset;
+			float xPosDamage = (barPos.x + xOffset) + Width * percentHealthAfterDamage;
+			float xPosCurrentHp = barPos.x + xOffset + Width * (hero->GetHealth() / hero->GetMaxHealth());
+			if (!hero->IsDead() && hero->IsValidTarget())
+			{
+				float differenceInHP = xPosCurrentHp - xPosDamage;
+				float pos1 = barPos.x + 9 + (107 * percentHealthAfterDamage);
 
+				for (int i = 0; i < differenceInHP; i++)
+				{
+					if (damage < hero->GetHealth())
+					{
+						GRender->DrawLine(Vec2(pos1 + i, yPos), Vec2(pos1 + i, yPos + Height), FillColor);
+					}
+					if (damage > hero->GetHealth())
+					{
+						GRender->DrawLine(Vec2(pos1 + i, yPos), Vec2(pos1 + i, yPos + Height), Color2);
+					}
+
+				}
+				if (!hero->IsVisible())
+				{
+
+				}
+			}
+		}
+	}
+}
 void PingKS()
 {
 	for (auto Enemy : GEntityList->GetAllHeros(false, true))
@@ -181,7 +238,19 @@ void PingKS()
 		{
 			if (pingonks->Enabled())
 			{
-				auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotR);
+				auto RDamage = 0;
+				if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotR) == 1)
+				{
+					RDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotR) * 3;
+				}
+				if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotR) == 2)
+				{
+					RDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotR) * 4;
+				}
+				if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotR) == 3)
+				{
+					RDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotR) * 5;
+				}
 				if (R->IsReady())
 				{
 					if (Enemy->GetHealth() < RDamage * 3)
@@ -953,15 +1022,12 @@ void Combo()
 	char const *pcharb = sb.c_str();
 	GGame->PrintChat(pcharb);
 	GGame->PrintChat("Range");
-	std::string sc = std::to_string(E->Range());
-	char const *pcharc = sc.c_str();
-	GGame->PrintChat(pcharc);*/
+	*/
 	if (ComboQ->Enabled())
 	{
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
 		if (!CanMove(GEntityList->Player()) && target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead() && !target->IsDashing())
 		{
-
 			if (Player->HasBuff("XerathArcanopulseChargeUp"))
 			{
 				lastqcast = 0;
@@ -1161,6 +1227,10 @@ PLUGIN_EVENT(void) OnRender()
 		if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), 5600); }
 	}
 	if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()); }
+	if (DrawDamage->Enabled())
+	{
+		dmgdraw();
+	}
 }
 
 PLUGIN_EVENT(void) OnSpellCast(CastedSpell const& Args)
