@@ -619,6 +619,7 @@ class Sona : public zHero
 			SonaBase().AAdisable();
 			SonaBase().Healing();
 			SonaBase().Auto();
+			SonaBase().HarasTog();
 			if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 			{
 				SonaBase().Combo();
