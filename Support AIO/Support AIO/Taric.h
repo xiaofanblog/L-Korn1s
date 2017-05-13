@@ -23,6 +23,7 @@ public:
 			ShieldInc = WSet->CheckBox("Auto Shield only Incoming Damage(sometimes not accurate)", true);
 			ShieldKill = WSet->CheckBox("Auto Shield if inc. damage will kill", true);
 			ShieldAA = WSet->CheckBox("Priority Allies over me", true);
+			ShieldSelf = WSet->CheckBox("Shiedl Self", true);
 		}
 		QSet = MainMenu->AddMenu("Healing");
 		{
@@ -303,7 +304,7 @@ public:
 		static DamageTracker tracker = DamageTracker(GPluginSDK, true);
 		for (auto ally : GEntityList->GetAllHeros(true, false))
 		{
-			if (ShieldE->Enabled())
+			if (ShieldE->Enabled() && !GEntityList->Player()->IsRecalling())
 			{
 				if (ally != GEntityList->Player())
 				{
@@ -319,9 +320,12 @@ public:
 							}
 							if (GetAlliesInRange(GEntityList->Player(), W->Range()) == 0)
 							{
-								if (GetEnemiesInRange(GEntityList->Player(), W->Range()) >= 1 && GEntityList->Player()->HealthPercent() <= ShieldHP->GetFloat())
+								if (ShieldSelf->Enabled())
 								{
-									W->CastOnPlayer();
+									if (GetEnemiesInRange(GEntityList->Player(), W->Range()) >= 1 && GEntityList->Player()->HealthPercent() <= ShieldHP->GetFloat())
+									{
+										W->CastOnPlayer();
+									}
 								}
 
 							}
@@ -387,27 +391,30 @@ public:
 						}
 						if (GetAlliesInRange(GEntityList->Player(), W->Range()) == 0)
 						{
-							if (GEntityList->Player() != nullptr && !GEntityList->Player()->IsDead())
+							if (ShieldSelf->Enabled())
 							{
+								if (GEntityList->Player() != nullptr && !GEntityList->Player()->IsDead())
+								{
 
-								if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
+									if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
+									{
+										W->CastOnPlayer();
+									}
+								}
+								if (GetEnemiesInRange(GEntityList->Player(), W->Range()) >= 1 && GEntityList->Player()->HealthPercent() <= ShieldHP->GetFloat())
 								{
 									W->CastOnPlayer();
 								}
-							}
-							if (GetEnemiesInRange(GEntityList->Player(), W->Range()) >= 1 && GEntityList->Player()->HealthPercent() <= ShieldHP->GetFloat())
-							{
-								W->CastOnPlayer();
-							}
 
 
-							if (!tracker.hasIncomingDamage(GEntityList->Player()))
-								return;
-							if (ShieldKill->Enabled())
-							{
-								if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
+								if (!tracker.hasIncomingDamage(GEntityList->Player()))
+									return;
+								if (ShieldKill->Enabled())
 								{
-									W->CastOnPlayer();
+									if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
+									{
+										W->CastOnPlayer();
+									}
 								}
 							}
 						}
@@ -418,29 +425,32 @@ public:
 				{
 					if (ally == GEntityList->Player())
 					{
-						if (GEntityList->Player() != nullptr && !GEntityList->Player()->IsDead())
+						if (ShieldSelf->Enabled())
 						{
+							if (GEntityList->Player() != nullptr && !GEntityList->Player()->IsDead())
+							{
 
-							if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
-							{
-								W->CastOnPlayer();
+								if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
+								{
+									W->CastOnPlayer();
+								}
+								if (GetEnemiesInRange(GEntityList->Player(), W->Range()) >= 1 && GEntityList->Player()->HealthPercent() <= ShieldHP->GetFloat())
+								{
+									W->CastOnPlayer();
+								}
 							}
-							if (GetEnemiesInRange(GEntityList->Player(), W->Range()) >= 1 && GEntityList->Player()->HealthPercent() <= ShieldHP->GetFloat())
+
+							if (!tracker.hasIncomingDamage(GEntityList->Player()))
+								return;
+							if (ShieldKill->Enabled())
 							{
-								W->CastOnPlayer();
+								if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
+								{
+									W->CastOnPlayer();
+								}
 							}
+
 						}
-
-						if (!tracker.hasIncomingDamage(GEntityList->Player()))
-							return;
-						if (ShieldKill->Enabled())
-						{
-							if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
-							{
-								W->CastOnPlayer();
-							}
-						}
-
 					}
 
 				}
@@ -474,46 +484,53 @@ public:
 											}
 										}
 									}
-									if (ally->HealthPercent() >= GEntityList->Player()->HealthPercent())
+									if (ShieldSelf->Enabled())
 									{
-
-										if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
+										if (ally->HealthPercent() >= GEntityList->Player()->HealthPercent())
 										{
 
-											W->CastOnPlayer();
-										}
-									}
-									if (!tracker.hasIncomingDamage(GEntityList->Player()))
-										return;
-									if (ShieldKill->Enabled())
-									{
-										if (tracker.getIncomingDamage(GEntityList->Player()) >= ally->GetHealth())
-										{
-											W->CastOnPlayer();
-										}
+											if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
+											{
 
+												W->CastOnPlayer();
+											}
+										}
+										if (!tracker.hasIncomingDamage(GEntityList->Player()))
+											return;
+										if (ShieldKill->Enabled())
+										{
+											if (tracker.getIncomingDamage(GEntityList->Player()) >= ally->GetHealth())
+											{
+												W->CastOnPlayer();
+											}
+
+										}
 									}
+
 								}
-
 							}
 						}
 						if (GetAlliesInRange(GEntityList->Player(), W->Range()) == 0)
 						{
-							if (GEntityList->Player() != nullptr && !GEntityList->Player()->IsDead())
+							if (ShieldSelf->Enabled())
 							{
+								if (GEntityList->Player() != nullptr && !GEntityList->Player()->IsDead())
+								{
 
-								if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
-								{
-									W->CastOnPlayer();
+									if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
+									{
+										W->CastOnPlayer();
+									}
 								}
-							}
-							if (!tracker.hasIncomingDamage(GEntityList->Player()))
-								return;
-							if (ShieldKill->Enabled())
-							{
-								if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
+								if (!tracker.hasIncomingDamage(GEntityList->Player()))
+									return;
+								if (ShieldKill->Enabled())
 								{
-									W->CastOnPlayer();
+									if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
+									{
+										W->CastOnPlayer();
+									}
+
 								}
 							}
 						}
@@ -522,26 +539,29 @@ public:
 					{
 						if (ally == GEntityList->Player())
 						{
-							if (GEntityList->Player() != nullptr && !GEntityList->Player()->IsDead())
+							if (ShieldSelf->Enabled())
 							{
+								if (GEntityList->Player() != nullptr && !GEntityList->Player()->IsDead())
+								{
 
-								if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
-								{
-									W->CastOnPlayer();
+									if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
+									{
+										W->CastOnPlayer();
+									}
 								}
-							}
-							if (!tracker.hasIncomingDamage(GEntityList->Player()))
-								return;
-							if (ShieldKill->Enabled())
-							{
-								if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
+								if (!tracker.hasIncomingDamage(GEntityList->Player()))
+									return;
+								if (ShieldKill->Enabled())
 								{
-									W->CastOnPlayer();
+									if (tracker.getIncomingDamage(GEntityList->Player()) >= GEntityList->Player()->GetHealth())
+									{
+										W->CastOnPlayer();
+									}
 								}
+
 							}
 
 						}
-
 					}
 
 				}

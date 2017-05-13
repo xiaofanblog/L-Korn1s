@@ -191,7 +191,7 @@ public:
 		static DamageTracker tracker = DamageTracker(GPluginSDK, true);
 		for (auto ally : GEntityList->GetAllHeros(true, false))
 		{
-			if (ShieldE->Enabled())
+			if (ShieldE->Enabled() && !GEntityList->Player()->IsRecalling())
 			{
 				if (ally != GEntityList->Player())
 				{

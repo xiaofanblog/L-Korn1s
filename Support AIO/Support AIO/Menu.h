@@ -179,6 +179,7 @@ IMenuOption* SaveKey;
 IMenuOption* SaveE;
 IMenuOption* AntiGapE;
 IMenuOption* DrawDamage;
+IMenuOption* ShieldSelf;
 IMenuOption* ComboPred;
 IMenuOption* LastQ;
 
@@ -195,6 +196,9 @@ IUnit* enem;
 std::vector<IUnit*> minions;
 
 int lastw;
+float Keypres;
+
+bool Harassenable = false;
 
 std::map<int, IMenuOption*> ChampionUse;
 

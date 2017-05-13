@@ -20,6 +20,7 @@ public:
 		}
 		MiscMenu = MainMenu->AddMenu("Misc.");
 		{
+			HarassQ = MiscMenu->AddKey("Auto Q Toggle", 'T');
 			AntiGapE = MiscMenu->CheckBox("Anti-Gapclose E", true);
 			ComboEslow = MiscMenu->CheckBox("Auto E if slowed", true);
 			InterruptR = MiscMenu->CheckBox("Interrupt R", true);
@@ -32,6 +33,7 @@ public:
 			DrawWRange = DrawingMenu->CheckBox("Draw W range", true);
 			DrawERange = DrawingMenu->CheckBox("Draw E range", true);
 			DrawRRange = DrawingMenu->CheckBox("Draw R Range", true);
+			DrawDamage = DrawingMenu->CheckBox("Draw Toggle", true);
 
 		}
 
@@ -44,7 +46,28 @@ public:
 		}
 	}
 
+	void HarasTog()
+	{
+		if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
+		{
+			if (GetAsyncKeyState(HarassQ->GetInteger()))
+			{
+				if (Harassenable == true && GGame->Time() > Keypres)
+				{
+					Harassenable = false;
+					Keypres = GGame->Time() + 0.250;
 
+				}
+				if (Harassenable == false && GGame->Time() > Keypres)
+				{
+					Harassenable = true;
+					Keypres = GGame->Time() + 0.250;
+
+				}
+
+			}
+		}
+	}
 	void AAdisable()
 	{
 		if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
@@ -158,6 +181,25 @@ public:
 				}
 			}
 		}
+		if (Harassenable == true)
+		{
+			for (auto Enemy : GEntityList->GetAllHeros(false, true))
+			{
+				if (Enemy != nullptr)
+				{
+					if (Q->IsReady() && Enemy->IsValidTarget() && !Enemy->IsDead())
+					{
+						if (Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
+						{
+
+							Q->CastOnTarget(Enemy);
+
+						}
+					}
+
+				}
+			}
+		}
 	}
 
 
@@ -243,5 +285,35 @@ public:
 		if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()); }
 		if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
 		if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 255, 255), R->Range()); }
+		if (DrawDamage->Enabled())
+		{
+			static IFont* pFont = nullptr;
+
+			if (pFont == nullptr)
+			{
+				pFont = GRender->CreateFont("Tahoma", 16.f, kFontWeightNormal);
+				pFont->SetOutline(true);
+				pFont->SetLocationFlags(kFontLocationCenterVertical);
+			}
+			Vec2 pos;
+			if (GGame->Projection(GEntityList->Player()->GetPosition(), &pos))
+			{
+				if (Harassenable == true)
+				{
+					std::string text = std::string("Harass ON");
+					Vec4 clr = Vec4(188, 255, 50, 255);
+					pFont->SetColor(clr);
+					pFont->Render(pos.x, pos.y - 10, text.c_str());
+				}
+				if (Harassenable == false)
+				{
+					std::string text = std::string("Harass OFF");
+					Vec4 clr = Vec4(188, 255, 50, 255);
+					pFont->SetColor(clr);
+					pFont->Render(pos.x, pos.y - 10, text.c_str());
+				}
+			}
+		}
 	}
+
 };
