@@ -253,7 +253,7 @@ void PingKS()
 				}
 				if (R->IsReady())
 				{
-					if (Enemy->GetHealth() < RDamage * 3)
+					if (Enemy->GetHealth() < RDamage)
 					{
 						if (GGame->Time() - LastPingTime2 >= 3)
 						{
