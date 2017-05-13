@@ -38,13 +38,15 @@ IMenuOption* HarassMana;
 IMenuOption* HarassAuto;
 IMenuOption* HarassQ;
 IMenuOption* HarassE;
+IMenuOption* ComboRcheck;
+IMenuOption* KSRCheck;
 IMenuOption* HarassEonlyPoison;
 
 IMenu* MiscMenu;
 IMenuOption* ComboAA;
 IMenuOption* ComboAAkey;
 IMenuOption* ComboAALevel;
-
+IMenuOption* DrawFarm;
 IMenuOption* DrawPred;
 
 IMenu* DrawingMenu;
@@ -59,7 +61,8 @@ IMenuOption* DrawRFlash;
 IMenuOption* DrawEkill;
 
 IMenu* FarmMenu;
-IMenuOption* FarmMana;
+IMenuOption* FarmManaP;
+IMenuOption* FarmManaPA;
 IMenuOption* FarmQ;
 IMenuOption* FarmE;
 IMenuOption* FarmEallow;
@@ -73,10 +76,13 @@ IMenuOption* Jungle;
 IMenu* LastHitMenu;
 IMenuOption* LastE;
 
+IMenuOption* FarmKey;
 IMenu* KillstealMenu;
 IMenuOption* KSQ;
 IMenuOption* KSE;
 IMenuOption* KSR;
+IMenu* FarmPush;
+IMenu* FarmPassive;
 
 ISpell2* Q;
 ISpell2* W;
@@ -88,15 +94,18 @@ int delaystuff;
 //std::vector<std::string> FarmEType = { "Block AA(Smooth)", "With AA" };
 
 IUnit* Player;
+bool Farmenable = true;
+float KeyPre;
 
 
 std::vector<IUnit*> minions;
 int xOffset = 10;
-int yOffset = 15;
+int yOffset = 20;
 int Width = 103;
 int Height = 8;
 Vec4 Color = Vec4(105, 198, 5, 255);
 Vec4 FillColor = Vec4(198, 176, 5, 255);
+Vec4 Color2 = Vec4(25, 255, 0, 200);
 float delay;
 
 void LoadSpells()
@@ -108,7 +117,7 @@ void LoadSpells()
 	W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, false, false, kCollidesWithNothing);
 	W->SetSkillshot(0.25, 75.f, FLT_MAX, 800.f);
 	E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, kCollidesWithYasuoWall);
-	R = GPluginSDK->CreateSpell2(kSlotR, kConeCast, false, false, kCollidesWithNothing);
+	R = GPluginSDK->CreateSpell2(kSlotR, kConeCast, false, true, kCollidesWithNothing);
 	
 }
 
@@ -131,7 +140,8 @@ void Menu()
 		ComboEonlyPoison = ESettings->CheckBox("Only E if POISONED", false);
 		RMenu = ComboMenu->AddMenu("R Settings");
 		ComboREnable = RMenu->CheckBox("Use R in Combo", true);
-		ComboRkillable = RMenu->CheckBox("Only R if Killabe with Combo", true);
+		ComboRkillable = RMenu->CheckBox("^- Only R if Killabe with Combo", true);
+		ComboRcheck = RMenu->AddFloat("Dont waste R if Enemy HP lower than", 0, 500, 100);
 		ComboRMin = RMenu->AddInteger("R if X enemies", 1, 5, 1);
 		ComboRHealth = RMenu->AddInteger("R if Target has Health Percent ", 10, 100, 60);
 		ComboRRANGE = RMenu->AddInteger("R Range for usage", 125, 825, 750);
@@ -164,16 +174,21 @@ void Menu()
 		DrawRFlash = DrawingMenu->CheckBox("Draw RFlash range", true);
 		DrawEkill = DrawingMenu->CheckBox("Draw Minions Killable With Q", true);
 		DrawPred = DrawingMenu->CheckBox("Draw Prediction", true);
+		DrawFarm = DrawingMenu->CheckBox("Draw Farm Toggle", true);
 	}
 	FarmMenu = MainMenu->AddMenu("Farming");
 	{
-		FarmMana = FarmMenu->AddInteger("Mana for clear", 10, 100, 50);
-		FarmQ = FarmMenu->CheckBox("Lane Clear with Q", true);
-		FarmE = FarmMenu->CheckBox("Lane Clear with E", true);
-		FarmELH = FarmMenu->CheckBox("Last hit E in Lane Clear", false);
-		FarmEsmooth = FarmMenu->CheckBox("^- Block AA(Smooth)", true);
-		FarmEpoison = FarmMenu->CheckBox("E only if poison", false);
-		LastEDelay = FarmMenu->AddFloat("Last Hit E Delay", 0, 1500, 0);
+		FarmKey = FarmMenu->AddKey("Mode Change:", 'Z');
+		FarmPush = FarmMenu->AddMenu("Pushing Settings");
+		FarmManaP = FarmPush->AddInteger("Mana For Push", 10, 100, 20);
+		FarmQ = FarmPush->CheckBox("Use Q", true);
+		FarmE = FarmPush->CheckBox("Use E", true);
+		FarmEpoison = FarmPush->CheckBox("^- Only If Poison", false);
+		FarmPassive = FarmMenu->AddMenu("Passive Settings");
+		FarmManaPA = FarmPassive->AddInteger("Mana For Passive Farm", 10, 100, 50);
+		FarmELH = FarmPassive->CheckBox("Use E", true);
+		FarmEsmooth = FarmPassive->CheckBox("^- Block AA(Smooth)", true);
+		LastEDelay = FarmPassive->AddFloat("Last Hit E Delay", 0, 1500, 0);
 		//Jungle = FarmMenu->CheckBox("Use in Jungle", true);
 	}
 
@@ -187,6 +202,8 @@ void Menu()
 		KSQ = KillstealMenu->CheckBox("Use Q", true);
 		KSE = KillstealMenu->CheckBox("Use E", true);
 		KSR = KillstealMenu->CheckBox("Use R", true);
+		KSRCheck = KillstealMenu->AddFloat("^- Dont waste R if Enemy HP lower than", 0, 500, 100);
+
 	}
 	MiscMenu = MainMenu->AddMenu("Misc.");
 	{
@@ -196,7 +213,25 @@ void Menu()
 	}
 
 }
+void FarmTog()
+{
+	if (GetAsyncKeyState(FarmKey->GetInteger()))
+	{
+		if (Farmenable == true && GGame->Time() > KeyPre)
+		{
+			Farmenable = false;
+			KeyPre = GGame->Time() + 0.250;
 
+		}
+		if (Farmenable == false && GGame->Time() > KeyPre)
+		{
+			Farmenable = true;
+			KeyPre = GGame->Time() + 0.250;
+
+		}
+
+	}
+}
 void Semi()
 {
 
@@ -206,7 +241,12 @@ void Semi()
 		{
 			if (!Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), ComboRRANGE->GetInteger()) && !Enemy->IsDead())
 			{
-				R->CastOnTarget(Enemy, kHitChanceHigh);
+				Vec3 pos;
+				int hit;
+				GPrediction->FindBestCastPosition(ComboRRANGE->GetInteger(), 290, false, false, true, pos, hit);
+				R->CastOnPosition(pos);
+
+
 			}
 		}
 	}
@@ -257,12 +297,17 @@ void dmgdraw()
 				float differenceInHP = xPosCurrentHp - xPosDamage;
 				float pos1 = barPos.x + 9 + (107 * percentHealthAfterDamage);
 
+
 				for (int i = 0; i < differenceInHP; i++)
 				{
-					GRender->DrawLine(Vec2(pos1 + i, yPos), Vec2(pos1 + i, yPos + Height), FillColor);
-				}
-				if (!hero->IsVisible())
-				{
+					if (RDamage + EDamage * 4 + QDamage < hero->GetHealth())
+					{
+						GRender->DrawLine(Vec2(pos1 + i, yPos), Vec2(pos1 + i, yPos + Height), FillColor);
+					}
+					if (RDamage + EDamage * 4 + QDamage > hero->GetHealth())
+					{
+						GRender->DrawLine(Vec2(pos1 + i, yPos), Vec2(pos1 + i, yPos + Height), Color2);
+					}
 
 				}
 			}
@@ -282,7 +327,7 @@ void Combo()
 			{
 				if (!ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
 				{
-					if (Qtarget != nullptr)
+					if (Qtarget != nullptr && Qtarget->IsValidTarget())
 					{
 						{
 							AdvPredictionOutput outputfam;
@@ -305,7 +350,7 @@ void Combo()
 				}
 				if (ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
 				{
-					if (Qtarget != nullptr)
+					if (Qtarget != nullptr && Qtarget->IsValidTarget())
 					{
 						if (!Qtarget->HasBuffOfType(BUFF_Poison))
 						{
@@ -328,7 +373,7 @@ void Combo()
 				}
 				if (ComboW->Enabled() && W->IsReady() && W->Range())
 				{
-					if (Wtarget != nullptr)
+					if (Wtarget != nullptr && Wtarget->IsValidTarget())
 					{
 						auto distance = (Player->GetPosition() - Wtarget->GetPosition()).Length();
 						if (distance >= 400 && distance <= ComboWmax->GetFloat())
@@ -343,7 +388,7 @@ void Combo()
 					if (E->IsReady())
 					{
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
-						if (target != nullptr)
+						if (target != nullptr && target->IsValidTarget())
 						{
 							if (!(ComboEonlyPoison->Enabled()) || target->HasBuffOfType(BUFF_Poison))
 								E->CastOnTarget(target);
@@ -355,7 +400,7 @@ void Combo()
 			{
 				if (ComboW->Enabled() && W->IsReady() && W->Range())
 				{
-					if (Wtarget != nullptr)
+					if (Wtarget != nullptr && Wtarget->IsValidTarget())
 					{
 						auto distance = (Player->GetPosition() - Wtarget->GetPosition()).Length();
 						if (distance >= 400 && distance <= ComboWmax->GetFloat())
@@ -372,7 +417,7 @@ void Combo()
 				{
 					if (!ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
 					{
-						if (Qtarget != nullptr)
+						if (Qtarget != nullptr && Qtarget->IsValidTarget())
 						{
 							{
 								AdvPredictionOutput outputfam;
@@ -394,7 +439,7 @@ void Combo()
 					}
 					if (ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
 					{
-						if (Qtarget != nullptr)
+						if (Qtarget != nullptr && Qtarget->IsValidTarget())
 						{
 							if (!Qtarget->HasBuffOfType(BUFF_Poison))
 							{
@@ -421,7 +466,7 @@ void Combo()
 					if (E->IsReady())
 					{
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
-						if (target != nullptr)
+						if (target != nullptr && target->IsValidTarget())
 						{
 							if (!(ComboEonlyPoison->Enabled()) || target->HasBuffOfType(BUFF_Poison))
 								E->CastOnTarget(target);
@@ -436,7 +481,7 @@ void Combo()
 					if (E->IsReady())
 					{
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
-						if (target != nullptr)
+						if (target != nullptr && target->IsValidTarget())
 						{
 							if (!(ComboEonlyPoison->Enabled()) || target->HasBuffOfType(BUFF_Poison))
 								E->CastOnTarget(target);
@@ -446,7 +491,7 @@ void Combo()
 
 				if (!ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
 				{
-					if (Qtarget != nullptr)
+					if (Qtarget != nullptr && Qtarget->IsValidTarget())
 					{
 						{
 							AdvPredictionOutput outputfam;
@@ -468,7 +513,7 @@ void Combo()
 				}
 				if (ComboQnotpoison->Enabled() && ComboQ->Enabled() && Q->IsReady() && Q->Range())
 				{
-					if (Qtarget != nullptr)
+					if (Qtarget != nullptr && Qtarget->IsValidTarget())
 					{
 						if (!Qtarget->HasBuffOfType(BUFF_Poison))
 						{
@@ -491,7 +536,7 @@ void Combo()
 				}
 				if (ComboW->Enabled() && W->IsReady() && W->Range())
 				{
-					if (Wtarget != nullptr)
+					if (Wtarget != nullptr && Wtarget->IsValidTarget())
 					{
 						auto distance = (Player->GetPosition() - Wtarget->GetPosition()).Length();
 						if (distance >= 400 && distance <= ComboWmax->GetFloat())
@@ -506,39 +551,58 @@ void Combo()
 		}
 		if (ComboRkillable->Enabled())
 		{
-			if (ComboREnable->Enabled() && R->IsReady() && GetEnemiesInRange(float(ComboRRANGE->GetInteger())) >= ComboRMin->GetInteger())
+			if (ComboREnable->Enabled() && R->IsReady())
 			{
 				auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotQ);
 				auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotE);
 				auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotR);
-				if (QDamage + EDamage * 4 + RDamage > Enemy->GetHealth())
+				Vec3 pos;
+				int hit;
+				GPrediction->FindBestCastPosition(ComboRRANGE->GetInteger(), 290, false, false, true, pos, hit);
+				if (hit >= ComboRMin->GetInteger())
 				{
 					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, float(ComboRRANGE->GetInteger()));
-					if (target != nullptr && ComboRFacing->Enabled() && target->IsFacing(Player))
+					if (target->GetHealth() > ComboRcheck->GetFloat())
 					{
-						R->CastOnTarget(target);
-					}
-					if (target != nullptr && !ComboRFacing->Enabled())
-					{
-						R->CastOnTarget(target);
+						if (QDamage + EDamage * 4 + RDamage > target->GetHealth())
+						{
+							if (target != nullptr && ComboRFacing->Enabled() && target->IsFacing(Player) && target->IsValidTarget())
+							{
+								R->CastOnPosition(pos);
+							}
+							if (target != nullptr && !ComboRFacing->Enabled() && target->IsValidTarget())
+							{
+								R->CastOnPosition(pos);
+							}
+						}
 					}
 				}
 			}
 		}
 		if (!ComboRkillable->Enabled())
 		{
-			if (ComboREnable->Enabled() && R->IsReady() && GetEnemiesInRange(float(ComboRRANGE->GetInteger())) >= ComboRMin->GetInteger())
+			if (ComboREnable->Enabled() && R->IsReady())
 			{
-				if (Enemy->HealthPercent() < ComboRHealth->GetInteger())
+
+				Vec3 pos;
+				int hit;
+				GPrediction->FindBestCastPosition(ComboRRANGE->GetInteger(), 290, false, false, true, pos, hit);
+				if (hit >= ComboRMin->GetInteger())
 				{
 					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, float(ComboRRANGE->GetInteger()));
-					if (target != nullptr && ComboRFacing->Enabled() && target->IsFacing(Player))
+					if (target->GetHealth() > ComboRcheck->GetFloat())
 					{
-						R->CastOnTarget(target);
-					}
-					if (target != nullptr && !ComboRFacing->Enabled())
-					{
-						R->CastOnTarget(target);
+						if (target->HealthPercent() <= ComboRHealth->GetInteger())
+						{
+							if (target != nullptr && ComboRFacing->Enabled() && target->IsFacing(Player) && target->IsValidTarget())
+							{
+								R->CastOnPosition(pos);
+							}
+							if (target != nullptr && !ComboRFacing->Enabled() && target->IsValidTarget())
+							{
+								R->CastOnPosition(pos);
+							}
+						}
 					}
 				}
 			}
@@ -714,7 +778,13 @@ void Killsteal()
 			}
 			if (KSR->Enabled() && R->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), R->Range()) && RDamage > Enemy->GetHealth() && Enemy->GetHealth() > 100)
 			{
-				R->CastOnTarget(Enemy);
+				if (Enemy->GetHealth() > KSRCheck->GetFloat())
+				{
+					Vec3 pos;
+					int hit;
+					GPrediction->FindBestCastPosition(ComboRRANGE->GetInteger(), 290, false, false, true, pos, hit);
+					R->CastOnPosition(pos);
+				}
 			}
 		}
 	}
@@ -744,58 +814,62 @@ void Farm()
 	minions = GEntityList->GetAllMinions(false, true, true);
 	for (IUnit* minion : minions)
 	{
-		if (FarmELH->Enabled() && FarmE->Enabled() && GGame->Time() > delay)
+		if (Farmenable == true)
 		{
-			GGame->PrintChat("Turn off Lane Clear E, or Last Hit E in LaneClear to work!");
-			delay = GGame->Time() + 3;
-		}
-		if (FarmELH->Enabled() && !FarmE->Enabled())
-		{
-			if (GEntityList->Player()->IsValidTarget(minion, E->Range()))
+			if (FarmELH->Enabled())
 			{
-				if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125,LastEDelay->GetFloat())) {
-					E->CastOnUnit(minion);
-				}
-			}
-		}
-		if (Player->ManaPercent() > FarmMana->GetInteger())
-		{
-			if (FarmE->Enabled() && E->IsReady() && !FarmELH->Enabled())
-			{
-				if (!FarmEpoison->Enabled())
+				if (FarmManaPA->GetFloat() < GEntityList->Player()->ManaPercent())
 				{
-					if (E->AttackMinions())
-						return;
-				}
-
-				else
-				{
-					if (minion != nullptr)
+					if (GEntityList->Player()->IsValidTarget(minion, E->Range()))
 					{
-						if (!minion->IsDead() && minion->HasBuffOfType(BUFF_Poison) && SimpleLib::SimpleLib::GetDistance(Player, minion) <= E->Range())
-						{
+						if (GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE) > GHealthPrediction->GetPredictedHealth(minion, kLastHitPrediction, static_cast<int>(((minion->ServerPosition() - GEntityList->Player()->GetPosition()).Length2D() * 1000) / E->Speed()) - 125, LastEDelay->GetFloat())) {
 							E->CastOnUnit(minion);
 						}
 					}
 				}
 			}
-			
-
-			if (FarmQ->Enabled() && Q->IsReady() && (minion->IsCreep() || minion->IsJungleCreep()))
+		}
+		if (Farmenable == false)
+		{
+			if (GEntityList->Player()->ManaPercent() > FarmManaP->GetInteger())
 			{
-				Vec3 pos;
-				int hit;
-				if (GetMinionsQ(Q->Range()) < 7 && minion->IsEnemy(GEntityList->Player()) && !minion->IsDead() && minion->IsValidTarget() && minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+				if (FarmE->Enabled())
 				{
-					GPrediction->FindBestCastPosition(Q->Range(), 100, false, true, false, pos, hit);
-					Q->CastOnPosition(pos);
-				}
-				if (GetMinionsQ(Q->Range()) > 7 && minion->IsEnemy(GEntityList->Player()) && !minion->IsDead() && minion->IsValidTarget() && minion->IsValidTarget(GEntityList->Player(), Q->Range()))
-				{
-					Q->CastOnUnit(minion);
-				}
-			}
+					if (!FarmEpoison->Enabled())
+					{
+						if (E->AttackMinions())
+							return;
+					}
 
+					else
+					{
+						if (minion != nullptr)
+						{
+							if (!minion->IsDead() && minion->HasBuffOfType(BUFF_Poison) && SimpleLib::SimpleLib::GetDistance(Player, minion) <= E->Range())
+							{
+								E->CastOnUnit(minion);
+							}
+						}
+					}
+				}
+
+
+				if (FarmQ->Enabled() && Q->IsReady() && (minion->IsCreep() || minion->IsJungleCreep()))
+				{
+					Vec3 pos;
+					int hit;
+					if (GetMinionsQ(Q->Range()) < 7 && minion->IsEnemy(GEntityList->Player()) && !minion->IsDead() && minion->IsValidTarget() && minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+					{
+						GPrediction->FindBestCastPosition(Q->Range(), 100, false, true, false, pos, hit);
+						Q->CastOnPosition(pos);
+					}
+					if (GetMinionsQ(Q->Range()) > 7 && minion->IsEnemy(GEntityList->Player()) && !minion->IsDead() && minion->IsValidTarget() && minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+					{
+						Q->CastOnUnit(minion);
+					}
+				}
+
+			}
 		}
 	}
 }
@@ -820,7 +894,7 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 			{
 				if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
 				{
-					if (FarmELH->Enabled() && !FarmE->Enabled() && GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
+					if (GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
 					{
 						if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
 						{
@@ -837,7 +911,7 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 			}
 			if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
 			{
-				if (LastE->Enabled() && GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
+				if (GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
 				{
 					if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
 					{
@@ -899,6 +973,8 @@ void Auto()
 
 PLUGIN_EVENT(void) OnGameUpdate()
 {
+	FarmTog();
+
 	if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 	{
 		Combo();
@@ -989,6 +1065,35 @@ PLUGIN_EVENT(void) OnRender()
 		}
 	}
 	drawpred();
+	if (DrawFarm->Enabled())
+	{
+		static IFont* pFont = nullptr;
+
+		if (pFont == nullptr)
+		{
+			pFont = GRender->CreateFont("Arial", 15.f, kFontWeightBold);
+			pFont->SetOutline(true);
+			pFont->SetLocationFlags(kFontLocationNormal);
+		}
+		Vec2 pos;
+		if (GGame->Projection(GEntityList->Player()->GetPosition(), &pos))
+		{
+			if (Farmenable == true)
+			{
+				std::string text = std::string("Farm: Passive");
+				Vec4 clr = Vec4(188, 255, 50, 255);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x, pos.y, text.c_str());
+			}
+			if (Farmenable == false)
+			{
+				std::string text = std::string("Farm: Pushing");
+				Vec4 clr = Vec4(188, 255, 50, 255);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x, pos.y, text.c_str());
+			}
+		}
+	}
 }
 
 PLUGIN_EVENTD(void) OnOrbwalkPreAttack(IUnit* Args1)
