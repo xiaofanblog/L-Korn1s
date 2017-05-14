@@ -87,7 +87,7 @@ public:
 			}
 			if (ComboQ->Enabled() && Q->IsReady() && GEntityList->Player()->IsValidTarget(target, Q->Range()))
 			{
-				Q->CastOnTarget(target);
+				Q->CastOnPlayer();
 			}
 			if (ComboE->Enabled() && E->IsReady() && GEntityList->Player()->IsValidTarget(target, E->Range()))
 			{
@@ -175,7 +175,7 @@ public:
 	{
 		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, Q->Range()) && InterruptQ->Enabled() && Q->IsReady())
 		{
-			Q->CastOnTarget(Args.Target);
+			Q->CastOnPlayer();
 		}
 		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, W->Range()) && InterruptW->Enabled() && W->IsReady() && (!Q->IsReady() || !GEntityList->Player()->IsValidTarget(Args.Target, Q->Range())))
 		{

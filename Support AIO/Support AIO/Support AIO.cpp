@@ -20,6 +20,7 @@
 #include "Nautilus.h"
 #include "Taric.h"
 #include "Rakan.h"
+#include "Zyra.h"
 PluginSetup("Support AIO by Kornis");
 
 class zHero
@@ -112,6 +113,80 @@ private:
 	void PrintMessage()
 	{
 		GGame->PrintChat("<b><font color = \"#f8a101\">Blitzcrank</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
+class Zyra : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		ZyraBase().DrawMenu();
+		ZyraBase().LoadSpells();
+	}
+
+	void OnRender() override
+	{
+		ZyraBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			ZyraBase().Combo();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			ZyraBase().Push();
+		}
+
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+
+	}
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+		
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+		//none
+	}
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+		//none
+	}
+	void OnCreateObject(IUnit* Source) override
+	{
+		//none
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Zyra WIP</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 	}
 };
 
@@ -1690,6 +1765,8 @@ void LoadChampion()
 		yHero = new Taric;
 	else if (playerHero == "Rakan")
 		yHero = new Rakan;
+	else if (playerHero == "Zyra")
+		yHero = new Zyra;
 	else
 	{
 		GGame->PrintChat("<b><font color=\"#FFFFFF\">This champion isn't supported.</b></font>");
