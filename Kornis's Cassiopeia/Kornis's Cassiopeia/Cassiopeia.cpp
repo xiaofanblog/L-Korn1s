@@ -759,7 +759,7 @@ void Killsteal()
 		auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotE);
 		auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotR);
 
-		if (Enemy != nullptr && !Enemy->IsDead())
+		if (Enemy != nullptr && !Enemy->IsDead() && Enemy->IsValidTarget())
 		{
 			if (KSQ->Enabled() && Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && QDamage > Enemy->GetHealth())
 			{
@@ -893,11 +893,11 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 {
 	if (Farmenable == true)
 	{
+		auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE);
 		for (auto minion : GEntityList->GetAllMinions(false, true, false))
 		{
 			if (minion->IsCreep() || minion->IsJungleCreep())
 			{
-				auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE);
 				if (FarmEsmooth->Enabled())
 				{
 					if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
