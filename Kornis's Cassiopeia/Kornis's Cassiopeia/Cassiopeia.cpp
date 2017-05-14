@@ -553,26 +553,30 @@ void Combo()
 		{
 			if (ComboREnable->Enabled() && R->IsReady())
 			{
-				auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotQ);
-				auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotE);
-				auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), Enemy, kSlotR);
-				Vec3 pos;
-				int hit;
-				GPrediction->FindBestCastPosition(ComboRRANGE->GetInteger(), 290, false, false, true, pos, hit);
-				if (hit >= ComboRMin->GetInteger())
+				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, float(ComboRRANGE->GetInteger()));
+				if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 				{
-					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, float(ComboRRANGE->GetInteger()));
+					auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotQ);
+					auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotE);
+					auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotR);
+
 					if (target->GetHealth() > ComboRcheck->GetFloat())
 					{
-						if (QDamage + EDamage * 4 + RDamage > target->GetHealth())
+						Vec3 pos;
+						int hit;
+						GPrediction->FindBestCastPosition(ComboRRANGE->GetInteger(), 290, false, false, true, pos, hit);
+						if (hit >= ComboRMin->GetInteger())
 						{
-							if (target != nullptr && ComboRFacing->Enabled() && target->IsFacing(Player) && target->IsValidTarget())
+							if (QDamage + EDamage * 4 + RDamage > target->GetHealth())
 							{
-								R->CastOnPosition(pos);
-							}
-							if (target != nullptr && !ComboRFacing->Enabled() && target->IsValidTarget())
-							{
-								R->CastOnPosition(pos);
+								if (target != nullptr && ComboRFacing->Enabled() && target->IsFacing(Player) && target->IsValidTarget())
+								{
+									R->CastOnPosition(pos);
+								}
+								if (target != nullptr && !ComboRFacing->Enabled() && target->IsValidTarget())
+								{
+									R->CastOnPosition(pos);
+								}
 							}
 						}
 					}
@@ -583,24 +587,26 @@ void Combo()
 		{
 			if (ComboREnable->Enabled() && R->IsReady())
 			{
-
-				Vec3 pos;
-				int hit;
-				GPrediction->FindBestCastPosition(ComboRRANGE->GetInteger(), 290, false, false, true, pos, hit);
-				if (hit >= ComboRMin->GetInteger())
+				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, float(ComboRRANGE->GetInteger()));
+				if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 				{
-					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, float(ComboRRANGE->GetInteger()));
 					if (target->GetHealth() > ComboRcheck->GetFloat())
 					{
 						if (target->HealthPercent() <= ComboRHealth->GetInteger())
 						{
-							if (target != nullptr && ComboRFacing->Enabled() && target->IsFacing(Player) && target->IsValidTarget())
+							Vec3 pos;
+							int hit;
+							GPrediction->FindBestCastPosition(ComboRRANGE->GetInteger(), 290, false, false, true, pos, hit);
+							if (hit >= ComboRMin->GetInteger())
 							{
-								R->CastOnPosition(pos);
-							}
-							if (target != nullptr && !ComboRFacing->Enabled() && target->IsValidTarget())
-							{
-								R->CastOnPosition(pos);
+								if (target != nullptr && ComboRFacing->Enabled() && target->IsFacing(Player) && target->IsValidTarget())
+								{
+									R->CastOnPosition(pos);
+								}
+								if (target != nullptr && !ComboRFacing->Enabled() && target->IsValidTarget())
+								{
+									R->CastOnPosition(pos);
+								}
 							}
 						}
 					}
@@ -885,14 +891,33 @@ void Jungles()
 }
 void _OnOrbwalkPreAttack(IUnit* minion)
 {
-	for (auto minion : GEntityList->GetAllMinions(false, true, false))
+	if (Farmenable == true)
 	{
-		if (minion->IsCreep() || minion->IsJungleCreep())
+		for (auto minion : GEntityList->GetAllMinions(false, true, false))
 		{
-			auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE);
-			if (FarmEsmooth->Enabled())
+			if (minion->IsCreep() || minion->IsJungleCreep())
 			{
-				if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+				auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE);
+				if (FarmEsmooth->Enabled())
+				{
+					if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+					{
+						if (GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
+						{
+							if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
+							{
+								if (minion->GetHealth() < EDamage + 100 && Player->GetMana() > E->ManaCost())
+								{
+									if (minion != nullptr && minion->IsCreep())
+									{
+										GOrbwalking->DisableNextAttack();
+									}
+								}
+							}
+						}
+					}
+				}
+				if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
 				{
 					if (GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
 					{
@@ -904,22 +929,6 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 								{
 									GOrbwalking->DisableNextAttack();
 								}
-							}
-						}
-					}
-				}
-			}
-			if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
-			{
-				if (GEntityList->Player()->GetSpellLevel(kSlotE) > 0)
-				{
-					if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
-					{
-						if (minion->GetHealth() < EDamage + 100 && Player->GetMana() > E->ManaCost())
-						{
-							if (minion != nullptr && minion->IsCreep())
-							{
-								GOrbwalking->DisableNextAttack();
 							}
 						}
 					}
@@ -943,6 +952,7 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 			}
 		}
 	}
+
 
 }
 void Auto()
