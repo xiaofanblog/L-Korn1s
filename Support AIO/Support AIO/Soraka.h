@@ -28,7 +28,8 @@ public:
 		MiscMenu = MainMenu->AddMenu("Healing");
 		{
 			HealW = MiscMenu->CheckBox("Use auto W", true);
-			HealWally = MiscMenu->AddInteger("Ally HP percent(if lower than)", 10, 100, 50);
+			HealWally = MiscMenu->AddInteger("Ally HP percent(if lower than)", 10, 101, 50);
+			HealWmy = MiscMenu->AddInteger("Dont W if my HP Percent lower than", 10, 100, 40);
 			HealR = MiscMenu->CheckBox("Use auto R", true);
 			HealRsemi = MiscMenu->CheckBox("Semi-Manual R ", false);
 			HealRhp = MiscMenu->AddInteger("Ally R HP percent (if lower than)", 10, 100, 20);
@@ -174,296 +175,299 @@ public:
 	{
 		for (auto Ally : GEntityList->GetAllHeros(true, false))
 		{
-			if (Ally != GEntityList->Player() && !GEntityList->Player()->IsRecalling())
+			if (HealWmy->GetInteger() <= GEntityList->Player()->HealthPercent())
 			{
-				if (WHeal1 != nullptr && WHeal1->Enabled() && WHeal01->ChampionName() == Ally->ChampionName())
+				if (Ally != GEntityList->Player() && !GEntityList->Player()->IsRecalling())
 				{
-					if (HealW->Enabled() && W->IsReady() && WHeal01->IsValidTarget(GEntityList->Player(), W->Range()))
+					if (WHeal1 != nullptr && WHeal1->Enabled() && WHeal01->ChampionName() == Ally->ChampionName())
 					{
-						if (WHeal01->HealthPercent() < HealWally->GetInteger())
+						if (HealW->Enabled() && W->IsReady() && WHeal01->IsValidTarget(GEntityList->Player(), W->Range()))
 						{
-							W->CastOnUnit(WHeal01);
-						}
-						else if (WHeal01->HealthPercent() > HealWally->GetInteger())
-						{
-							if (WHeal02->IsValidTarget(GEntityList->Player(), W->Range()))
+							if (WHeal01->HealthPercent() < HealWally->GetInteger())
 							{
-								if (WHeal02->HealthPercent() < HealWally->GetInteger())
+								W->CastOnUnit(WHeal01);
+							}
+							else if (WHeal01->HealthPercent() > HealWally->GetInteger())
+							{
+								if (WHeal02->IsValidTarget(GEntityList->Player(), W->Range()))
 								{
-									W->CastOnUnit(WHeal02);
+									if (WHeal02->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal02);
+									}
 								}
-							}
-							if (WHeal03->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal03->HealthPercent() < HealWally->GetInteger())
+								if (WHeal03->IsValidTarget(GEntityList->Player(), W->Range()))
 								{
-									W->CastOnUnit(WHeal03);
+									if (WHeal03->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal03);
+									}
 								}
-							}
-							if (WHeal04->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal04->HealthPercent() < HealWally->GetInteger())
+								if (WHeal04->IsValidTarget(GEntityList->Player(), W->Range()))
 								{
-									W->CastOnUnit(WHeal04);
+									if (WHeal04->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal04);
+									}
 								}
-							}
-							if (WHeal05->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal05->HealthPercent() < HealWally->GetInteger())
+								if (WHeal05->IsValidTarget(GEntityList->Player(), W->Range()))
 								{
-									W->CastOnUnit(WHeal05);
-								}
-							}
-						}
-
-					}
-				}
-
-				else if (WHeal1->Enabled() && !WHeal01->IsValidTarget(GEntityList->Player(), W->Range()))
-				{
-					if (HealW->Enabled() && W->IsReady() && Ally->IsValidTarget(GEntityList->Player(), W->Range()))
-					{
-						if (Ally->HealthPercent() < HealWally->GetInteger())
-						{
-							if (Ally != nullptr)
-							{
-								W->CastOnUnit(Ally);
-							}
-						}
-					}
-				}
-				if (WHeal2 != nullptr && WHeal2->Enabled() && WHeal02->ChampionName() == Ally->ChampionName())
-				{
-					if (HealW->Enabled() && W->IsReady() && WHeal02->IsValidTarget(GEntityList->Player(), W->Range()))
-					{
-						if (WHeal02->HealthPercent() < HealWally->GetInteger())
-						{
-							W->CastOnUnit(WHeal02);
-						}
-						else if (WHeal02->HealthPercent() > HealWally->GetInteger())
-						{
-							if (WHeal01->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal01->HealthPercent() < HealWally->GetInteger())
-								{
-									W->CastOnUnit(WHeal01);
-								}
-							}
-							if (WHeal03->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal03->HealthPercent() < HealWally->GetInteger())
-								{
-									W->CastOnUnit(WHeal03);
-								}
-							}
-							if (WHeal04->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal04->HealthPercent() < HealWally->GetInteger())
-								{
-									W->CastOnUnit(WHeal04);
-								}
-							}
-							if (WHeal05->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal05->HealthPercent() < HealWally->GetInteger())
-								{
-									W->CastOnUnit(WHeal05);
-								}
-							}
-						}
-
-					}
-				}
-
-				else if (WHeal2->Enabled() && !WHeal02->IsValidTarget(GEntityList->Player(), W->Range()))
-				{
-					if (HealW->Enabled() && W->IsReady() && Ally->IsValidTarget(GEntityList->Player(), W->Range()))
-					{
-						if (Ally->HealthPercent() < HealWally->GetInteger())
-						{
-							if (Ally != nullptr)
-							{
-								W->CastOnUnit(Ally);
-							}
-						}
-					}
-				}
-				if (WHeal3 != nullptr && WHeal3->Enabled() && WHeal03->ChampionName() == Ally->ChampionName())
-				{
-					if (HealW->Enabled() && W->IsReady() && WHeal03->IsValidTarget(GEntityList->Player(), W->Range()))
-					{
-						if (WHeal03->HealthPercent() < HealWally->GetInteger())
-						{
-							W->CastOnUnit(WHeal03);
-						}
-						else if (WHeal03->HealthPercent() > HealWally->GetInteger())
-						{
-							if (WHeal01->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal01->HealthPercent() < HealWally->GetInteger())
-								{
-									W->CastOnUnit(WHeal01);
-								}
-							}
-							if (WHeal02->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal02->HealthPercent() < HealWally->GetInteger())
-								{
-									W->CastOnUnit(WHeal02);
-								}
-							}
-							if (WHeal04->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal04->HealthPercent() < HealWally->GetInteger())
-								{
-									W->CastOnUnit(WHeal04);
-								}
-							}
-							if (WHeal05->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal05->HealthPercent() < HealWally->GetInteger())
-								{
-									W->CastOnUnit(WHeal05);
+									if (WHeal05->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal05);
+									}
 								}
 							}
 
 						}
 					}
-				}
-				else if (WHeal3->Enabled() && !WHeal03->IsValidTarget(GEntityList->Player(), W->Range()))
-				{
-					if (HealW->Enabled() && W->IsReady() && Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+
+					else if (WHeal1->Enabled() && !WHeal01->IsValidTarget(GEntityList->Player(), W->Range()))
 					{
-						if (Ally->HealthPercent() < HealWally->GetInteger())
+						if (HealW->Enabled() && W->IsReady() && Ally->IsValidTarget(GEntityList->Player(), W->Range()))
 						{
-							if (Ally != nullptr)
+							if (Ally->HealthPercent() < HealWally->GetInteger())
 							{
-								W->CastOnUnit(Ally);
+								if (Ally != nullptr)
+								{
+									W->CastOnUnit(Ally);
+								}
 							}
 						}
 					}
-				}
-				if (WHeal4 != nullptr && WHeal4->Enabled() && WHeal04->ChampionName() == Ally->ChampionName())
-				{
-					if (HealW->Enabled() && W->IsReady() && WHeal04->IsValidTarget(GEntityList->Player(), W->Range()))
+					if (WHeal2 != nullptr && WHeal2->Enabled() && WHeal02->ChampionName() == Ally->ChampionName())
 					{
-						if (WHeal04->HealthPercent() < HealWally->GetInteger())
+						if (HealW->Enabled() && W->IsReady() && WHeal02->IsValidTarget(GEntityList->Player(), W->Range()))
 						{
-							W->CastOnUnit(WHeal04);
-						}
-						else if (WHeal04->HealthPercent() > HealWally->GetInteger())
-						{
-							if (WHeal01->IsValidTarget(GEntityList->Player(), W->Range()))
+							if (WHeal02->HealthPercent() < HealWally->GetInteger())
 							{
-								if (WHeal01->HealthPercent() < HealWally->GetInteger())
-								{
-									W->CastOnUnit(WHeal01);
-								}
+								W->CastOnUnit(WHeal02);
 							}
-							if (WHeal02->IsValidTarget(GEntityList->Player(), W->Range()))
+							else if (WHeal02->HealthPercent() > HealWally->GetInteger())
 							{
-								if (WHeal02->HealthPercent() < HealWally->GetInteger())
+								if (WHeal01->IsValidTarget(GEntityList->Player(), W->Range()))
 								{
-									W->CastOnUnit(WHeal02);
+									if (WHeal01->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal01);
+									}
 								}
-							}
-							if (WHeal03->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal03->HealthPercent() < HealWally->GetInteger())
+								if (WHeal03->IsValidTarget(GEntityList->Player(), W->Range()))
 								{
-									W->CastOnUnit(WHeal03);
+									if (WHeal03->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal03);
+									}
 								}
-							}
-							if (WHeal05->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal05->HealthPercent() < HealWally->GetInteger())
+								if (WHeal04->IsValidTarget(GEntityList->Player(), W->Range()))
 								{
-									W->CastOnUnit(WHeal05);
+									if (WHeal04->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal04);
+									}
+								}
+								if (WHeal05->IsValidTarget(GEntityList->Player(), W->Range()))
+								{
+									if (WHeal05->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal05);
+									}
 								}
 							}
 
 						}
 					}
-				}
 
-				else if (WHeal4->Enabled() && !WHeal04->IsValidTarget(GEntityList->Player(), W->Range()))
-				{
-					if (HealW->Enabled() && W->IsReady() && Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+					else if (WHeal2->Enabled() && !WHeal02->IsValidTarget(GEntityList->Player(), W->Range()))
 					{
-						if (Ally->HealthPercent() < HealWally->GetInteger())
+						if (HealW->Enabled() && W->IsReady() && Ally->IsValidTarget(GEntityList->Player(), W->Range()))
 						{
-							if (Ally != nullptr)
+							if (Ally->HealthPercent() < HealWally->GetInteger())
 							{
-								W->CastOnUnit(Ally);
+								if (Ally != nullptr)
+								{
+									W->CastOnUnit(Ally);
+								}
 							}
 						}
 					}
-				}
-				if (WHeal5 != nullptr && WHeal5->Enabled() && WHeal05->ChampionName() == Ally->ChampionName())
-				{
-					if (HealW->Enabled() && W->IsReady() && WHeal05->IsValidTarget(GEntityList->Player(), W->Range()))
+					if (WHeal3 != nullptr && WHeal3->Enabled() && WHeal03->ChampionName() == Ally->ChampionName())
 					{
-						if (WHeal05->HealthPercent() < HealWally->GetInteger())
+						if (HealW->Enabled() && W->IsReady() && WHeal03->IsValidTarget(GEntityList->Player(), W->Range()))
 						{
-							W->CastOnUnit(WHeal05);
-						}
-						else if (WHeal05->HealthPercent() > HealWally->GetInteger())
-						{
-							if (WHeal02->IsValidTarget(GEntityList->Player(), W->Range()))
+							if (WHeal03->HealthPercent() < HealWally->GetInteger())
 							{
-								if (WHeal02->HealthPercent() < HealWally->GetInteger())
-								{
-									W->CastOnUnit(WHeal02);
-								}
+								W->CastOnUnit(WHeal03);
 							}
-							if (WHeal03->IsValidTarget(GEntityList->Player(), W->Range()))
+							else if (WHeal03->HealthPercent() > HealWally->GetInteger())
 							{
-								if (WHeal03->HealthPercent() < HealWally->GetInteger())
+								if (WHeal01->IsValidTarget(GEntityList->Player(), W->Range()))
 								{
-									W->CastOnUnit(WHeal03);
+									if (WHeal01->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal01);
+									}
 								}
-							}
-							if (WHeal04->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal04->HealthPercent() < HealWally->GetInteger())
+								if (WHeal02->IsValidTarget(GEntityList->Player(), W->Range()))
 								{
-									W->CastOnUnit(WHeal04);
+									if (WHeal02->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal02);
+									}
 								}
-							}
-							if (WHeal01->IsValidTarget(GEntityList->Player(), W->Range()))
-							{
-								if (WHeal01->HealthPercent() < HealWally->GetInteger())
+								if (WHeal04->IsValidTarget(GEntityList->Player(), W->Range()))
 								{
-									W->CastOnUnit(WHeal01);
+									if (WHeal04->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal04);
+									}
 								}
-							}
+								if (WHeal05->IsValidTarget(GEntityList->Player(), W->Range()))
+								{
+									if (WHeal05->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal05);
+									}
+								}
 
-						}
-					}
-				}
-
-				else if (WHeal5->Enabled() && !WHeal05->IsValidTarget(GEntityList->Player(), W->Range()))
-				{
-					if (HealW->Enabled() && W->IsReady() && Ally->IsValidTarget(GEntityList->Player(), W->Range()))
-					{
-						if (Ally->HealthPercent() < HealWally->GetInteger())
-						{
-							if (Ally != nullptr)
-							{
-								W->CastOnUnit(Ally);
 							}
 						}
 					}
-				}
-				if (!WHeal1->Enabled() && !WHeal2->Enabled() && !WHeal3->Enabled() && !WHeal4->Enabled() && !WHeal5->Enabled())
-				{
-					if (HealW->Enabled() && W->IsReady() && Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+					else if (WHeal3->Enabled() && !WHeal03->IsValidTarget(GEntityList->Player(), W->Range()))
 					{
-						if (Ally->HealthPercent() < HealWally->GetInteger())
+						if (HealW->Enabled() && W->IsReady() && Ally->IsValidTarget(GEntityList->Player(), W->Range()))
 						{
-							if (Ally != nullptr)
+							if (Ally->HealthPercent() < HealWally->GetInteger())
 							{
-								W->CastOnUnit(Ally);
+								if (Ally != nullptr)
+								{
+									W->CastOnUnit(Ally);
+								}
+							}
+						}
+					}
+					if (WHeal4 != nullptr && WHeal4->Enabled() && WHeal04->ChampionName() == Ally->ChampionName())
+					{
+						if (HealW->Enabled() && W->IsReady() && WHeal04->IsValidTarget(GEntityList->Player(), W->Range()))
+						{
+							if (WHeal04->HealthPercent() < HealWally->GetInteger())
+							{
+								W->CastOnUnit(WHeal04);
+							}
+							else if (WHeal04->HealthPercent() > HealWally->GetInteger())
+							{
+								if (WHeal01->IsValidTarget(GEntityList->Player(), W->Range()))
+								{
+									if (WHeal01->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal01);
+									}
+								}
+								if (WHeal02->IsValidTarget(GEntityList->Player(), W->Range()))
+								{
+									if (WHeal02->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal02);
+									}
+								}
+								if (WHeal03->IsValidTarget(GEntityList->Player(), W->Range()))
+								{
+									if (WHeal03->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal03);
+									}
+								}
+								if (WHeal05->IsValidTarget(GEntityList->Player(), W->Range()))
+								{
+									if (WHeal05->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal05);
+									}
+								}
+
+							}
+						}
+					}
+
+					else if (WHeal4->Enabled() && !WHeal04->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+						if (HealW->Enabled() && W->IsReady() && Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+						{
+							if (Ally->HealthPercent() < HealWally->GetInteger())
+							{
+								if (Ally != nullptr)
+								{
+									W->CastOnUnit(Ally);
+								}
+							}
+						}
+					}
+					if (WHeal5 != nullptr && WHeal5->Enabled() && WHeal05->ChampionName() == Ally->ChampionName())
+					{
+						if (HealW->Enabled() && W->IsReady() && WHeal05->IsValidTarget(GEntityList->Player(), W->Range()))
+						{
+							if (WHeal05->HealthPercent() < HealWally->GetInteger())
+							{
+								W->CastOnUnit(WHeal05);
+							}
+							else if (WHeal05->HealthPercent() > HealWally->GetInteger())
+							{
+								if (WHeal02->IsValidTarget(GEntityList->Player(), W->Range()))
+								{
+									if (WHeal02->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal02);
+									}
+								}
+								if (WHeal03->IsValidTarget(GEntityList->Player(), W->Range()))
+								{
+									if (WHeal03->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal03);
+									}
+								}
+								if (WHeal04->IsValidTarget(GEntityList->Player(), W->Range()))
+								{
+									if (WHeal04->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal04);
+									}
+								}
+								if (WHeal01->IsValidTarget(GEntityList->Player(), W->Range()))
+								{
+									if (WHeal01->HealthPercent() < HealWally->GetInteger())
+									{
+										W->CastOnUnit(WHeal01);
+									}
+								}
+
+							}
+						}
+					}
+
+					else if (WHeal5->Enabled() && !WHeal05->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+						if (HealW->Enabled() && W->IsReady() && Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+						{
+							if (Ally->HealthPercent() < HealWally->GetInteger())
+							{
+								if (Ally != nullptr)
+								{
+									W->CastOnUnit(Ally);
+								}
+							}
+						}
+					}
+					if (!WHeal1->Enabled() && !WHeal2->Enabled() && !WHeal3->Enabled() && !WHeal4->Enabled() && !WHeal5->Enabled())
+					{
+						if (HealW->Enabled() && W->IsReady() && Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+						{
+							if (Ally->HealthPercent() < HealWally->GetInteger())
+							{
+								if (Ally != nullptr)
+								{
+									W->CastOnUnit(Ally);
+								}
 							}
 						}
 					}
