@@ -4,7 +4,46 @@
 class BlitzcrankBase
 {
 public:
+	void qblack()
+	{
+		int indx = 0;
+		auto Teamates = GEntityList->GetAllHeros(false, true);
+		for (auto teamate : Teamates)
+		{
 
+
+			if (indx == 0)
+			{
+				indx++;
+				WHeal1 = BlacklistMenu->CheckBox(teamate->ChampionName(), false);
+				WHeal01 = teamate;
+			}
+			else if (indx == 1)
+			{
+				indx++;
+				WHeal2 = BlacklistMenu->CheckBox(teamate->ChampionName(), false);
+				WHeal02 = teamate;
+			}
+			else if (indx == 2)
+			{
+				indx++;
+				WHeal3 = BlacklistMenu->CheckBox(teamate->ChampionName(), false);
+				WHeal03 = teamate;
+			}
+			else if (indx == 3)
+			{
+				indx++;
+				WHeal4 = BlacklistMenu->CheckBox(teamate->ChampionName(), false);
+				WHeal04 = teamate;
+			}
+			else if (indx == 4)
+			{
+				WHeal5 = BlacklistMenu->CheckBox(teamate->ChampionName(), false);
+				WHeal05 = teamate;
+				return;
+			}
+		}
+	}
 	void DrawMenu()
 	{
 		MainMenu = GPluginSDK->AddMenu("Blitzcrank - Support AIO");
@@ -42,11 +81,8 @@ public:
 			KSR = KillstealMenu->CheckBox("Use R", true);
 		}
 
-		BlacklistMenu = MainMenu->AddMenu("Blacklist");
-
-		for (auto enemy : GEntityList->GetAllHeros(false, true)) {
-			BlacklistMenu->CheckBox(enemy->ChampionName(), false);
-		}
+		BlacklistMenu = MainMenu->AddMenu("Q Blacklist");
+		qblack();
 	}
 
 	void LoadSpells()
@@ -118,18 +154,93 @@ public:
 
 			if (target != nullptr)
 			{
-				if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && !temp->Enabled() && target->IsValidTarget())
+				if (WHeal1 != nullptr && !WHeal1->Enabled() && WHeal01->ChampionName() == target->ChampionName())
 				{
-					if ((!target->HasBuffOfType(BUFF_SpellShield) || !target->HasBuffOfType(BUFF_SpellImmunity)) && target != nullptr && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
+					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && target->IsValidTarget())
 					{
-						AdvPredictionOutput outputfam;
-						Q->RunPrediction(target, false, kCollidesWithMinions, &outputfam);
-						if (outputfam.HitChance >= kHitChanceHigh)
+						if ((!target->HasBuffOfType(BUFF_SpellShield) || !target->HasBuffOfType(BUFF_SpellImmunity)) && target != nullptr && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
 						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-							if (InSpellRange(Q, pred))
-								Q->CastOnPosition(pred);
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(target, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh &&  outputfam.HitChance != kHitChanceCollision)
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								if (InSpellRange(Q, pred))
+									Q->CastOnPosition(pred);
+							}
+						}
+					}
+				}
+				if (WHeal2 != nullptr && !WHeal2->Enabled() && WHeal02->ChampionName() == target->ChampionName())
+				{
+					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && target->IsValidTarget())
+					{
+						if ((!target->HasBuffOfType(BUFF_SpellShield) || !target->HasBuffOfType(BUFF_SpellImmunity)) && target != nullptr && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
+						{
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(target, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh &&  outputfam.HitChance != kHitChanceCollision)
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								if (InSpellRange(Q, pred))
+									Q->CastOnPosition(pred);
+							}
+						}
+					}
+				}
+				if (WHeal3 != nullptr && !WHeal3->Enabled() && WHeal03->ChampionName() == target->ChampionName())
+				{
+					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && target->IsValidTarget())
+					{
+						if ((!target->HasBuffOfType(BUFF_SpellShield) || !target->HasBuffOfType(BUFF_SpellImmunity)) && target != nullptr && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
+						{
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(target, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh &&  outputfam.HitChance != kHitChanceCollision)
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								if (InSpellRange(Q, pred))
+									Q->CastOnPosition(pred);
+							}
+						}
+					}
+				}
+				if (WHeal4 != nullptr && !WHeal4->Enabled() && WHeal04->ChampionName() == target->ChampionName())
+				{
+					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && target->IsValidTarget())
+					{
+						if ((!target->HasBuffOfType(BUFF_SpellShield) || !target->HasBuffOfType(BUFF_SpellImmunity)) && target != nullptr && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
+						{
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(target, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh &&  outputfam.HitChance != kHitChanceCollision) 
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								if (InSpellRange(Q, pred))
+									Q->CastOnPosition(pred);
+							}
+						}
+					}
+				}
+				if (WHeal5 != nullptr && !WHeal5->Enabled() && WHeal05->ChampionName() == target->ChampionName())
+				{
+					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && target->IsValidTarget())
+					{
+						if ((!target->HasBuffOfType(BUFF_SpellShield) || !target->HasBuffOfType(BUFF_SpellImmunity)) && target != nullptr && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
+						{
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(target, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh &&  outputfam.HitChance != kHitChanceCollision )
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								if (InSpellRange(Q, pred))
+									Q->CastOnPosition(pred);
+							}
 						}
 					}
 				}
