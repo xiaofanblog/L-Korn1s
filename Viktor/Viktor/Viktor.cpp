@@ -633,7 +633,7 @@ void Combo()
 	}
 	if (hello == true && stuff < GGame->TickCount())
 	{
-		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range() - 80);
+		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 600);
 		GOrbwalking->SetAttacksAllowed(true);
 		GGame->IssueOrder(GEntityList->Player(), kAttackUnit, target);
 
