@@ -59,6 +59,9 @@ IMenuOption* DrawDamage;
 IMenuOption* DrawFill;
 IMenuOption* DrawRFlash;
 IMenuOption* DrawEkill;
+IMenuOption* StackTear;
+IMenuOption* StackTearQ;
+IMenuOption* StackTearW;
 
 IMenu* FarmMenu;
 IMenuOption* FarmManaP;
@@ -83,6 +86,9 @@ IMenuOption* KSE;
 IMenuOption* KSR;
 IMenu* FarmPush;
 IMenu* FarmPassive;
+
+IInventoryItem* Tear;
+IInventoryItem* Staff;
 
 ISpell2* Q;
 ISpell2* W;
@@ -118,7 +124,9 @@ void LoadSpells()
 	W->SetSkillshot(0.25, 75.f, FLT_MAX, 800.f);
 	E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, kCollidesWithYasuoWall);
 	R = GPluginSDK->CreateSpell2(kSlotR, kConeCast, false, true, kCollidesWithNothing);
-	
+	Tear = GPluginSDK->CreateItemForId(3070, 0);
+	Staff = GPluginSDK->CreateItemForId(3003, 0);
+
 }
 
 
@@ -210,6 +218,9 @@ void Menu()
 		ComboAALevel = MiscMenu->AddInteger("At what level disable AA", 1, 18, 6);
 		ComboAA = MiscMenu->CheckBox("Disable AA", true);
 		ComboAAkey = MiscMenu->AddKey("Disable key", 32);
+		StackTear = MiscMenu->CheckBox("Stack Tear", true);
+		StackTearQ = MiscMenu->CheckBox("^- use Q", true);
+		StackTearW = MiscMenu->CheckBox("^- use W", true);
 	}
 
 }
@@ -979,11 +990,28 @@ void Auto()
 		}
 	}
 }
-
+void stacking()
+{
+	if (StackTear->Enabled() && GUtility->IsPositionInFountain(GEntityList->Player()->ServerPosition(), true, false))
+	{
+		if (Tear->IsOwned() || Staff->IsOwned())
+		{
+			if (StackTearQ->Enabled())
+			{
+				Q->CastOnPosition(GEntityList->Player()->GetPosition().Extend(GGame->CursorPosition(), 300));
+			}
+			if (StackTearW->Enabled())
+			{
+				W->CastOnPosition(GEntityList->Player()->GetPosition().Extend(GGame->CursorPosition(), 300));
+			}
+		}
+	}
+}
 
 PLUGIN_EVENT(void) OnGameUpdate()
 {
 	FarmTog();
+	stacking();
 
 	if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 	{
