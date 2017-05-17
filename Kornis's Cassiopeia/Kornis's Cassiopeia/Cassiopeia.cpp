@@ -904,10 +904,9 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 {
 	if (Farmenable == true)
 	{
-		auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE);
 		for (auto minion : GEntityList->GetAllMinions(false, true, false))
 		{
-			if (minion->IsCreep() || minion->IsJungleCreep())
+			if (minion->IsCreep())
 			{
 				if (FarmEsmooth->Enabled())
 				{
@@ -917,6 +916,7 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 						{
 							if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
 							{
+								auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE);
 								if (minion->GetHealth() < EDamage + 100 && Player->GetMana() > E->ManaCost())
 								{
 									if (minion != nullptr && minion->IsCreep())
@@ -934,6 +934,7 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 					{
 						if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
 						{
+							auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE);
 							if (minion->GetHealth() < EDamage + 100 && Player->GetMana() > E->ManaCost())
 							{
 								if (minion != nullptr && minion->IsCreep())
@@ -951,6 +952,7 @@ void _OnOrbwalkPreAttack(IUnit* minion)
 				{
 					if (minion->IsValidTarget(GEntityList->Player(), E->Range()))
 					{
+						auto EDamage = GDamage->GetSpellDamage(GEntityList->Player(), minion, kSlotE);
 						if (minion->GetHealth() < EDamage + 100 && Player->GetMana() > E->ManaCost())
 						{
 							if (minion != nullptr && minion->IsCreep())
