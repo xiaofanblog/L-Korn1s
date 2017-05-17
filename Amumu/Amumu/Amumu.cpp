@@ -224,10 +224,26 @@ static int CountMinionsNearMe(IPluginSDK *sdk, float range)
 
 	return count;
 }
-
+static int GetMinionsW(float range)
+{
+	auto minions = GEntityList->GetAllMinions(false, true, false);
+	auto minionsInRange = 0;
+	for (auto minion : minions)
+	{
+		if (minion != nullptr && minion->IsValidTarget() && minion->IsEnemy(GEntityList->Player()) && !minion->IsDead())
+		{
+			auto minionDistance = (minion->GetPosition() - GEntityList->Player()->GetPosition()).Length2D();
+			if (minionDistance < range)
+			{
+				minionsInRange++;
+			}
+		}
+	}
+	return minionsInRange;
+}
 void Farm()
 {
-	if (Player->ManaPercent() > FarmMana->GetInteger())
+	if (GEntityList->Player()->ManaPercent() > FarmMana->GetInteger())
 	{
 		for (auto Minion : GEntityList->GetAllMinions(false, false, true))
 		{
@@ -241,7 +257,7 @@ void Farm()
 				{
 					E->CastOnUnit(Minion);
 				}
-				if (!GEntityList->Player()->HasBuff("AuraofDespair") && CountMinionsNearMe(GPluginSDK, W->Range()) >= FarmWmin->GetFloat() && FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range()))
+				if (!GEntityList->Player()->HasBuff("AuraofDespair") && GetMinionsW(W->Range()) >= FarmWmin->GetFloat() && FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range()))
 				{
 					W->CastOnPlayer();
 				}
@@ -249,19 +265,19 @@ void Farm()
 			}
 
 		}
-		for (auto Minion : GEntityList->GetAllMinions(false, true, false))
+		for (auto Minions : GEntityList->GetAllMinions(false, true, false))
 		{
-			if (!Minion->IsDead() && Minion != nullptr && Minion->IsValidTarget())
+			if (!Minions->IsDead() && Minions != nullptr && Minions->IsValidTarget())
 			{
-				if (FarmQlane->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
+				if (FarmQlane->Enabled() && Q->IsReady() && Minions->IsValidTarget(GEntityList->Player(), Q->Range()))
 				{
-					Q->CastOnUnit(Minion);
+					Q->CastOnUnit(Minions);
 				}
-				if (FarmE->Enabled() && E->IsReady() && Minion->IsValidTarget(GEntityList->Player(), E->Range()))
+				if (FarmE->Enabled() && E->IsReady() && Minions->IsValidTarget(GEntityList->Player(), E->Range()))
 				{
-					E->CastOnUnit(Minion);
+					E->CastOnUnit(Minions);
 				}
-				if (!GEntityList->Player()->HasBuff("AuraofDespair") && CountMinionsNearMe(GPluginSDK, W->Range()) >= FarmWmin->GetFloat() && FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range()))
+				if (!GEntityList->Player()->HasBuff("AuraofDespair") && GetMinionsW(W->Range()) >= FarmWmin->GetFloat() && FarmW->Enabled() && W->IsReady() && Minions->IsValidTarget(GEntityList->Player(), W->Range()))
 				{
 					W->CastOnPlayer();
 				}
@@ -275,7 +291,7 @@ void AutoW()
 	{
 		if (GEntityList->Player()->HasBuff("AuraofDespair"))
 		{
-			if (CountMinionsNearMe(GPluginSDK, W->Range()) == 0 && EnemiesInRange(GEntityList->Player(), W->Range()) == 0)
+			if (GetMinionsW(W->Range()) == 0 && EnemiesInRange(GEntityList->Player(), W->Range()) == 0)
 			{
 				W->CastOnPlayer();
 			}
