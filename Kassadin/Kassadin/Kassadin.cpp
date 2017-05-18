@@ -272,7 +272,7 @@ void Combo()
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
 			if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 			{
-				E->CastOnPosition(target->GetPosition());
+				E->CastOnPosition(target->ServerPosition());
 			}
 		}
 
@@ -314,7 +314,7 @@ void Burst()
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
 						if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 						{
-							E->CastOnPosition(target->GetPosition());
+							E->CastOnPosition(target->ServerPosition());
 						}
 					}
 					{
@@ -345,7 +345,7 @@ void Burst()
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
 						if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 						{
-							E->CastOnPosition(target->GetPosition());
+							E->CastOnPosition(target->ServerPosition());
 						}
 					}
 					{
@@ -385,7 +385,7 @@ void Burst()
 							auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
 							if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 							{
-								E->CastOnPosition(target->GetPosition());
+								E->CastOnPosition(target->ServerPosition());
 							}
 						}
 						{
@@ -417,7 +417,7 @@ void Burst()
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
 						if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 						{
-							E->CastOnPosition(target->GetPosition());
+							E->CastOnPosition(target->ServerPosition());
 						}
 					}
 					{
