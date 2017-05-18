@@ -64,7 +64,7 @@ public:
 	void LoadSpells()
 	{
 		Q = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithMinions));
-		Q->SetSkillshot(0.25f, 60, 5000, 750);
+		Q->SetSkillshot(0.25f, 60, 5000, 850);
 		W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, true, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
 		W->SetSkillshot(0.25f, 50, FLT_MAX, 650);
 		E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, static_cast<eCollisionFlags>(kCollidesWithNothing));
