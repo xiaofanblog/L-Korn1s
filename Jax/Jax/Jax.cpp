@@ -12,6 +12,7 @@ IMenuOption* ComboQAA;
 IMenuOption* ComboW;
 IMenuOption* ComboWAA;
 IMenuOption* ComboE;
+IMenuOption* ComboEmode;
 IMenuOption* ComboR;
 IMenuOption* ComboR1v1;
 IMenu* FleeMenu;
@@ -42,9 +43,11 @@ IMenuOption* DrawQRange;
 IMenuOption* DrawERange;
 IMenuOption* DrawQmin;
 IMenuOption* DrawWard;
+IMenuOption* DrawToggle;
 
 IMenu* FarmMenu;
 IMenuOption* FarmQ;
+IMenuOption* FarmEdelay;
 IMenuOption* FarmE;
 IMenuOption* FarmW;
 
@@ -89,6 +92,7 @@ IInventoryItem* Tiamat;
 IInventoryItem* Titanic_Hydra;
 IInventoryItem* Ravenous_Hydra;
 
+float KeyPre;
 
 
 std::vector<std::string> ComboMode = { "Q>E", "E>Q"};
@@ -273,7 +277,8 @@ void Menu()
 		ESettings = ComboMenu->AddMenu("E Settings");
 		ComboE = ESettings->CheckBox("Use E in Combo", true);
 		ComboEDelay = ESettings->AddSelection("E mode:", 0, ComboEMode);
-		ComboEDelayadd = ESettings->AddInteger("E Delay", 100, 400, 250);
+		ComboEDelayadd = ESettings->AddInteger("E Delay", 100, 2000, 1000);
+		ComboEmode = ESettings->AddKey("E Mode Change: ", 'T');
 		RSettings = ComboMenu->AddMenu("R Settings");
 		ComboR = RSettings->CheckBox("Use R in Combo", true);
 		ComboRMin = RSettings->AddInteger("Min. enemies for R: ", 1, 5, 2);
@@ -295,12 +300,14 @@ void Menu()
 		DrawERange = DrawingMenu->CheckBox("Draw E Range", true);
 		DrawQmin = DrawingMenu->CheckBox("Draw Q min Range", true);
 		DrawWard = DrawingMenu->CheckBox("Draw Wardjump Range", true);
+		DrawToggle = DrawingMenu->CheckBox("Draw Toggle", true);
 	}
 	FarmMenu = MainMenu->AddMenu("Farming");
 	FarmMana = FarmMenu->AddInteger("Mana percent for Clear", 10, 100, 50);
 	FarmQ = FarmMenu->CheckBox("Farm Q", true);
 	FarmW = FarmMenu->CheckBox("Farm W", true);
 	FarmE = FarmMenu->CheckBox("Farm E", true);
+	FarmEdelay = FarmMenu->AddInteger("E Delay", 100, 2000, 1000);
 
 	FleeMenu = MainMenu->AddMenu("Wardjump");
 	FleeKey = FleeMenu->AddKey("Wardjump", 'G');
@@ -326,6 +333,22 @@ int GetEnemiesInRange(float range)
 }
 
 
+void ChangePriority()
+{
+	if (GetAsyncKeyState(ComboEmode->GetInteger()) && !GGame->IsChatOpen())
+	{
+		if (ComboEDelay->GetInteger() == 0 && GGame->Time() > KeyPre)
+		{
+			ComboEDelay->UpdateInteger(1);
+			KeyPre = GGame->Time() + 0.250;
+		}
+		if (ComboEDelay->GetInteger() == 1 && GGame->Time() > KeyPre)
+		{
+			ComboEDelay->UpdateInteger(0);
+			KeyPre = GGame->Time() + 0.250;
+		}
+	}
+}
 void Combo()
 
 {
@@ -372,10 +395,10 @@ void Combo()
 				if (E->IsReady() && ComboE->Enabled() && E->Range() && !Player->HasBuff("JaxCounterStrike") && target->IsValidTarget(GEntityList->Player(), E->Range()))
 				{
 					E->CastOnPlayer();
-					lastedel = GGame->CurrentTick();
+					lastedel = GGame->TickCount() + ComboEDelayadd->GetInteger();
 				}
 			
-				else if ((GGame->CurrentTick() - lastedel > ComboEDelayadd->GetInteger()) && ComboE->Enabled() && Player->HasBuff("JaxCounterStrike") && target->IsValidTarget(GEntityList->Player(), E->Range()))
+				else if (GGame->TickCount() > lastedel && ComboE->Enabled() && Player->HasBuff("JaxCounterStrike") && target->IsValidTarget(GEntityList->Player(), E->Range()))
 				{
 					E->CastOnTarget(target);
 				}
@@ -406,13 +429,13 @@ void Combo()
 				if (E->IsReady() && ComboE->Enabled() && E->Range() && !Player->HasBuff("JaxCounterStrike") && target->IsValidTarget(GEntityList->Player(), Q->Range()+100))
 				{
 					E->CastOnPlayer();
-					laste = GGame->CurrentTick();
+					laste = GGame->TickCount();
 				}
 				else if (ComboE->Enabled() && Player->HasBuff("JaxCounterStrike") && target->IsValidTarget(GEntityList->Player(), Q->Range()+100))
 				{
 					E->CastOnTarget(target);
 				}
-				if (GGame->CurrentTick() - laste > 100)
+				if (GGame->TickCount() > 100 + laste)
 				{
 					if (Q->IsReady() && ComboQ->Enabled() && target->IsValidTarget(GEntityList->Player(), Q->Range()))
 					{
@@ -440,16 +463,18 @@ void Combo()
 			{
 				if (E->IsReady() && ComboE->Enabled() && E->Range() && !Player->HasBuff("JaxCounterStrike") && target->IsValidTarget(GEntityList->Player(), Q->Range()+100))
 				{
-					E->CastOnPlayer();
-					laste = GGame->CurrentTick();
-					lastedel = GGame->CurrentTick();
+					if (E->CastOnPlayer())
+					{
+						laste = GGame->TickCount();
+						lastedel = GGame->TickCount() + ComboEDelayadd->GetInteger();
+					}
 				}
 
-				else if ((GGame->CurrentTick() - lastedel > ComboEDelayadd->GetInteger()) && ComboE->Enabled() && Player->HasBuff("JaxCounterStrike") && target->IsValidTarget(GEntityList->Player(), E->Range()))
+				else if (GGame->TickCount() > lastedel && ComboE->Enabled() && Player->HasBuff("JaxCounterStrike") && target->IsValidTarget(GEntityList->Player(), E->Range()))
 				{
 					E->CastOnTarget(target);
 				}
-				if (GGame->CurrentTick() - laste > 100)
+				if (GGame->TickCount() > 100 + laste)
 				{
 					if (Q->IsReady() && ComboQ->Enabled() && target->IsValidTarget(GEntityList->Player(), Q->Range()))
 					{
@@ -530,13 +555,13 @@ void Mixed()
 			if (E->IsReady() && HarassE->Enabled() && E->Range() && !Player->HasBuff("JaxCounterStrike") && target->IsValidTarget(GEntityList->Player(), Q->Range() + 100))
 			{
 				E->CastOnPlayer();
-				laste = GGame->CurrentTick();
+				laste = GGame->TickCount();
 			}
 			else if (HarassE->Enabled() && Player->HasBuff("JaxCounterStrike") && target->IsValidTarget(GEntityList->Player(), Q->Range() + 100))
 			{
 				E->CastOnTarget(target);
 			}
-			if (GGame->CurrentTick() - laste > 100)
+			if (GGame->TickCount() > 100 + laste)
 			{
 				if (Q->IsReady() && HarassQ->Enabled() && target->IsValidTarget(GEntityList->Player(), Q->Range()))
 				{
@@ -556,19 +581,23 @@ void Farm()
 	{
 		for (auto Minion : GEntityList->GetAllMinions(false, true, true))
 		{
-			if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && Minion->IsCreep() || Minion->IsJungleCreep())
+			if (Minion->IsEnemy(GEntityList->Player()) && !Minion->IsDead() && Minion->IsValidTarget() && (Minion->IsCreep() || Minion->IsJungleCreep()))
 			{
 				if (FarmQ->Enabled() && Q->IsReady() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
 				{
 					Q->CastOnUnit(Minion);
 				}
-				if (FarmE->Enabled() && E->IsReady() && Minion->IsValidTarget(GEntityList->Player(), E->Range() + 100))
+				if (E->IsReady() && FarmE->Enabled() && !Player->HasBuff("JaxCounterStrike") && Minion->IsValidTarget(GEntityList->Player(), E->Range()))
 				{
-					E->CastOnUnit(Minion);
+					if (E->CastOnPlayer())
+					{
+						lastedel = GGame->TickCount() + FarmEdelay->GetInteger();
+					}
 				}
-				if (Player->HasBuff("JaxCounterStrike"))
+				if (GGame->TickCount() > lastedel && FarmE->Enabled() && Player->HasBuff("JaxCounterStrike") && Minion->IsValidTarget(GEntityList->Player(), E->Range()))
 				{
-					E->CastOnUnit(Minion);
+					GGame->PrintChat("ahah");
+					E->CastOnTarget(Minion);
 				}
 
 			}
@@ -623,13 +652,10 @@ boolean InitSpells()
 
 
 	if (strcmp(name, "LeeSin") == 0) {
-		GGame->PrintChat("Loaded Lee Jump!");
-
 		jump = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, kCollidesWithNothing);
 
 	}
 	else if ((strcmp(name, "Jax")) == 0) {
-		GGame->PrintChat("Loaded Jax Jump!");
 		jump = GPluginSDK->CreateSpell2(kSlotQ, kTargetCast, false, false, kCollidesWithNothing);
 	}
 
@@ -643,6 +669,7 @@ boolean InitSpells()
 
 PLUGIN_EVENT(void) OnGameUpdate()
 {
+	ChangePriority();
 	KeyPressEvent();
 	if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 	{
@@ -795,6 +822,35 @@ PLUGIN_EVENT(void) OnRender()
 	if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
 	if (DrawQmin->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), ComboQAA->GetInteger()); }
 	if (DrawWard->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), 630); }
+	if (DrawToggle->Enabled())
+	{
+		static IFont* pFont = nullptr;
+
+		if (pFont == nullptr)
+		{
+			pFont = GRender->CreateFont("Arial", 15.f, kFontWeightBold);
+			pFont->SetOutline(true);
+			pFont->SetLocationFlags(kFontLocationNormal);
+		}
+		Vec2 pos;
+		if (GGame->Projection(GEntityList->Player()->GetPosition(), &pos))
+		{
+			if (ComboEDelay->GetInteger() == 0)
+			{
+				std::string text = std::string("E Mode: Instant");
+				Vec4 clr = Vec4(188, 255, 50, 255);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x, pos.y, text.c_str());
+			}
+			if (ComboEDelay->GetInteger() == 1)
+			{
+				std::string text = std::string("E Mode: Delayed");
+				Vec4 clr = Vec4(200, 200, 50, 255);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x, pos.y, text.c_str());
+			}
+		}
+	}
 }
 
 
