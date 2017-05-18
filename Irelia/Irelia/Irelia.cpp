@@ -371,8 +371,16 @@ void Combo()
 				}
 				if (Player->HasBuff("IreliaTranscendentBladesSpell"))
 				{
+					if (!ComboProc->Enabled())
 					{
 						R->CastOnTarget(Rtarget);
+					}
+					if (ComboProc->Enabled())
+					{
+						if (!GEntityList->Player()->HasBuff("Sheen"))
+						{
+							R->CastOnTarget(Rtarget);
+						}
 					}
 				}
 			}
