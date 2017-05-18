@@ -19,6 +19,7 @@ IMenuOption* ComboRgapks;
 IMenuOption* ComboQgap;
 IMenuOption* ComboItems;
 IMenuOption* Rkillable;
+IMenuOption* ComboProc;
 
 IMenu* HarassMenu;
 IMenuOption* HarassQmin;
@@ -63,7 +64,6 @@ ISpell2* Q;
 ISpell2* W;
 ISpell2* E;
 ISpell2* R;
-ISpell2* Ignite;
 
 
 IUnit* Player;
@@ -83,9 +83,6 @@ void LoadSpells()
 	E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, kCollidesWithNothing);
 	E->SetOverrideRange(320);
 	R = GPluginSDK->CreateSpell2(kSlotR, kTargetCast, false, false, kCollidesWithYasuoWall);
-	if (GEntityList->Player()->GetSpellSlot("SummonerDot") != kSlotUnknown)
-		Ignite = GPluginSDK->CreateSpell2(GEntityList->Player()->GetSpellSlot("SummonerDot"), kTargetCast, false, false, kCollidesWithNothing);
-
 	Botrk = GPluginSDK->CreateItemForId(3153, 550);
 	Cutlass = GPluginSDK->CreateItemForId(3144, 550);
 }
@@ -106,6 +103,7 @@ void Menu()
 		ComboRgap = ComboMenu->CheckBox("Use R to Gapclose", true);
 		ComboRgapks = ComboMenu->CheckBox("R gap only when killable", true);
 		ComboItems = ComboMenu->CheckBox("Use Items", true);
+		ComboProc = ComboMenu->CheckBox("Sheen Proc.", true);
 
 	}
 	HarassMenu = MainMenu->AddMenu("Harass");
@@ -332,7 +330,7 @@ void Combo()
 				}
 			}
 
-			if (ComboR->Enabled() && R->IsReady() && R->Range() && !Rkillable->Enabled())
+			if (ComboR->Enabled() && R->IsReady() && !Rkillable->Enabled())
 			{
 				if (Q->IsReady() && E->IsReady())
 				{
@@ -346,8 +344,16 @@ void Combo()
 				}
 				if (Player->HasBuff("IreliaTranscendentBladesSpell"))
 				{
+					if (!ComboProc->Enabled())
 					{
 						R->CastOnTarget(Rtarget);
+					}
+					if (ComboProc->Enabled())
+					{
+						if (!GEntityList->Player()->HasBuff("Sheen"))
+						{
+							R->CastOnTarget(Rtarget);
+						}
 					}
 				}
 			}
