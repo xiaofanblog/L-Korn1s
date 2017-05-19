@@ -493,7 +493,7 @@ public:
 		float endtime;
 		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, E->Range()) && InterruptE->Enabled() && E->IsReady())
 		{
-			if (Args.Target->IsCastingImportantSpell(&endtime))
+			if (Args.Source->IsCastingImportantSpell(&endtime))
 			{
 				E->CastOnTarget(Args.Source, kHitChanceHigh);
 			}
