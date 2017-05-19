@@ -124,11 +124,9 @@ void Menu()
 }
 void CheckKeyPresses()
 {
-	keystate = GetAsyncKeyState(SmiteKey->GetInteger()); //Rembrandt
-
 	if (GUtility->IsLeagueWindowFocused() && !GGame->IsChatOpen())
 	{
-		if (keystate < 0)
+		if (GUtility->IsKeyDown(SmiteKey->GetInteger()))
 		{
 			
 			if (smiteKeyWasDown == false)
@@ -383,7 +381,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Mixed();
 	}
-	if (GetAsyncKeyState(Semikey->GetInteger()))
+	if (GUtility->IsKeyDown(Semikey->GetInteger()))
 	{
 		Semi();
 	}
