@@ -154,7 +154,7 @@ void Menu()
 
 void ChangeMode()
 {
-	if (GetAsyncKeyState(ComboModeChange->GetInteger()) && !GGame->IsChatOpen())
+	if (GUtility->IsKeyDown(ComboModeChange->GetInteger()) && !GGame->IsChatOpen())
 	{
 		if (ComboMode->GetInteger() == 0 && GGame->Time() > Keypress)
 		{
@@ -547,7 +547,7 @@ void Flee()
 	}
 	if (!E->IsReady())
 	{
-		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 	}
 }
 
@@ -799,7 +799,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Mixed();
 	}
-	if (GetAsyncKeyState(FleeKey->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(FleeKey->GetInteger()))
 	{
 		Flee();
 	}
