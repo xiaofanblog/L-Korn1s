@@ -155,7 +155,7 @@ void Menu()
 
 void EFlash()
 {
-	GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+	GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 	for (auto Enemy : GEntityList->GetAllHeros(false, true))
 	{
 		if (Flash != nullptr)
@@ -423,7 +423,7 @@ void Combo()
 						}
 					}
 
-					if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()) && ComboEenable->Enabled())
+					if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()))
 					{
 
 						CastE(targetEa);
@@ -489,7 +489,7 @@ void Combo()
 						}
 					}
 
-					if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()) && ComboEenable->Enabled())
+					if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()))
 					{
 
 						CastE(targetEa);
@@ -553,7 +553,7 @@ void Combo()
 						}
 					}
 
-					if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()) && ComboEenable->Enabled())
+					if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()))
 					{
 
 						CastE(targetEa);
@@ -636,7 +636,7 @@ void Combo()
 				}
 			}
 
-			if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()) && ComboEenable->Enabled())
+			if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()))
 			{
 
 				CastE(targetEa);
@@ -670,7 +670,7 @@ void Mixed()
 						E->CastOnPosition(targetEa->ServerPosition());
 					}
 
-					if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()) && HarassE->Enabled())
+					if (!Player->IsTargetable() && GEntityList->Player()->IsValidTarget(targetEa, E->Range()))
 					{
 
 						CastE(targetEa);
@@ -795,11 +795,11 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Mixed();
 	}
-	if (GetAsyncKeyState(ComboE1->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(ComboE1->GetInteger()))
 	{
 		EFlash();
 	}
-	if (GetAsyncKeyState(ComboSemiManual->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(ComboSemiManual->GetInteger()))
 	{
 		Semi();
 	}
