@@ -282,7 +282,7 @@ void Burst()
 {
 	if (GUtility->IsLeagueWindowFocused() && !GGame->IsChatOpen())
 	{
-		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 		for (auto Enemy : GEntityList->GetAllHeros(false, true))
 		{
 			if (Enemy->IsValidTarget() && Enemy != nullptr && !Enemy->IsDead())
@@ -519,7 +519,7 @@ void Flee()
 	if (!GGame->IsChatOpen())
 	{
 
-			GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+			GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 			R->CastOnPosition(GGame->CursorPosition());
 
 	}
@@ -606,11 +606,11 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Mixed();
 	}
-	if (GetAsyncKeyState(FleeKey->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(FleeKey->GetInteger()))
 	{
 		Flee();
 	}
-	if (GetAsyncKeyState(BurstKey->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(BurstKey->GetInteger()))
 	{
 		Burst();
 	}
