@@ -1398,7 +1398,7 @@ void ForcingQ()
 	{
 		if (ForceQ->Enabled())
 		{
-		GGame->IssueOrder(Player, kMoveTo, GGame->CursorPosition());
+		GGame->IssueOrderEx(Player, kMoveTo, GGame->CursorPosition(), false);
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
 			if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead() && !target->IsDashing())
 			{
@@ -1613,15 +1613,15 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Mixed();
 	}
-	if (GetAsyncKeyState(ComboRTapa->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(ComboRTapa->GetInteger()))
 	{
 		RCastTapo();
 	}
-	if (GetAsyncKeyState(SemiQkey->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(SemiQkey->GetInteger()))
 	{
 		ForcingQ();
 	}
-	if (GetAsyncKeyState(SemiE->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(SemiE->GetInteger()))
 	{
 		Semi();
 	}
