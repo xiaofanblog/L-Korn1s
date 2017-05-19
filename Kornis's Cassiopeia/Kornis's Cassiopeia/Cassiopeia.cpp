@@ -226,7 +226,7 @@ void Menu()
 }
 void FarmTog()
 {
-	if (GetAsyncKeyState(FarmKey->GetInteger()))
+	if (GUtility->IsKeyDown(FarmKey->GetInteger()))
 	{
 		if (Farmenable == true && GGame->Time() > KeyPre)
 		{
@@ -658,10 +658,10 @@ void Rflash()
 {
 	if (GUtility->IsLeagueWindowFocused() && !GGame->IsChatOpen())
 	{
-		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 		for (auto Enemy : GEntityList->GetAllHeros(false, true))
 		{
-			if (R->IsReady() && Flash != nullptr && Flash->IsReady() && ComboRRANGE->GetInteger() + 410 && ComboREnable->Enabled())
+			if (R->IsReady() && Flash != nullptr && Flash->IsReady() && ComboREnable->Enabled())
 			{
 				if ((Player->GetPosition() - Enemy->GetPosition()).Length() > R->Range() && Enemy->IsValidTarget() && Enemy != nullptr && ((Player->GetPosition() - Enemy->GetPosition()).Length()) < R->Range() + 410 && !Enemy->IsDead())
 				{
@@ -672,7 +672,7 @@ void Rflash()
 					}
 				}
 			}
-			if (Enemy->IsValidTarget() && W->Range() && !Flash->IsReady() && !R->IsReady())
+			if (Enemy->IsValidTarget() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()) && !Flash->IsReady() && !R->IsReady())
 			{
 				if (Enemy != nullptr)
 				{
@@ -1023,7 +1023,6 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Farm();
 		Jungles();
-
 	}
 	if (GOrbwalking->GetOrbwalkingMode() == kModeLastHit)
 	{
@@ -1033,7 +1032,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Mixed();
 	}
-	if (GetAsyncKeyState(ComboAAkey->GetInteger()))
+	if (GUtility->IsKeyDown(ComboAAkey->GetInteger()))
 	{
 		auto level = Player->GetLevel();
 		if (ComboAA->Enabled() && level >= ComboAALevel->GetInteger() && Player->GetMana() > 100)
@@ -1041,17 +1040,17 @@ PLUGIN_EVENT(void) OnGameUpdate()
 			GOrbwalking->SetAttacksAllowed(false);
 		}
 	}
-	if (!GetAsyncKeyState(ComboAAkey->GetInteger()) || Player->GetMana() < 100)
+	if (!GUtility->IsKeyDown(ComboAAkey->GetInteger()) || Player->GetMana() < 100)
 	{
 		{
 			GOrbwalking->SetAttacksAllowed(true);
 		}
 	}
-	if (GetAsyncKeyState(ComboRflash->GetInteger()))
+	if (GUtility->IsKeyDown(ComboRflash->GetInteger()))
 	{
 		Rflash();
 	}
-	if (GetAsyncKeyState(SemiR->GetInteger()))
+	if (GUtility->IsKeyDown(SemiR->GetInteger()))
 	{
 		Semi();
 	}
