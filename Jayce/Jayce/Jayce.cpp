@@ -11,6 +11,7 @@ IMenu* ComboMenu;
 IMenu* Qset;
 IMenu* Wset;
 IMenu* Eset;
+IMenuOption* AutoE;
 IMenuOption* ComboQM;
 IMenuOption* ComboWWait;
 IMenuOption* ComboQAOE;
@@ -177,6 +178,7 @@ void Menu()
 	{
 		InterruptE = MiscMenu->CheckBox("Interupt E", true);
 		AntiGapE = MiscMenu->CheckBox("AntiGap E", true);
+		AutoE = MiscMenu->CheckBox("Auto E on Manual Q", true);
 	}
 	DrawingMenu = MainMenu->AddMenu("Drawings");
 	{
@@ -238,7 +240,7 @@ void SemiQ()
 	{
 		if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
 		{
-			GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+			GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 			if (E2->CastOnPosition(GEntityList->Player()->ServerPosition().Extend(GGame->CursorPosition(), 150)))
 			{
 				QE->CastOnPosition(GGame->CursorPosition());
@@ -368,7 +370,7 @@ void Flee()
 {
 	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
 	{
-		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 		if (!GEntityList->Player()->HasBuff("jaycestancehammer"))
 		{
 
@@ -460,11 +462,15 @@ int GetAlliesInRange(IUnit* Source, float range)
 }
 void insec()
 {
+	if (!GEntityList->Player()->HasBuff("jaycestancehammer"))
+	{
+		R->CastOnPlayer();
+	}
 	if (GEntityList->Player()->HasBuff("jaycestancehammer"))
 	{
 		if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
 		{
-			GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+			GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 			for (auto Enemy : GEntityList->GetAllHeros(false, true))
 			{
 				if (Enemy->IsValidTarget() && Enemy != nullptr  && !Enemy->IsDead())
@@ -1012,9 +1018,9 @@ void Killsteal()
 
 PLUGIN_EVENT(void) OnProcessSpellCast(CastedSpell const& Args)
 {
-	if (GOrbwalking->GetOrbwalkingMode() == kModeCombo || GOrbwalking->GetOrbwalkingMode() == kModeMixed || GetAsyncKeyState(ComboSemiQE->GetInteger()))
+	if (GOrbwalking->GetOrbwalkingMode() == kModeCombo || GOrbwalking->GetOrbwalkingMode() == kModeMixed || GUtility->IsKeyDown(ComboSemiQE->GetInteger()))
 		return;
-	if (Args.Caster_ == GEntityList->Player())
+	if (Args.Caster_ == GEntityList->Player() && AutoE->Enabled())
 	{
 		
 		if (std::string(Args.Name_) == "JayceShockBlast")
@@ -1120,15 +1126,15 @@ PLUGIN_EVENT(void) OnGameUpdate()
 		Farm();
 		Jungle();
 	}
-	if (GetAsyncKeyState(FleeKey->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(FleeKey->GetInteger()))
 	{
 		Flee();
 	}
-	if (GetAsyncKeyState(ComboSemiQE->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(ComboSemiQE->GetInteger()))
 	{
 		SemiQ();
 	}
-	if (GetAsyncKeyState(Insec->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(Insec->GetInteger()))
 	{
 		insec();
 	}
