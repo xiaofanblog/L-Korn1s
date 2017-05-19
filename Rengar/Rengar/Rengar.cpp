@@ -188,7 +188,7 @@ void AutoSmite() // AUTO SMITE PRO BY REMBRANDT
 
 void ChangePriority()
 {
-	if (GetAsyncKeyState(ComboModeChange->GetInteger()) && !GGame->IsChatOpen() && GGame->Time() > KeyPre)
+	if (GUtility->IsKeyDown(ComboModeChange->GetInteger()) && !GGame->IsChatOpen() && GGame->Time() > KeyPre)
 	{
 		if (ComboMode == 1)
 		{
@@ -539,11 +539,9 @@ void Farm()
 
 void CheckKeyPresses()
 {
-	keystate = GetAsyncKeyState(SmiteKey->GetInteger()); //Rembrandt
-
 	if (GUtility->IsLeagueWindowFocused() && !GGame->IsChatOpen())
 	{
-		if (keystate < 0) // If most-significant bit is set...
+		if (GUtility->IsKeyDown(SmiteKey->GetInteger()))
 		{
 			// key is down . . .
 			if (smiteKeyWasDown == false)
@@ -576,7 +574,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Mixed();
 	}
-	if (GetAsyncKeyState(SemiE->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(SemiE->GetInteger()))
 	{
 		Semi();
 	}
