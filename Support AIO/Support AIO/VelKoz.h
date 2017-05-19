@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Menu.h"
 #include "MalachitePred.h"
 #include <string>
@@ -481,9 +481,9 @@ public:
 
 	void AntiGapclose(GapCloserSpell const& Args)
 	{
-		if (Args.Sender != GEntityList->Player() && Args.Sender->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Sender, 200 + Args.Sender->BoundingRadius()) && AntiGapE->Enabled() && E->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, 200 + Args.Source->BoundingRadius()) && AntiGapE->Enabled() && E->IsReady())
 		{
-			E->CastOnTarget(Args.Sender, kHitChanceDashing);
+			E->CastOnTarget(Args.Source, kHitChanceDashing);
 		}
 	}
 
@@ -491,11 +491,11 @@ public:
 	void Interrupt(InterruptibleSpell const& Args)
 	{
 		float endtime;
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, E->Range()) && InterruptE->Enabled() && E->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, E->Range()) && InterruptE->Enabled() && E->IsReady())
 		{
 			if (Args.Target->IsCastingImportantSpell(&endtime))
 			{
-				E->CastOnTarget(Args.Target, kHitChanceHigh);
+				E->CastOnTarget(Args.Source, kHitChanceHigh);
 			}
 
 		}
