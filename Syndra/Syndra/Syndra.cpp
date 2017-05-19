@@ -10,6 +10,7 @@ IMenu* MainMenu;
 IMenu* ComboMenu;
 IMenuOption* ComboQ;
 IMenuOption* ComboQE;
+IMenuOption* ComboQErange;
 IMenuOption* ComboQ2;
 IMenuOption* ComboW;
 IMenuOption* ComboE;
@@ -63,6 +64,7 @@ IMenuOption* HarassE;
 IMenuOption* HarassQauto;
 IMenuOption* HarassQautom;
 ISpell2* Q;
+ISpell2* Q2;
 ISpell2* QE;
 ISpell2* W;
 ISpell2* E;
@@ -97,8 +99,10 @@ void LoadSpells()
 {
 	Q = GPluginSDK->CreateSpell2(kSlotQ, kCircleCast, false, false, (kCollidesWithNothing));
 	Q->SetSkillshot(0.f, 60.f, 10000000000000.f, 800.f);
+	Q2 = GPluginSDK->CreateSpell2(kSlotQ, kCircleCast, false, false, (kCollidesWithNothing));
+	Q2->SetSkillshot(0.f, 60.f, 10000000000000.f, 800.f);
 	QE = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, false, false, kCollidesWithYasuoWall);
-	QE->SetSkillshot(0.6f, 80.f, 2100.f, 1200.f);
+	QE->SetSkillshot(0.6f, 80.f, 1900.f, 1200.f);
 	W = GPluginSDK->CreateSpell2(kSlotW, kCircleCast, true, false, kCollidesWithNothing);
 	W->SetSkillshot(0.25f, 50.f, 5000.f, 980.f);
 
@@ -117,6 +121,7 @@ void Menu()
 		ComboMenu = MainMenu->AddMenu("Combo Settings");
 		ComboQ = ComboMenu->CheckBox("Use Q", true);
 		ComboQE = ComboMenu->CheckBox("Use QE", true);
+		ComboQErange = ComboMenu->AddFloat("QE Range", 800, 1200, 1000);
 		ComboW = ComboMenu->CheckBox("Use W", true);
 		ComboE = ComboMenu->CheckBox("Use E", true);
 		ComboR = ComboMenu->CheckBox("Use R", true);
@@ -189,54 +194,63 @@ inline float GetDistanceVectors(Vec3 from, Vec3 to)
 
 static void CastQELogic(IUnit* target)
 {
-	if ((GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D() < 800)
+	if ((GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D() < Q->Range())
 	{
-		auto ppos = GEntityList->Player()->ServerPosition();
-		auto startPosition = ppos.Extend(target->ServerPosition(), Q->Range());
-
-		QE->SetRangeCheckFrom(startPosition);
-		QE->SetFrom(startPosition);
-		AdvPredictionOutput prediction_output;
-		QE->RunPrediction(target, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall), &prediction_output);
-
-		if (prediction_output.HitChance >= kHitChanceHigh)
-		{
-			Q->SetOverrideRange(1200);
-			Vec3 pred;
-			GPrediction->GetFutureUnitPosition(target, 0.5, true, pred);
-			if (!target->IsValidTarget(GEntityList->Player(), E->Range()))
-			{
-				if (Q->CastOnPosition(pred.Extend(GEntityList->Player()->ServerPosition(), 420)));
-				{
-					lastqE = GGame->Latency();
-					Q->SetOverrideRange(800);
-					QE->SetFrom(Vec3(0, 0, 0));
-				}
-			}
-			if (target->IsValidTarget(GEntityList->Player(), E->Range()))
-			{
-				if (Q->CastOnPosition(pred));
-				{
-					lastqE = GGame->Latency();
-					Q->SetOverrideRange(800);
-					QE->SetFrom(Vec3(0, 0, 0));
-				}
-			}
-		}
-	}
-	if ((GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D() > 800 && (GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D() < 1100)
-	{
-		auto ppos = GEntityList->Player()->ServerPosition();
-		auto startPosition = ppos.Extend(target->ServerPosition(), Q->Range()-100);
 		QE->SetOverrideDelay(0.4);
-		QE->SetRangeCheckFrom(startPosition);
-		QE->SetFrom(startPosition);
+		QE->SetRangeCheckFrom(target->ServerPosition());
+		QE->SetFrom(target->ServerPosition());
 		AdvPredictionOutput prediction_output;
 		QE->RunPrediction(target, true, static_cast<eCollisionFlags>(kCollidesWithYasuoWall), &prediction_output);
 
 		if (prediction_output.HitChance >= kHitChanceHigh)
 		{
-			if (Q->CastOnPosition(startPosition))
+			Vec3 pred;
+			GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+			if (Q->CastOnPosition(pred))
+			{
+				QE->SetFrom(Vec3(0, 0, 0));
+				lastqE = GGame->Latency();
+			}
+		}
+	}
+	if ((GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D() > 800 && (GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D() < 850)
+	{
+		Vec3 pred;
+		GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+		auto ppos = GEntityList->Player()->ServerPosition();
+		auto startPosition = ppos.Extend(pred, Q->Range());
+		QE->SetOverrideDelay(0.4 + ((GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D()) / QE->Speed());
+		QE->SetRangeCheckFrom(startPosition);
+		QE->SetFrom(startPosition);
+		Q2->SetOverrideDelay(0.5 + ((GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D()) / QE->Speed());
+		AdvPredictionOutput prediction_output;
+		QE->RunPrediction(target, true, static_cast<eCollisionFlags>(kCollidesWithYasuoWall), &prediction_output);
+
+		if (prediction_output.HitChance >= kHitChanceHigh)
+		{
+			if (Q2->CastOnPosition(startPosition))
+			{
+				QE->SetFrom(Vec3(0, 0, 0));
+				lastqE = GGame->Latency();
+			}
+		}
+	}
+	if ((GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D() > 850 && (GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D() < ComboQErange->GetFloat())
+	{
+		Vec3 pred;
+		GPrediction->GetFutureUnitPosition(target, 0.35f, true, pred);
+		auto ppos = GEntityList->Player()->ServerPosition();
+		auto startPosition = ppos.Extend(pred, Q->Range());
+		QE->SetOverrideDelay(0.4+((GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D())/QE->Speed());
+		QE->SetRangeCheckFrom(startPosition);
+		QE->SetFrom(startPosition);
+		Q2->SetOverrideDelay(0.5 + ((GEntityList->Player()->GetPosition() - target->GetPosition()).Length2D()) / QE->Speed());
+		AdvPredictionOutput prediction_output;
+		QE->RunPrediction(target, true, static_cast<eCollisionFlags>(kCollidesWithYasuoWall), &prediction_output);
+
+		if (prediction_output.HitChance >= kHitChanceHigh)
+		{
+			if (Q2->CastOnPosition(startPosition))
 			{
 				QE->SetFrom(Vec3(0, 0, 0));
 				lastqE = GGame->Latency();
@@ -335,7 +349,7 @@ static void CastELogic(IUnit* target)
 	for (auto ball : sOrbs.ToVector())
 	{
 		auto orb = ball->ServerPosition();
-		if (GEntityList->Player()->ServerPosition().To2D().Distance(orb.To2D()) <= E->Range() && GEntityList->Player()->ServerPosition().To2D().Distance(orb.To2D()) >= 200)
+		if (GEntityList->Player()->ServerPosition().To2D().Distance(orb.To2D()) <= E->Range() && GEntityList->Player()->ServerPosition().To2D().Distance(orb.To2D()) >= 100)
 		{
 			auto rangeLeft = 100 + (-0.6 * GEntityList->Player()->ServerPosition().To2D().Distance(orb.To2D()) + 900);
 			auto start_point = orb.To2D() - (orb.To2D().VectorNormalize() - GEntityList->Player()->ServerPosition().To2D().VectorNormalize()) * 10;
@@ -352,6 +366,7 @@ static void CastELogic(IUnit* target)
 				&& Distance(prediction_output.TargetPosition.To2D(), start_point, end_point, false) < QE->Radius() + target->BoundingRadius()-20)
 			{
 				E->CastOnPosition(orb);
+				lastqE = GGame->Latency();
 				QE->SetFrom(Vec3(0, 0, 0));
 				return;
 			}
@@ -365,7 +380,7 @@ void autorange()
 	{
 		W->SetOverrideRange(925);
 	}
-	else W->SetOverrideRange(1100);
+	else W->SetOverrideRange(1000);
 }
 void Combo()
 {
@@ -385,44 +400,47 @@ void Combo()
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
 		if (target != nullptr && target->IsValidTarget(GEntityList->Player(), W->Range()) && ComboW->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 		{
-			if (!GEntityList->Player()->HasBuff("syndrawtooltip") && lastq < GGame->TickCount())
+			if (!GEntityList->Player()->HasBuff("syndrawtooltip") && GEntityList->Player()->GetSpellBook()->GetToggleState(kSlotW) == 1)
 			{
 				IUnit* obj = nullptr;
 				for (auto orbs : GEntityList->GetAllUnits())
 				{
-					if (orbs != nullptr && !orbs->IsDead() && orbs->IsValidObject() && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
+					if (orbs != nullptr && !orbs->IsDead() && orbs->IsValidObject() && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && std::string(orbs->GetObjectName()).find("Syndra_Q") && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
 					{
 						obj = orbs;
-						if (obj != nullptr)
-						{
-							W->CastOnPosition(obj->GetPosition());
-							lastw = GGame->TickCount() + GGame->Latency() + 20;
-							lastwe = GGame->TickCount() + GGame->Latency() + 150;
-							return;
-						}
 					}
 
 				}
-				for (auto minion : GEntityList->GetAllMinions(false, true, true))
+				if (obj != nullptr)
 				{
-					if (minion != nullptr && minion->IsValidTarget() && !minion->IsDead() && minion->IsValidTarget(GEntityList->Player(), 925))
+					if (W->CastOnPosition(obj->ServerPosition()))
 					{
-						obj = minion;
-						if (obj != nullptr)
+						lastw = GGame->TickCount() + GGame->Latency() + 20;
+						lastwe = GGame->TickCount() + GGame->Latency() + 200;
+						return;
+					}
+				}
+				if (obj == nullptr)
+				{
+					for (auto minion : GEntityList->GetAllMinions(false, true, true))
+					{
+						if (minion != nullptr && minion->IsValidTarget() && !minion->IsDead() && minion->IsValidTarget(GEntityList->Player(), 925))
 						{
-							W->CastOnPosition(obj->GetPosition());
-							lastw = GGame->TickCount() + GGame->Latency() + 20;
-							lastwe = GGame->TickCount() + GGame->Latency() + 150;
-							return;
+							if (W->CastOnTarget(minion))
+							{
+								lastw = GGame->TickCount() + GGame->Latency() + 20;
+								lastwe = GGame->TickCount() + GGame->Latency() + 200;
+								return;
+							}
 						}
 					}
-				}			
-
+				}
 			}
+
 		}
 	}
 
-	if (GEntityList->Player()->HasBuff("syndrawtooltip"))
+	if (GEntityList->Player()->HasBuff("syndrawtooltip") && GEntityList->Player()->GetSpellBook()->GetToggleState(kSlotW) == 2)
 	{
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
 		if (target != nullptr && target->IsValidTarget(GEntityList->Player(), W->Range()) && lastqe < GGame->TickCount() && ComboW->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
@@ -432,7 +450,7 @@ void Combo()
 				Vec3 pred;
 				GPrediction->GetFutureUnitPosition(target, 0.25f, true, pred);
 				W->CastOnPosition(pred);
-				
+				 
 			}
 
 		}
@@ -498,35 +516,38 @@ void Killsteal()
 			if (KSW->Enabled() && W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()) && WDamage > Enemy->GetHealth())
 			{
 
-				if (!GEntityList->Player()->HasBuff("syndrawtooltip") && lastq < GGame->TickCount())
+				if (!GEntityList->Player()->HasBuff("syndrawtooltip") && GEntityList->Player()->GetSpellBook()->GetToggleState(kSlotW) == 1)
 				{
 					IUnit* obj = nullptr;
 					for (auto orbs : GEntityList->GetAllUnits())
 					{
-						if (orbs != nullptr && !orbs->IsDead() && orbs->IsValidObject() && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
+						if (orbs != nullptr && !orbs->IsDead() && orbs->IsValidObject() && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && std::string(orbs->GetObjectName()).find("Syndra_Q") && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
 						{
 							obj = orbs;
-							if (obj != nullptr)
-							{
-								W->CastOnPosition(obj->GetPosition());
-								lastw = GGame->TickCount() + GGame->Latency() + 20;
-								lastwe = GGame->TickCount() + GGame->Latency() + 150;
-								return;
-							}
 						}
 
 					}
-					for (auto minion : GEntityList->GetAllMinions(false, true, true))
+					if (obj != nullptr)
 					{
-						if (minion != nullptr && minion->IsValidTarget() && !minion->IsDead() && minion->IsValidTarget(GEntityList->Player(), 925))
+						if (W->CastOnPosition(obj->ServerPosition()))
 						{
-							obj = minion;
-							if (obj != nullptr)
+							lastw = GGame->TickCount() + GGame->Latency() + 20;
+							lastwe = GGame->TickCount() + GGame->Latency() + 200;
+							return;
+						}
+					}
+					if (obj == nullptr)
+					{
+						for (auto minion : GEntityList->GetAllMinions(false, true, true))
+						{
+							if (minion != nullptr && minion->IsValidTarget() && !minion->IsDead() && minion->IsValidTarget(GEntityList->Player(), 925))
 							{
-								W->CastOnPosition(obj->GetPosition());
-								lastw = GGame->TickCount() + GGame->Latency() + 20;
-								lastwe = GGame->TickCount() + GGame->Latency() + 150;
-								return;
+								if (W->CastOnTarget(minion))
+								{
+									lastw = GGame->TickCount() + GGame->Latency() + 20;
+									lastwe = GGame->TickCount() + GGame->Latency() + 200;
+									return;
+								}
 							}
 						}
 					}
@@ -536,14 +557,16 @@ void Killsteal()
 
 			if(WDamage > Enemy->GetHealth() && W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()))
 			{
-				if (GEntityList->Player()->HasBuff("syndrawtooltip"))
+				if (GEntityList->Player()->HasBuff("syndrawtooltip") && GEntityList->Player()->GetSpellBook()->GetToggleState(kSlotW) == 2)
 				{
 					auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
 					if (target != nullptr && target->IsValidTarget(GEntityList->Player(), W->Range()) && ComboW->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 					{
 						if (!target->HasBuff("SyndraEDebuff") && lastqe < GGame->TickCount())
 						{
-							W->CastOnTarget(target);
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.25f, true, pred);
+							W->CastOnPosition(pred);
 							
 						}
 
@@ -596,7 +619,7 @@ static int GetMinionsW(float range)
 
 void FarmTog()
 {
-	if (GetAsyncKeyState(FarmToggle->GetInteger()))
+	if (GUtility->IsKeyDown(FarmToggle->GetInteger()))
 	{
 		if (Farmenable == true && GGame->Time() > KeyPre)
 		{
@@ -617,7 +640,7 @@ void HarasTog()
 {
 	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
 	{
-		if (GetAsyncKeyState(HarassQautom->GetInteger()))
+		if (GUtility->IsKeyDown(HarassQautom->GetInteger()))
 		{
 			if (Harassenable == true && GGame->Time() > KeyPres)
 			{
@@ -680,35 +703,38 @@ void Farm()
 				}
 				if (FarmW->Enabled() && W->IsReady() && GetMinionsW(W->Range()) >= 3)
 				{
-					if (!GEntityList->Player()->HasBuff("syndrawtooltip"))
+					if (!GEntityList->Player()->HasBuff("syndrawtooltip") && GEntityList->Player()->GetSpellBook()->GetToggleState(kSlotW) == 1)
 					{
 						IUnit* obj = nullptr;
 						for (auto orbs : GEntityList->GetAllUnits())
 						{
-							if (orbs != nullptr && !orbs->IsDead() && orbs->IsValidObject() && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
+							if (orbs != nullptr && !orbs->IsDead() && orbs->IsValidObject() && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && std::string(orbs->GetObjectName()).find("Syndra_Q") && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
 							{
 								obj = orbs;
-								if (obj != nullptr)
-								{
-									W->CastOnPosition(obj->GetPosition());
-									lastw = GGame->TickCount() + GGame->Latency() + 20;
-									lastwe = GGame->TickCount() + GGame->Latency() + 150;
-									return;
-								}
 							}
 
 						}
-						for (auto minion : GEntityList->GetAllMinions(false, true, true))
+						if (obj != nullptr)
 						{
-							if (minion != nullptr && minion->IsValidTarget() && !minion->IsDead() && minion->IsValidTarget(GEntityList->Player(), 925))
+							if (W->CastOnPosition(obj->ServerPosition()))
 							{
-								obj = minion;
-								if (obj != nullptr)
+								lastw = GGame->TickCount() + GGame->Latency() + 20;
+								lastwe = GGame->TickCount() + GGame->Latency() + 200;
+								return;
+							}
+						}
+						if (obj == nullptr)
+						{
+							for (auto minion : GEntityList->GetAllMinions(false, true, true))
+							{
+								if (minion != nullptr && minion->IsValidTarget() && !minion->IsDead() && minion->IsValidTarget(GEntityList->Player(), 925))
 								{
-									W->CastOnPosition(obj->GetPosition());
-									lastw = GGame->TickCount() + GGame->Latency() + 20;
-									lastwe = GGame->TickCount() + GGame->Latency() + 150;
-									return;
+									if (W->CastOnTarget(minion))
+									{
+										lastw = GGame->TickCount() + GGame->Latency() + 20;
+										lastwe = GGame->TickCount() + GGame->Latency() + 200;
+										return;
+									}
 								}
 							}
 						}
@@ -821,35 +847,38 @@ void Harass()
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
 			if (target != nullptr && target->IsValidTarget(GEntityList->Player(), W->Range()) && HarassW->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 			{
-				if (!GEntityList->Player()->HasBuff("syndrawtooltip") && lastq < GGame->TickCount())
+				if (!GEntityList->Player()->HasBuff("syndrawtooltip") && GEntityList->Player()->GetSpellBook()->GetToggleState(kSlotW) == 1)
 				{
 					IUnit* obj = nullptr;
 					for (auto orbs : GEntityList->GetAllUnits())
 					{
-						if (orbs != nullptr && !orbs->IsDead() && orbs->IsValidObject() && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
+						if (orbs != nullptr && !orbs->IsDead() && orbs->IsValidObject() && orbs->GetTeam() == GEntityList->Player()->GetTeam() && !orbs->IsDead() && std::string(orbs->GetObjectName()) == "Seed" && std::string(orbs->GetObjectName()).find("Syndra_Q") && GetDistanceVectors(orbs->GetPosition(), GEntityList->Player()->GetPosition()) <= 925)
 						{
 							obj = orbs;
-							if (obj != nullptr)
-							{
-								W->CastOnPosition(obj->GetPosition());
-								lastw = GGame->TickCount() + GGame->Latency() + 20;
-								lastwe = GGame->TickCount() + GGame->Latency() + 150;
-								return;
-							}
 						}
 
 					}
-					for (auto minion : GEntityList->GetAllMinions(false, true, true))
+					if (obj != nullptr)
 					{
-						if (minion != nullptr && minion->IsValidTarget() && !minion->IsDead() && minion->IsValidTarget(GEntityList->Player(), 925))
+						if (W->CastOnPosition(obj->ServerPosition()))
 						{
-							obj = minion;
-							if (obj != nullptr)
+							lastw = GGame->TickCount() + GGame->Latency() + 20;
+							lastwe = GGame->TickCount() + GGame->Latency() + 200;
+							return;
+						}
+					}
+					if (obj == nullptr)
+					{
+						for (auto minion : GEntityList->GetAllMinions(false, true, true))
+						{
+							if (minion != nullptr && minion->IsValidTarget() && !minion->IsDead() && minion->IsValidTarget(GEntityList->Player(), 925))
 							{
-								W->CastOnPosition(obj->GetPosition());
-								lastw = GGame->TickCount() + GGame->Latency() + 20;
-								lastwe = GGame->TickCount() + GGame->Latency() + 150;
-								return;
+								if (W->CastOnTarget(minion))
+								{
+									lastw = GGame->TickCount() + GGame->Latency() + 20;
+									lastwe = GGame->TickCount() + GGame->Latency() + 200;
+									return;
+								}
 							}
 						}
 					}
@@ -857,14 +886,16 @@ void Harass()
 			}
 		}
 
-		if (GEntityList->Player()->HasBuff("syndrawtooltip"))
+		if (GEntityList->Player()->HasBuff("syndrawtooltip") && GEntityList->Player()->GetSpellBook()->GetToggleState(kSlotW) == 2)
 		{
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
 			if (target != nullptr && target->IsValidTarget(GEntityList->Player(), W->Range()) && HarassW->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 			{
 				if (!target->HasBuff("SyndraEDebuff") && lastqe < GGame->TickCount())
 				{
-					W->CastOnTarget(target);
+					Vec3 pred;
+					GPrediction->GetFutureUnitPosition(target, 0.25f, true, pred);
+					W->CastOnPosition(pred);
 					
 				}
 
@@ -931,20 +962,26 @@ static void OnProcessSpellCast(CastedSpell const& Args)
 			if (GOrbwalking->GetOrbwalkingMode() == kModeCombo && lastw < GGame->TickCount() && ComboE->Enabled())
 			{
 				EndPos = Args.EndPosition_;
-				GPluginSDK->DelayFunctionCall(lastqE, []()
+				if ((Args.EndPosition_ - GEntityList->Player()->GetPosition()).Length2D() <= 850)
 				{
-					E->CastOnPosition(EndPos);
-					lastqE = 0;
-				});
+					GPluginSDK->DelayFunctionCall(lastqE, []()
+					{
+						E->CastOnPosition(EndPos);
+						lastqE = 0;
+					});
+				}
 			}
-			if (GetAsyncKeyState(QEmouse->GetInteger()))
+			if (GUtility->IsKeyDown(QEmouse->GetInteger()))
 			{
 				EndPos = Args.EndPosition_;
-				GPluginSDK->DelayFunctionCall(lastqE, []()
+				if ((Args.EndPosition_ - GEntityList->Player()->GetPosition()).Length2D() <= 850)
 				{
-					E->CastOnPosition(EndPos);
-					lastqE = 0;
-				});
+					GPluginSDK->DelayFunctionCall(lastqE, []()
+					{
+						E->CastOnPosition(EndPos);
+						lastqE = 0;
+					});
+				}
 			}
 
 		}
@@ -1007,7 +1044,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Combo();
 	}
-	if (GetAsyncKeyState(QEmouse->GetInteger()))
+	if (GUtility->IsKeyDown(QEmouse->GetInteger()))
 	{
 		if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
 		{
@@ -1050,7 +1087,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Farm();
 	}
-	if (GetAsyncKeyState(ComboAAkey->GetInteger()))
+	if (GUtility->IsKeyDown(ComboAAkey->GetInteger()))
 	{
 		auto level = Player->GetLevel();
 		if (ComboAA->Enabled() && level >= ComboAALevel->GetInteger() && Player->GetMana() > 100)
@@ -1058,7 +1095,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 			GOrbwalking->SetAttacksAllowed(false);
 		}
 	}
-	if (!GetAsyncKeyState(ComboAAkey->GetInteger()) || Player->GetMana() < 100 || (!Q->IsReady() && !W->IsReady() && !E->IsReady()))
+	if (!GUtility->IsKeyDown(ComboAAkey->GetInteger()) || Player->GetMana() < 100 || (!Q->IsReady() && !W->IsReady() && !E->IsReady()))
 	{
 		{
 			GOrbwalking->SetAttacksAllowed(true);
@@ -1069,27 +1106,27 @@ PLUGIN_EVENT(void) OnGameUpdate()
 PLUGIN_EVENT(void) OnInterruptible(InterruptibleSpell const& Args)
 
 {
-	if (InterruptE->Enabled() && (Args.Target->GetPosition() - GEntityList->Player()->GetPosition()).Length() < E->Range() && E->IsReady() && Args.Target->IsValidTarget())
+	if (InterruptE->Enabled() && (Args.Source->GetPosition() - GEntityList->Player()->GetPosition()).Length() < E->Range() && E->IsReady() && Args.Source->IsValidTarget())
 	{
-		E->CastOnTarget(Args.Target);
+		E->CastOnTarget(Args.Source);
 	}
 }
 PLUGIN_EVENT(void) OnGapCloser(GapCloserSpell const& Args)
 {
 
-	if (Args.Sender != GEntityList->Player()
-		&& Args.Sender->IsEnemy(GEntityList->Player())
-		&& GEntityList->Player()->IsValidTarget(Args.Sender, E->Range() + Args.Sender->BoundingRadius())
-		&& AntiGapE->Enabled() && E->IsReady())
+	if (Args.Source != GEntityList->Player()
+		&& Args.Source->IsEnemy(GEntityList->Player())
+		&& GEntityList->Player()->IsValidTarget(Args.Source, E->Range() + Args.Source->BoundingRadius())
+		&& AntiGapE->Enabled() && E->IsReady() && Args.Source->IsValidTarget())
 	{
-		E->CastOnTarget(Args.Sender);
+		E->CastOnTarget(Args.Source);
 	}
 }
 
 PLUGIN_EVENT(void) OnRender()
 {
 	if (DrawQRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(145, 255, 255, 255), Q->Range()); }
-	if (DrawQE->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), 1200); }
+	if (DrawQE->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), ComboQErange->GetFloat()); }
 	if (DrawWRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), W->Range()); }
 	if (DrawERange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), E->Range()); }
 	if (DrawRRange->Enabled()) { GPluginSDK->GetRenderer()->DrawOutlinedCircle(GEntityList->Player()->GetPosition(), Vec4(255, 255, 0, 255), R->Range()); }
@@ -1100,7 +1137,7 @@ PLUGIN_EVENT(void) OnRender()
 
 		if (pFont == nullptr)
 		{
-			pFont = GRender->CreateFont("Tahoma", 16.f, kFontWeightNormal);
+			pFont = GRender->CreateFont("Arial", 15.f, kFontWeightBold);
 			pFont->SetOutline(true);
 			pFont->SetLocationFlags(kFontLocationNormal);
 		}
@@ -1129,9 +1166,9 @@ PLUGIN_EVENT(void) OnRender()
 
 		if (pFont == nullptr)
 		{
-			pFont = GRender->CreateFont("Tahoma", 16.f, kFontWeightNormal);
+			pFont = GRender->CreateFont("Arial", 15.f, kFontWeightBold);
 			pFont->SetOutline(true);
-			pFont->SetLocationFlags(kFontLocationCenterVertical);
+			pFont->SetLocationFlags(kFontLocationNormal);
 		}
 		Vec2 pos;
 		if (GGame->Projection(GEntityList->Player()->GetPosition(), &pos))
@@ -1148,7 +1185,7 @@ PLUGIN_EVENT(void) OnRender()
 				std::string text = std::string("Harass OFF");
 				Vec4 clr = Vec4(188, 255, 50, 255);
 				pFont->SetColor(clr);
-				pFont->Render(pos.x, pos.y - 10, text.c_str());
+				pFont->Render(pos.x, pos.y - 20, text.c_str());
 			}
 		}
 	}
@@ -1168,7 +1205,7 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 	GEventManager->AddEventHandler(kEventOnInterruptible, OnInterruptible);
 	GEventManager->AddEventHandler(kEventOnGapCloser, OnGapCloser);
 	GGame->PrintChat("<b><font color=\"#FFFFFF\">Syndra<b><font color=\"#f8a101\"> by</font></b> Kornis<font color=\"#7FFF00\"> - Loaded</font></b>");
-	GGame->PrintChat("<b><font color=\"#f8a101\">Version: 0.1</font></b>");
+	GGame->PrintChat("<b><font color=\"#f8a101\">Version: 0.3</font></b>");
 
 }
 
