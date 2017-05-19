@@ -240,7 +240,7 @@ static void DoWardJump(Vec3 pos)
 
 static bool IsKeyDown(IMenuOption *menuOption)
 {
-	return GetAsyncKeyState(menuOption->GetInteger()) & 0x8000;
+	return GUtility->IsKeyDown(menuOption->GetInteger());
 }
 
 
@@ -335,7 +335,7 @@ int GetEnemiesInRange(float range)
 
 void ChangePriority()
 {
-	if (GetAsyncKeyState(ComboEmode->GetInteger()) && !GGame->IsChatOpen())
+	if (GUtility->IsKeyDown(ComboEmode->GetInteger()) && !GGame->IsChatOpen())
 	{
 		if (ComboEDelay->GetInteger() == 0 && GGame->Time() > KeyPre)
 		{
@@ -596,7 +596,6 @@ void Farm()
 				}
 				if (GGame->TickCount() > lastedel && FarmE->Enabled() && Player->HasBuff("JaxCounterStrike") && Minion->IsValidTarget(GEntityList->Player(), E->Range()))
 				{
-					GGame->PrintChat("ahah");
 					E->CastOnTarget(Minion);
 				}
 
