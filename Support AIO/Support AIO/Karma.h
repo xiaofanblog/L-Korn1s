@@ -407,7 +407,7 @@ public:
 
 	void ComboSurvive()
 	{
-		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 		if (R->IsReady())
 		{
 			auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
@@ -458,7 +458,7 @@ public:
 	}
 	void ComboChase()
 	{
-		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 		if (E->IsReady() && !GEntityList->Player()->HasBuff("KarmaMantra"))
 		{
 			auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
@@ -851,16 +851,16 @@ public:
 	}
 	void AntiGapclose(GapCloserSpell const& Args)
 	{
-		if (Args.Sender != GEntityList->Player()
-			&& Args.Sender->IsEnemy(GEntityList->Player())
-			&& GEntityList->Player()->IsValidTarget(Args.Sender, W->Range() + Args.Sender->BoundingRadius())
+		if (Args.Source != GEntityList->Player()
+			&& Args.Source->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Source, W->Range() + Args.Source->BoundingRadius())
 			&& AntiGapW->Enabled() && W->IsReady())
 		{
-			W->CastOnTarget(Args.Sender);
+			W->CastOnTarget(Args.Source);
 		}
-		if (Args.Sender != GEntityList->Player()
-			&& Args.Sender->IsEnemy(GEntityList->Player())
-			&& GEntityList->Player()->IsValidTarget(Args.Sender, E->Range() + Args.Sender->BoundingRadius())
+		if (Args.Source != GEntityList->Player()
+			&& Args.Source->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Source, E->Range() + Args.Source->BoundingRadius())
 			&& AntiGapE->Enabled() && E->IsReady())
 		{
 			E->CastOnPlayer();

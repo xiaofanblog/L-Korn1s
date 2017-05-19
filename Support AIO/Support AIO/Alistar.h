@@ -108,7 +108,7 @@ public:
 	{
 		if (GUtility->IsLeagueWindowFocused() && !GGame->IsChatOpen())
 		{
-		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+			GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 			for (auto Enemy : GEntityList->GetAllHeros(false, true))
 			{
 				if (Q->IsReady() && Flash != nullptr && Flash->IsReady())
@@ -151,7 +151,7 @@ public:
 	{
 		if (GUtility->IsLeagueWindowFocused() && !GGame->IsChatOpen())
 		{
-		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+			GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 
 			auto target = GTargetSelector->GetFocusedTarget();
 			if (target != nullptr && target->IsValidTarget() && target->IsHero() && target->IsValidTarget())
@@ -173,30 +173,30 @@ public:
 
 	void Interrupt(InterruptibleSpell const& Args)
 	{
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, Q->Range()) && InterruptQ->Enabled() && Q->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, Q->Range()) && InterruptQ->Enabled() && Q->IsReady())
 		{
 			Q->CastOnPlayer();
 		}
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, W->Range()) && InterruptW->Enabled() && W->IsReady() && (!Q->IsReady() || !GEntityList->Player()->IsValidTarget(Args.Target, Q->Range())))
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, W->Range()) && InterruptW->Enabled() && W->IsReady() && (!Q->IsReady() || !GEntityList->Player()->IsValidTarget(Args.Source, Q->Range())))
 		{
-			W->CastOnTarget(Args.Target);
+			W->CastOnTarget(Args.Source);
 		}
 	}
 	void AntiGapclose(GapCloserSpell const& Args)
 	{
-		if (Args.Sender != GEntityList->Player()
-			&& Args.Sender->IsEnemy(GEntityList->Player())
-			&& GEntityList->Player()->IsValidTarget(Args.Sender, Q->Range() + Args.Sender->BoundingRadius())
+		if (Args.Source != GEntityList->Player()
+			&& Args.Source->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Source, Q->Range() + Args.Source->BoundingRadius())
 			&& AntiGapQ->Enabled() && E->IsReady())
 		{
-			Q->CastOnTarget(Args.Sender);
+			Q->CastOnTarget(Args.Source);
 		}
-		if (Args.Sender != GEntityList->Player()
-			&& Args.Sender->IsEnemy(GEntityList->Player())
-			&& GEntityList->Player()->IsValidTarget(Args.Sender, W->Range() + Args.Sender->BoundingRadius())
-			&& AntiGapW->Enabled() && W->IsReady() && (!Q->IsReady() || !GEntityList->Player()->IsValidTarget(Args.Sender, Q->Range())))
+		if (Args.Source != GEntityList->Player()
+			&& Args.Source->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Source, W->Range() + Args.Source->BoundingRadius())
+			&& AntiGapW->Enabled() && W->IsReady() && (!Q->IsReady() || !GEntityList->Player()->IsValidTarget(Args.Source, Q->Range())))
 		{
-			W->CastOnTarget(Args.Sender);
+			W->CastOnTarget(Args.Source);
 		}
 	}
 

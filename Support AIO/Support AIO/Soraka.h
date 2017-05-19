@@ -179,7 +179,7 @@ public:
 			{
 				if (Ally != GEntityList->Player() && !GEntityList->Player()->IsRecalling())
 				{
-					if (WHeal1 != nullptr && WHeal1->Enabled() && WHeal01->ChampionName() == Ally->ChampionName())
+					if (WHeal1 != nullptr && WHeal1->Enabled() && WHeal01 == Ally)
 					{
 						if (HealW->Enabled() && W->IsReady() && WHeal01->IsValidTarget(GEntityList->Player(), W->Range()))
 						{
@@ -235,7 +235,7 @@ public:
 							}
 						}
 					}
-					if (WHeal2 != nullptr && WHeal2->Enabled() && WHeal02->ChampionName() == Ally->ChampionName())
+					if (WHeal2 != nullptr && WHeal2->Enabled() && WHeal02 == Ally)
 					{
 						if (HealW->Enabled() && W->IsReady() && WHeal02->IsValidTarget(GEntityList->Player(), W->Range()))
 						{
@@ -291,7 +291,7 @@ public:
 							}
 						}
 					}
-					if (WHeal3 != nullptr && WHeal3->Enabled() && WHeal03->ChampionName() == Ally->ChampionName())
+					if (WHeal3 != nullptr && WHeal3->Enabled() && WHeal03 == Ally)
 					{
 						if (HealW->Enabled() && W->IsReady() && WHeal03->IsValidTarget(GEntityList->Player(), W->Range()))
 						{
@@ -346,7 +346,7 @@ public:
 							}
 						}
 					}
-					if (WHeal4 != nullptr && WHeal4->Enabled() && WHeal04->ChampionName() == Ally->ChampionName())
+					if (WHeal4 != nullptr && WHeal4->Enabled() && WHeal04 == Ally)
 					{
 						if (HealW->Enabled() && W->IsReady() && WHeal04->IsValidTarget(GEntityList->Player(), W->Range()))
 						{
@@ -402,7 +402,7 @@ public:
 							}
 						}
 					}
-					if (WHeal5 != nullptr && WHeal5->Enabled() && WHeal05->ChampionName() == Ally->ChampionName())
+					if (WHeal5 != nullptr && WHeal5->Enabled() && WHeal05 == Ally)
 					{
 						if (HealW->Enabled() && W->IsReady() && WHeal05->IsValidTarget(GEntityList->Player(), W->Range()))
 						{
@@ -542,21 +542,21 @@ public:
 
 	void AntiGapclose(GapCloserSpell const& Args)
 	{
-		if (Args.Sender != GEntityList->Player()
-			&& Args.Sender->IsEnemy(GEntityList->Player())
-			&& GEntityList->Player()->IsValidTarget(Args.Sender, E->Range() + Args.Sender->BoundingRadius())
+		if (Args.Source != GEntityList->Player()
+			&& Args.Source->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Source, E->Range() + Args.Source->BoundingRadius())
 			&& ComboEgapclose->Enabled() && E->IsReady())
 		{
-			E->CastOnTarget(Args.Sender);
+			E->CastOnTarget(Args.Source);
 		}
 	}
 
 
 	void Interrupt(InterruptibleSpell const& Args)
 	{
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, E->Range()) && ComboEinterrupt->Enabled() && E->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, E->Range()) && ComboEinterrupt->Enabled() && E->IsReady())
 		{
-			E->CastOnTarget(Args.Target, kHitChanceHigh);
+			E->CastOnTarget(Args.Source, kHitChanceHigh);
 		}
 
 	}

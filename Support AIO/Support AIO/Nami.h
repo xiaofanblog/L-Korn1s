@@ -263,7 +263,7 @@ public:
 		{
 			if (Ally != GEntityList->Player() && !GEntityList->Player()->IsDead() && !Ally->IsDead())
 			{
-				if (WHeal1 != nullptr && WHeal1->Enabled() && WHeal01->ChampionName() == Ally->ChampionName())
+				if (WHeal1 != nullptr && WHeal1->Enabled() && WHeal01 == Ally)
 				{
 					if (HealW->Enabled() && W->IsReady() && WHeal01->IsValidTarget(GEntityList->Player(), W->Range()))
 					{
@@ -319,7 +319,7 @@ public:
 						}
 					}
 				}
-				if (WHeal2 != nullptr && WHeal2->Enabled() && WHeal02->ChampionName() == Ally->ChampionName())
+				if (WHeal2 != nullptr && WHeal2->Enabled() && WHeal02 == Ally)
 				{
 					if (HealW->Enabled() && W->IsReady() && WHeal02->IsValidTarget(GEntityList->Player(), W->Range()))
 					{
@@ -375,7 +375,7 @@ public:
 						}
 					}
 				}
-				if (WHeal3 != nullptr && WHeal3->Enabled() && WHeal03->ChampionName() == Ally->ChampionName())
+				if (WHeal3 != nullptr && WHeal3->Enabled() && WHeal03 == Ally)
 				{
 					if (HealW->Enabled() && W->IsReady() && WHeal03->IsValidTarget(GEntityList->Player(), W->Range()))
 					{
@@ -430,7 +430,7 @@ public:
 						}
 					}
 				}
-				if (WHeal4 != nullptr && WHeal4->Enabled() && WHeal04->ChampionName() == Ally->ChampionName())
+				if (WHeal4 != nullptr && WHeal4->Enabled() && WHeal04 == Ally)
 				{
 					if (HealW->Enabled() && W->IsReady() && WHeal04->IsValidTarget(GEntityList->Player(), W->Range()))
 					{
@@ -486,7 +486,7 @@ public:
 						}
 					}
 				}
-				if (WHeal5 != nullptr && WHeal5->Enabled() && WHeal05->ChampionName() == Ally->ChampionName())
+				if (WHeal5 != nullptr && WHeal5->Enabled() && WHeal05 == Ally)
 				{
 					if (HealW->Enabled() && W->IsReady() && WHeal05->IsValidTarget(GEntityList->Player(), W->Range()))
 					{
@@ -686,7 +686,7 @@ public:
 
 					if (Ally != GEntityList->Player())
 					{
-						if (EPriority1 != nullptr && EPriority1->Enabled() && EPriority01->ChampionName() == Ally->ChampionName())
+						if (EPriority1 != nullptr && EPriority1->Enabled() && EPriority01 == Ally)
 						{
 							if (EPriority01->IsWindingUp())
 							{
@@ -713,7 +713,7 @@ public:
 								}
 							}
 						}
-						if (EPriority2 != nullptr && EPriority2->Enabled() && EPriority02->ChampionName() == Ally->ChampionName())
+						if (EPriority2 != nullptr && EPriority2->Enabled() && EPriority02 == Ally)
 						{
 							if (EPriority02->IsWindingUp())
 							{
@@ -740,7 +740,7 @@ public:
 								}
 							}
 						}
-						if (EPriority3 != nullptr && EPriority3->Enabled() && EPriority03->ChampionName() == Ally->ChampionName())
+						if (EPriority3 != nullptr && EPriority3->Enabled() && EPriority03 == Ally)
 						{
 							if (EPriority03->IsWindingUp())
 							{
@@ -769,7 +769,7 @@ public:
 								}
 							}
 						}
-						if (EPriority4 != nullptr && EPriority4->Enabled() && EPriority04->ChampionName() == Ally->ChampionName())
+						if (EPriority4 != nullptr && EPriority4->Enabled() && EPriority04 == Ally)
 						{
 							if (EPriority04->IsWindingUp())
 							{
@@ -795,7 +795,7 @@ public:
 								}
 							}
 						}
-						if (EPriority5 != nullptr && EPriority5->Enabled() && EPriority05->ChampionName() == Ally->ChampionName())
+						if (EPriority5 != nullptr && EPriority5->Enabled() && EPriority05 == Ally)
 						{
 							if (EPriority05->IsWindingUp())
 							{
@@ -877,16 +877,16 @@ public:
 	void Interrupt(InterruptibleSpell const& Args)
 	{
 		float endtime;
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, R->Range()) && InterruptR->Enabled() && R->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, R->Range()) && InterruptR->Enabled() && R->IsReady())
 		{
-			if (Args.Target->IsCastingImportantSpell(&endtime))
+			if (Args.Source->IsCastingImportantSpell(&endtime))
 			{
-				R->CastOnTarget(Args.Target);
+				R->CastOnTarget(Args.Source);
 			}
 		}
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, Q->Range()) && InterruptQ->Enabled() && Q->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, Q->Range()) && InterruptQ->Enabled() && Q->IsReady())
 		{
-			Q->CastOnTarget(Args.Target);
+			Q->CastOnTarget(Args.Source);
 		}
 	}
 

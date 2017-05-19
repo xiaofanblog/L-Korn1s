@@ -63,7 +63,7 @@ public:
 		{
 			BlitzcrankBase().Combo();
 		}
-		if (GetAsyncKeyState(GrabQ->GetInteger()) & 0x8000)
+		if (GUtility->IsKeyDown(GrabQ->GetInteger()))
 		{
 			BlitzcrankBase().ManQ();
 		}
@@ -366,11 +366,11 @@ public:
 		{
 			ZileanBase().Mixed();
 		}
-		if (GetAsyncKeyState(ComboEflee->GetInteger()) & 0x8000)
+		if (GUtility->IsKeyDown(ComboEflee->GetInteger()))
 		{
 			ZileanBase().Flee();
 		}
-		if (GetAsyncKeyState(QWQMouse->GetInteger()) & 0x8000)
+		if (GUtility->IsKeyDown(QWQMouse->GetInteger()))
 		{
 			ZileanBase().QWQ();
 		}
@@ -450,7 +450,7 @@ public:
 		{
 			NamiBase().Combo();
 		}
-		if (GetAsyncKeyState(ForceR->GetInteger()))
+		if (GUtility->IsKeyDown(ForceR->GetInteger()))
 		{
 			NamiBase().Semi();
 		}
@@ -614,11 +614,11 @@ public:
 		{
 			BraumBase().LastHit();
 		}
-		if (GetAsyncKeyState(SaveKey->GetInteger()) & 0x8000)
+		if (GUtility->IsKeyDown(SaveKey->GetInteger()))
 		{
 			BraumBase().ComboSave();
 		}
-		if (GetAsyncKeyState(ForceR->GetInteger()))
+		if (GUtility->IsKeyDown(ForceR->GetInteger()))
 		{
 			BraumBase().Semi();
 		}
@@ -699,7 +699,7 @@ class Sona : public zHero
 			{
 				SonaBase().Combo();
 			}
-			if (GetAsyncKeyState(ForceR->GetInteger()))
+			if (GUtility->IsKeyDown(ForceR->GetInteger()))
 			{
 				SonaBase().Semi();
 			}
@@ -776,11 +776,11 @@ public:
 		{
 			AlistarBase().Combo();
 		}
-		if (GetAsyncKeyState(ComboQflash->GetInteger()))
+		if (GUtility->IsKeyDown(ComboQflash->GetInteger()))
 		{
 			AlistarBase().FlashQ();
 		}
-		if (GetAsyncKeyState(ComboQ2->GetInteger()))
+		if (GUtility->IsKeyDown(ComboQ2->GetInteger()))
 		{
 			AlistarBase().EngageCombo();
 		}
@@ -1099,15 +1099,15 @@ public:
 		{
 			KarmaBase().Farm();
 		}
-		if (GetAsyncKeyState(Chase->GetInteger()) & 0x8000)
+		if (GUtility->IsKeyDown(Chase->GetInteger()))
 		{
 			KarmaBase().ComboChase();
 		}
-		if (GetAsyncKeyState(QWQMouse->GetInteger()) & 0x8000)
+		if (GUtility->IsKeyDown(QWQMouse->GetInteger()))
 		{
 			KarmaBase().RQ();
 		}
-		if (GetAsyncKeyState(Survival->GetInteger()) & 0x8000)
+		if (GUtility->IsKeyDown(Survival->GetInteger()))
 		{
 			KarmaBase().ComboSurvive();
 		}
@@ -1276,7 +1276,7 @@ public:
 		{
 			LuxBase().harass();
 		}
-		if (GetAsyncKeyState(ForceR->GetInteger()))
+		if (GUtility->IsKeyDown(ForceR->GetInteger()))
 		{
 			LuxBase().Semi();
 		}
@@ -1352,7 +1352,7 @@ public:
 		VelKozBase().AutoE();
 		VelKozBase().AAdisable();
 		VelKozBase().autoQ();
-		VelKozBase().setQ();
+		//VelKozBase().setQ();
 		VelKozBase().Killsteal();
 		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
@@ -1601,11 +1601,11 @@ public:
 			RakanBase().Harass();
 		}
 	
-		if (GetAsyncKeyState(FleeKey->GetInteger()) & 0x8000)
+		if (GUtility->IsKeyDown(FleeKey->GetInteger()))
 		{
 			RakanBase().Flee();
 		}
-		if (GetAsyncKeyState(ComboEgapclose->GetInteger()) & 0x8000)
+		if (GUtility->IsKeyDown(ComboEgapclose->GetInteger()))
 		{
 			RakanBase().Engage();
 		}

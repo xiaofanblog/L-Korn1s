@@ -844,19 +844,19 @@ public:
 
 	void AntiGapclose(GapCloserSpell const& Args)
 	{
-		if (Args.Sender != GEntityList->Player()
-			&& Args.Sender->IsEnemy(GEntityList->Player())
-			&& GEntityList->Player()->IsValidTarget(Args.Sender, Q->Range() + Args.Sender->BoundingRadius())
+		if (Args.Source != GEntityList->Player()
+			&& Args.Source->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Source, Q->Range() + Args.Source->BoundingRadius())
 			&& AntiGapQ->Enabled() && Q->IsReady())
 		{
-			Q->CastOnTarget(Args.Sender);
+			Q->CastOnTarget(Args.Source);
 		}
-		if (Args.Sender != GEntityList->Player()
-			&& Args.Sender->IsEnemy(GEntityList->Player())
-			&& GEntityList->Player()->IsValidTarget(Args.Sender, W->Range() + Args.Sender->BoundingRadius())
+		if (Args.Source != GEntityList->Player()
+			&& Args.Source->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Source, W->Range() + Args.Source->BoundingRadius())
 			&& AntiGapW->Enabled() && W->IsReady())
 		{
-			W->CastOnTarget(Args.Sender);
+			W->CastOnTarget(Args.Source);
 		}
 	}
 

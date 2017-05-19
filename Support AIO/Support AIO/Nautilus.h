@@ -311,24 +311,24 @@ public:
 
 	void Interrupt(InterruptibleSpell const& Args)
 	{
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, Q->Range()) && InterruptQ->Enabled() && Q->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, Q->Range()) && InterruptQ->Enabled() && Q->IsReady())
 		{
-			Q->CastOnTarget(Args.Target);
+			Q->CastOnTarget(Args.Source);
 		}
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, R->Range()) && InterruptR->Enabled() && R->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, R->Range()) && InterruptR->Enabled() && R->IsReady())
 		{
 			if (Args.DangerLevel == kHighDanger)
 
 			{
-				R->CastOnTarget(Args.Target);
+				R->CastOnTarget(Args.Source);
 			}
 		}
 	}
 	void AntiGapclose(GapCloserSpell const& Args)
 	{
-		if (Args.Sender != GEntityList->Player()
-			&& Args.Sender->IsEnemy(GEntityList->Player())
-			&& GEntityList->Player()->IsValidTarget(Args.Sender, Q->Range() + Args.Sender->BoundingRadius())
+		if (Args.Source != GEntityList->Player()
+			&& Args.Source->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Source, Q->Range() + Args.Source->BoundingRadius())
 			&& AntiGapQ->Enabled() && E->IsReady())
 		{
 			Q->CastOnPosition(Args.EndPosition);

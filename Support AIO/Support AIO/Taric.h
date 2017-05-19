@@ -588,31 +588,31 @@ public:
 	}
 	void Interrupt(InterruptibleSpell const& Args)
 	{
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, E->Range() + 1280) && InterruptE->Enabled() && E->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, E->Range() + 1280) && InterruptE->Enabled() && E->IsReady())
 		{
-			if (Args.Target->IsValidTarget() && !Args.Target->IsDead() && Args.Target != nullptr)
+			if (Args.Source->IsValidTarget() && !Args.Source->IsDead() && Args.Source != nullptr)
 			{
 
-				if ((Args.Target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+				if ((Args.Source->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 				{
-					if (Args.Target != nullptr && Args.Target->IsValidTarget() && !Args.Target->IsDead())
+					if (Args.Source != nullptr && Args.Source->IsValidTarget() && !Args.Source->IsDead())
 					{
-						E->CastOnTarget(Args.Target);
+						E->CastOnTarget(Args.Source);
 					}
 				}
 
 
-				if ((Args.Target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() > E->Range())
+				if ((Args.Source->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() > E->Range())
 				{
 					for (auto Ally : GEntityList->GetAllHeros(true, false))
 					{
-						if (Ally->HasBuff("taricwallybuff") && !Ally->IsDead() && Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), 1280) && (Args.Target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < 1280 + E->Range())
+						if (Ally->HasBuff("taricwallybuff") && !Ally->IsDead() && Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), 1280) && (Args.Source->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < 1280 + E->Range())
 						{
-							if (Args.Target->IsValidTarget(Ally, E->Range()))
+							if (Args.Source->IsValidTarget(Ally, E->Range()))
 							{
-								if (Args.Target != nullptr && Args.Target->IsValidTarget() && !Args.Target->IsDead())
+								if (Args.Source != nullptr && Args.Source->IsValidTarget() && !Args.Source->IsDead())
 								{
-									E->CastOnPosition(Args.Target->ServerPosition());
+									E->CastOnPosition(Args.Source->ServerPosition());
 								}
 							}
 						}
@@ -625,32 +625,32 @@ public:
 	}
 	void AntiGapclose(GapCloserSpell const& Args)
 	{
-		if (Args.Sender != GEntityList->Player()
-			&& Args.Sender->IsEnemy(GEntityList->Player())
-			&& GEntityList->Player()->IsValidTarget(Args.Sender, E->Range() + 1280)
+		if (Args.Source != GEntityList->Player()
+			&& Args.Source->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Source, E->Range() + 1280)
 			&& AntiGapE->Enabled() && E->IsReady())
 		{
-			if (Args.Sender->IsValidTarget() && !Args.Sender->IsDead() && Args.Sender != nullptr)
+			if (Args.Source->IsValidTarget() && !Args.Source->IsDead() && Args.Source != nullptr)
 			{
 
-				if ((Args.Sender->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
+				if ((Args.Source->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < E->Range())
 				{
-					if (Args.Sender != nullptr && Args.Sender->IsValidTarget() && !Args.Sender->IsDead())
+					if (Args.Source != nullptr && Args.Source->IsValidTarget() && !Args.Source->IsDead())
 					{
 						E->CastOnPosition(Args.EndPosition);
 					}
 				}
 
 
-				if ((Args.Sender->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() > E->Range())
+				if ((Args.Source->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() > E->Range())
 				{
 					for (auto Ally : GEntityList->GetAllHeros(true, false))
 					{
-						if (Ally->HasBuff("taricwallybuff") && !Ally->IsDead() && Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), 1280) && (Args.Sender->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < 1280 + E->Range())
+						if (Ally->HasBuff("taricwallybuff") && !Ally->IsDead() && Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), 1280) && (Args.Source->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < 1280 + E->Range())
 						{
-							if (Args.Sender->IsValidTarget(Ally, E->Range()))
+							if (Args.Source->IsValidTarget(Ally, E->Range()))
 							{
-								if (Args.Sender != nullptr && Args.Sender->IsValidTarget() && !Args.Sender->IsDead())
+								if (Args.Source != nullptr && Args.Source->IsValidTarget() && !Args.Source->IsDead())
 								{
 									E->CastOnPosition(Args.EndPosition);
 								}

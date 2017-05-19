@@ -115,7 +115,7 @@ public:
 	{
 		if (GUtility->IsLeagueWindowFocused() && !GGame->IsChatOpen())
 		{
-			GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+			GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 
 			auto target = GTargetSelector->GetFocusedTarget();
 			if (target != nullptr && target->IsValidTarget() && target->IsHero())
@@ -155,7 +155,7 @@ public:
 
 		if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
 		{
-			GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+			GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 			if (FleeE->Enabled() && E->IsReady())
 			{
 				for (auto target : GEntityList->GetAllHeros(true, false))
@@ -558,16 +558,16 @@ public:
 	void Interrupt(InterruptibleSpell const& Args)
 	{
 
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, W->Range()) && InterruptW->Enabled() && W->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, W->Range()) && InterruptW->Enabled() && W->IsReady())
 		{
-			W->CastOnTarget(Args.Target);
+			W->CastOnTarget(Args.Source);
 		}
 	}
 	void AntiGapclose(GapCloserSpell const& Args)
 	{
-		if (Args.Sender != GEntityList->Player()
-			&& Args.Sender->IsEnemy(GEntityList->Player())
-			&& GEntityList->Player()->IsValidTarget(Args.Sender, W->Range() + Args.Sender->BoundingRadius())
+		if (Args.Source != GEntityList->Player()
+			&& Args.Source->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Source, W->Range() + Args.Source->BoundingRadius())
 			&& AntiGapW->Enabled() && W->IsReady())
 		{
 			W->CastOnPosition(Args.EndPosition);

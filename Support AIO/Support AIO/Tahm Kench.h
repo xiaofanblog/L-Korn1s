@@ -312,11 +312,11 @@ public:
 
 	void AntiGapclose(GapCloserSpell const& Args)
 	{
-		if (Args.Sender != GEntityList->Player() && Args.Sender->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Sender, 200 + Args.Sender->BoundingRadius()) && AntiGapQ->Enabled() && Q->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, 200 + Args.Source->BoundingRadius()) && AntiGapQ->Enabled() && Q->IsReady())
 		{
-			Q->CastOnTarget(Args.Sender);
+			Q->CastOnTarget(Args.Source);
 		}
-		if (Args.Sender != GEntityList->Player() && Args.Sender->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Sender, 200 + Args.Sender->BoundingRadius()) && AntiGapW->Enabled() && W->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, 200 + Args.Source->BoundingRadius()) && AntiGapW->Enabled() && W->IsReady())
 		{
 			for (auto Ally : GEntityList->GetAllHeros(true, false))
 			{
@@ -326,7 +326,7 @@ public:
 					{
 						if (Ally->HealthPercent() < 50)
 						{
-							if (Args.Sender->HealthPercent() > Ally->HealthPercent())
+							if (Args.Source->HealthPercent() > Ally->HealthPercent())
 							{
 								W->CastOnTarget(Ally);
 							}
@@ -341,13 +341,13 @@ public:
 	void Interrupt(InterruptibleSpell const& Args)
 	{
 		float endtime;
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, 860) && InterruptQ->Enabled() && Q->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, 860) && InterruptQ->Enabled() && Q->IsReady())
 		{
-			if (Args.Target->HasBuff("tahmkenchpdevourable"))
+			if (Args.Source->HasBuff("tahmkenchpdevourable"))
 			{
-				if (Args.Target->IsCastingImportantSpell(&endtime))
+				if (Args.Source->IsCastingImportantSpell(&endtime))
 				{
-					Q->CastOnTarget(Args.Target, kHitChanceHigh);
+					Q->CastOnTarget(Args.Source, kHitChanceHigh);
 				}
 			}
 

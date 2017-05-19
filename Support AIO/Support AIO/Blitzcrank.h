@@ -150,11 +150,33 @@ public:
 		for (auto Enemy : GEntityList->GetAllHeros(false, true))
 		{
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
-			IMenuOption * temp = BlacklistMenu->GetOption(Enemy->ChampionName());
 
 			if (target != nullptr)
 			{
-				if (WHeal1 != nullptr && !WHeal1->Enabled() && WHeal01->ChampionName() == target->ChampionName())
+				if (WHeal1 != nullptr && !WHeal1->Enabled() && WHeal01 == target)
+				{
+					GGame->PrintChat("1");
+					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && target->IsValidTarget())
+					{
+						GGame->PrintChat("2");
+						if ((!target->HasBuffOfType(BUFF_SpellShield) || !target->HasBuffOfType(BUFF_SpellImmunity)) && target != nullptr && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
+						{
+							GGame->PrintChat("3");
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(target, false, kCollidesWithMinions, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh &&  outputfam.HitChance != kHitChanceCollision)
+							{
+								GGame->PrintChat("4");
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+								if (InSpellRange(Q, pred))
+									GGame->PrintChat("5");
+									Q->CastOnPosition(pred);
+							}
+						}
+					}
+				}
+				if (WHeal2 != nullptr && !WHeal2->Enabled() && WHeal02 == target)
 				{
 					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && target->IsValidTarget())
 					{
@@ -172,7 +194,7 @@ public:
 						}
 					}
 				}
-				if (WHeal2 != nullptr && !WHeal2->Enabled() && WHeal02->ChampionName() == target->ChampionName())
+				if (WHeal3 != nullptr && !WHeal3->Enabled() && WHeal03 == target)
 				{
 					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && target->IsValidTarget())
 					{
@@ -190,25 +212,7 @@ public:
 						}
 					}
 				}
-				if (WHeal3 != nullptr && !WHeal3->Enabled() && WHeal03->ChampionName() == target->ChampionName())
-				{
-					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && target->IsValidTarget())
-					{
-						if ((!target->HasBuffOfType(BUFF_SpellShield) || !target->HasBuffOfType(BUFF_SpellImmunity)) && target != nullptr && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
-						{
-							AdvPredictionOutput outputfam;
-							Q->RunPrediction(target, false, kCollidesWithMinions, &outputfam);
-							if (outputfam.HitChance >= kHitChanceHigh &&  outputfam.HitChance != kHitChanceCollision)
-							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								if (InSpellRange(Q, pred))
-									Q->CastOnPosition(pred);
-							}
-						}
-					}
-				}
-				if (WHeal4 != nullptr && !WHeal4->Enabled() && WHeal04->ChampionName() == target->ChampionName())
+				if (WHeal4 != nullptr && !WHeal4->Enabled() && WHeal04 == target)
 				{
 					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && target->IsValidTarget())
 					{
@@ -226,7 +230,7 @@ public:
 						}
 					}
 				}
-				if (WHeal5 != nullptr && !WHeal5->Enabled() && WHeal05->ChampionName() == target->ChampionName())
+				if (WHeal5 != nullptr && !WHeal5->Enabled() && WHeal05 == target)
 				{
 					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && target->IsValidTarget())
 					{
@@ -286,11 +290,10 @@ public:
 		{
 			if (AutoQ->Enabled())
 			{
-				IMenuOption * temp = BlacklistMenu->GetOption(Enemy->ChampionName());
 
 				if (Enemy != nullptr)
 				{
-					if (Q->IsReady() && !temp->Enabled() && Enemy->IsValidTarget())
+					if (Q->IsReady() && Enemy->IsValidTarget())
 					{
 						if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
 						{
@@ -312,12 +315,12 @@ public:
 
 	void ManQ()
 	{
+		GGame->PrintChat("test");
 		for (auto Enemy : GEntityList->GetAllHeros(false, true))
 		{
-			IMenuOption * temp = BlacklistMenu->GetOption(Enemy->ChampionName());
 			if (Enemy != nullptr)
 			{
-				if (Q->IsReady() && !temp->Enabled() && Enemy->IsValidTarget())
+				if (Q->IsReady() && Enemy->IsValidTarget())
 				{
 					if ((!Enemy->HasBuffOfType(BUFF_SpellShield) || !Enemy->HasBuffOfType(BUFF_SpellImmunity)) && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()))
 					{
@@ -381,9 +384,9 @@ public:
 
 	void Interrupt(InterruptibleSpell const& Args)
 	{
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, R->Range()) && ComboRinterrupt->Enabled() && R->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, R->Range()) && ComboRinterrupt->Enabled() && R->IsReady())
 		{
-			R->CastOnTarget(Args.Target);
+			R->CastOnTarget(Args.Source);
 		}
 	}
 

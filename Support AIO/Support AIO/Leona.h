@@ -223,11 +223,11 @@ public:
 
 	void AntiGapclose(GapCloserSpell const& Args)
 	{
-		if (Args.Sender != GEntityList->Player() && Args.Sender->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Sender, 200 + Args.Sender->BoundingRadius()) && AntigapQ->Enabled() && Q->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, 200 + Args.Source->BoundingRadius()) && AntigapQ->Enabled() && Q->IsReady())
 		{
 			if (Q->CastOnPlayer())
 			{
-				GOrbwalking->SetOverrideTarget(Args.Sender);
+				GOrbwalking->SetOverrideTarget(Args.Source);
 			}
 		}
 	}
@@ -236,17 +236,17 @@ public:
 	void Interrupt(InterruptibleSpell const& Args)
 	{
 		float endtime;
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, 200) && InterruptQ->Enabled() && Q->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, 200) && InterruptQ->Enabled() && Q->IsReady())
 		{
 			Q->CastOnPlayer();
-			GOrbwalking->SetOverrideTarget(Args.Target);
+			GOrbwalking->SetOverrideTarget(Args.Source);
 		}
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, R->Range()) && InterruptR->Enabled() && R->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, R->Range()) && InterruptR->Enabled() && R->IsReady())
 		{
-			if (Args.Target->IsCastingImportantSpell(&endtime))
+			if (Args.Source->IsCastingImportantSpell(&endtime))
 			{
-				if (!Q->IsReady() || !GEntityList->Player()->IsValidTarget(Args.Target, 200))
-					R->CastOnTarget(Args.Target, kHitChanceHigh);
+				if (!Q->IsReady() || !GEntityList->Player()->IsValidTarget(Args.Source, 200))
+					R->CastOnTarget(Args.Source, kHitChanceHigh);
 			}
 
 		}

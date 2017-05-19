@@ -325,7 +325,7 @@ public:
 	{
 		if (!GGame->IsChatOpen())
 		{
-			GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+			GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 			if (E->IsReady())
 			{
 				E->CastOnPlayer();
@@ -336,16 +336,16 @@ public:
 
 	void Interrupt(InterruptibleSpell const& Args)
 	{
-		if (ComboQinterrupt->Enabled() && (Args.Target->GetPosition() - GEntityList->Player()->GetPosition()).Length() < Q->Range() && Q->IsReady() && Args.Target->IsValidTarget())
+		if (ComboQinterrupt->Enabled() && (Args.Source->GetPosition() - GEntityList->Player()->GetPosition()).Length() < Q->Range() && Q->IsReady() && Args.Source->IsValidTarget())
 		{
-			Q->CastOnTarget(Args.Target);
+			Q->CastOnTarget(Args.Source);
 		}
 		if (!Q->IsReady())
 		{
-			if (ComboQinterrupt->Enabled() && (Args.Target->GetPosition() - GEntityList->Player()->GetPosition()).Length() < Q->Range() && Args.Target->IsValidTarget())
+			if (ComboQinterrupt->Enabled() && (Args.Source->GetPosition() - GEntityList->Player()->GetPosition()).Length() < Q->Range() && Args.Source->IsValidTarget())
 			{
 				W->CastOnPlayer();
-				Q->CastOnTarget(Args.Target);
+				Q->CastOnTarget(Args.Source);
 			}
 		}
 	}

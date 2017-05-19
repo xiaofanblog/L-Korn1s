@@ -540,19 +540,19 @@ public:
 
 	void AntiGapclose(GapCloserSpell const& Args)
 	{
-		if (Args.Sender != GEntityList->Player()
-			&& Args.Sender->IsEnemy(GEntityList->Player())
-			&& GEntityList->Player()->IsValidTarget(Args.Sender, R->Range() + Args.Sender->BoundingRadius())
+		if (Args.Source != GEntityList->Player()
+			&& Args.Source->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Source, R->Range() + Args.Source->BoundingRadius())
 			&& AntiGapR->Enabled() && R->IsReady())
 		{
-			R->CastOnTarget(Args.Sender);
+			R->CastOnTarget(Args.Source);
 		}
 	}
 	void Interrupt(InterruptibleSpell const& Args)
 	{
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, E->Range()) && Args.DangerLevel == kHighDanger && InterruptR->Enabled() && R->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, E->Range()) && Args.DangerLevel == kHighDanger && InterruptR->Enabled() && R->IsReady())
 		{
-			R->CastOnTarget(Args.Target);
+			R->CastOnTarget(Args.Source);
 		}
 	}
 

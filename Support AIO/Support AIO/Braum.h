@@ -86,7 +86,7 @@ public:
 
 	void ComboSave()
 	{
-		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 
 		if (SaveW->Enabled() && W->IsReady())
 		{
@@ -253,8 +253,8 @@ public:
 	void OnInterruptible(InterruptibleSpell const& Args)
 	{
 		{
-			if (Args.DangerLevel == kHighDanger && InterruptR->Enabled() && R->IsReady())
-				R->CastOnTarget(Args.Target);
+			if (Args.DangerLevel == kHighDanger && InterruptR->Enabled() && R->IsReady() && Args.Source->IsValidTarget(GEntityList->Player(), R->Range()) && Args.Source->IsValidTarget())
+				R->CastOnTarget(Args.Source);
 		}
 		{
 			if (Args.DangerLevel == kHighDanger && SaveW->Enabled() && W->IsReady())
@@ -377,19 +377,19 @@ public:
 	{
 		minions = GEntityList->GetAllMinions(true, false, false);
 		for (IUnit* minion : minions)
-			if (Args.Sender != GEntityList->Player()
-				&& Args.Sender->IsEnemy(GEntityList->Player())
-				&& GEntityList->Player()->IsValidTarget(Args.Sender, W->Range() + Args.Sender->BoundingRadius())
+			if (Args.Source != GEntityList->Player()
+				&& Args.Source->IsEnemy(GEntityList->Player())
+				&& GEntityList->Player()->IsValidTarget(Args.Source, W->Range() + Args.Source->BoundingRadius())
 				&& AntiGapW->Enabled() && W->IsReady() && CountAllyMinionsNearMe(GPluginSDK, W->Range() >= 1) && minion != nullptr && !minion->IsDead())
 			{
 				W->CastOnUnit(minion);
 			}
-		if (Args.Sender != GEntityList->Player()
-			&& Args.Sender->IsEnemy(GEntityList->Player())
-			&& GEntityList->Player()->IsValidTarget(Args.Sender, W->Range() + Args.Sender->BoundingRadius())
+		if (Args.Source != GEntityList->Player()
+			&& Args.Source->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Source, W->Range() + Args.Source->BoundingRadius())
 			&& AntiGapE->Enabled() && E->IsReady())
 		{
-			E->CastOnPosition(Args.Sender->ServerPosition());
+			E->CastOnPosition(Args.Source->ServerPosition());
 		}
 	}
 

@@ -419,28 +419,28 @@ public:
 
 	void AntiGapclose(GapCloserSpell const& Args)
 	{
-		if (Args.Sender != GEntityList->Player()
-			&& Args.Sender->IsEnemy(GEntityList->Player())
-			&& GEntityList->Player()->IsValidTarget(Args.Sender, Q->Range() + Args.Sender->BoundingRadius())
+		if (Args.Source != GEntityList->Player()
+			&& Args.Source->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Source, Q->Range() + Args.Source->BoundingRadius())
 			&& AntiGapQ->Enabled() && Q->IsReady())
 		{
-			Q->CastOnTarget(Args.Sender);
+			Q->CastOnTarget(Args.Source);
 		}
-		if (Args.Sender != GEntityList->Player()
-			&& Args.Sender->IsEnemy(GEntityList->Player())
-			&& GEntityList->Player()->IsValidTarget(Args.Sender, W->Range() + Args.Sender->BoundingRadius())
+		if (Args.Source != GEntityList->Player()
+			&& Args.Source->IsEnemy(GEntityList->Player())
+			&& GEntityList->Player()->IsValidTarget(Args.Source, W->Range() + Args.Source->BoundingRadius())
 			&& AntiGapW->Enabled() && W->IsReady())
 		{
-			W->CastOnTarget(Args.Sender);
+			W->CastOnTarget(Args.Source);
 		}
 	}
 
 
 	void Interrupt(InterruptibleSpell const& Args)
 	{
-		if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, Q->Range()) && InterruptQ->Enabled() && Q->IsReady())
+		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, Q->Range()) && InterruptQ->Enabled() && Q->IsReady())
 		{
-			Q->CastOnTarget(Args.Target, kHitChanceHigh);
+			Q->CastOnTarget(Args.Source, kHitChanceHigh);
 
 			LastQcast = GGame->TickCount() + 1500;
 
@@ -448,7 +448,7 @@ public:
 		}
 		if (LastQcast < GGame->TickCount())
 		{
-			if (Args.Target != GEntityList->Player() && Args.Target->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Target, R->Range()) && InterruptR->Enabled() && R->IsReady())
+			if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, R->Range()) && InterruptR->Enabled() && R->IsReady())
 			{
 				if (Args.DangerLevel == kHighDanger && !Q->IsReady())
 				{
