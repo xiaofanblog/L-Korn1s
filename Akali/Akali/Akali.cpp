@@ -131,7 +131,7 @@ void Menu()
 void ComboWRG()
 {
 	{
-		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 		bool hasIgnite = GEntityList->Player()->GetSpellState(GEntityList->Player()->GetSpellSlot("SummonerDot")) == Ready;
 
 		if (Gunblade->IsOwned() && Gunblade->IsReady() && ItemsCombo->Enabled() && !(Player->IsDead()))
@@ -328,7 +328,7 @@ void Flee()
 
 		if (FleeW->Enabled() && W->IsReady())
 		{
-			GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+			GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 			W->CastOnPosition(GGame->CursorPosition());
 		}
 
@@ -516,11 +516,11 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Mixed();
 	}
-	if (GetAsyncKeyState(ComboWR->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(ComboWR->GetInteger()))
 	{
 		ComboWRG();
 	}
-	if (GetAsyncKeyState(FleeKey->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(FleeKey->GetInteger()))
 	{
 		Flee();
 	}
