@@ -184,7 +184,7 @@ void Flee()
 {
 	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
 	{
-		GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 		if (FleeW->Enabled() && W->IsReady())
 		{
 			W->CastOnPlayer();
@@ -239,7 +239,7 @@ void HarasTog()
 {
 	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
 	{
-		if (GetAsyncKeyState(HarassAuto->GetInteger()))
+		if (GUtility->IsKeyDown(HarassAuto->GetInteger()))
 		{
 			if (Harassenable == true && GGame->Time() > KeyPres)
 			{
@@ -841,7 +841,7 @@ void Combo()
 				E->CastOnTarget(target);
 			}
 		}
-		else GGame->IssueOrder(GEntityList->Player(), kMoveTo, GGame->CursorPosition());
+		else GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
 	}
 }
 void LastHit()
@@ -1218,7 +1218,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	{
 		Mixed();
 	}
-	if (GetAsyncKeyState(FleeKey->GetInteger()) & 0x8000)
+	if (GUtility->IsKeyDown(FleeKey->GetInteger()))
 	{
 		Flee();
 	}
@@ -1257,7 +1257,7 @@ PLUGIN_EVENT(void) OnRender()
 	{
 		for (auto hero : GEntityList->GetAllHeros(false, true))
 		{
-			if (GetAsyncKeyState(FleeKey->GetInteger()))
+			if (GUtility->IsKeyDown(FleeKey->GetInteger()))
 			{
 				GRender->DrawOutlinedCircle(GGame->CursorPosition(), Vec4(255, 0, 0, 255), 200);
 			}
