@@ -71,8 +71,19 @@ ISpell2* E;
 ISpell2* R;
 ISpell2* Ignite;
 
+IMenu* BlacklistMenu;
 IUnit* Enemy;
 
+IMenuOption* Block1;
+IMenuOption* Block2;
+IMenuOption* Block3;
+IMenuOption* Block4;
+IMenuOption* Block5;
+IUnit* Block01;
+IUnit* Block02;
+IUnit* Block03;
+IUnit* Block04;
+IUnit* Block05;
 Vec3 EndPos;
 
 IUnit* Player;
@@ -112,7 +123,46 @@ void LoadSpells()
 	R = GPluginSDK->CreateSpell2(kSlotR, kTargetCast, false, false, (kCollidesWithYasuoWall));
 }
 
+void qblack()
+{
+	int indx = 0;
+	auto Teamates = GEntityList->GetAllHeros(false, true);
+	for (auto teamate : Teamates)
+	{
 
+
+		if (indx == 0)
+		{
+			indx++;
+			Block1 = BlacklistMenu->CheckBox(teamate->ChampionName(), false);
+			Block01 = teamate;
+		}
+		else if (indx == 1)
+		{
+			indx++;
+			Block2 = BlacklistMenu->CheckBox(teamate->ChampionName(), false);
+			Block02 = teamate;
+		}
+		else if (indx == 2)
+		{
+			indx++;
+			Block3 = BlacklistMenu->CheckBox(teamate->ChampionName(), false);
+			Block03 = teamate;
+		}
+		else if (indx == 3)
+		{
+			indx++;
+			Block4 = BlacklistMenu->CheckBox(teamate->ChampionName(), false);
+			Block04 = teamate;
+		}
+		else if (indx == 4)
+		{
+			Block5 = BlacklistMenu->CheckBox(teamate->ChampionName(), false);
+			Block05 = teamate;
+			return;
+		}
+	}
+}
 void Menu()
 {
 	MainMenu = GPluginSDK->AddMenu("Kornis Syndra");
@@ -130,10 +180,9 @@ void Menu()
 		ComboAALevel = AASet->AddInteger("At what level disable AA", 1, 18, 6);
 		ComboAA = AASet->CheckBox("Disable AA", false);
 		ComboAAkey = AASet->AddKey("Disable key", 32);
-		RBlacklist = MainMenu->AddMenu("R Blacklist");
-		for (auto enemy : GEntityList->GetAllHeros(false, true)) {
-			RBlacklist->CheckBox(enemy->ChampionName(), false);
-		}
+		BlacklistMenu = MainMenu->AddMenu("R Blacklist");
+		qblack();
+
 		QEmouse = ComboMenu->AddKey("QE Key", 'T');
 		QEsettings = ComboMenu->AddSelection("QE on Key Mode", 1, { "Target", "Mouse", "Logic"});
 
@@ -450,7 +499,7 @@ void Combo()
 				Vec3 pred;
 				GPrediction->GetFutureUnitPosition(target, 0.25f, true, pred);
 				W->CastOnPosition(pred);
-				 
+
 			}
 
 		}
@@ -480,15 +529,61 @@ void Combo()
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
 		if (target != nullptr && ComboR->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range()) && GetUltimateDamage(target) > target->GetHealth())
 		{
-
-			for (auto enemy : GEntityList->GetAllHeros(false, true))
+			if (Block1 != nullptr && !Block1->Enabled() && Block01 == target)
 			{
-				IMenuOption* temp = RBlacklist->GetOption(enemy->ChampionName());
-				if (GetUltimateDamage(enemy) > enemy->GetHealth() && R->IsReady() && enemy->IsValidTarget(GEntityList->Player(), R->Range()))
+				if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
 				{
-					if (!temp->Enabled() && enemy->GetHealth() > ComboRcheck->GetFloat())
+					if (target->GetHealth() > ComboRcheck->GetFloat())
 					{
-						R->CastOnTarget(enemy);
+						R->CastOnTarget(target);
+					}
+
+				}
+
+			}
+			if (Block2 != nullptr && !Block2->Enabled() && Block02 == target)
+			{
+				if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+				{
+					if (target->GetHealth() > ComboRcheck->GetFloat())
+					{
+						R->CastOnTarget(target);
+					}
+
+				}
+
+			}
+			if (Block3 != nullptr && !Block3->Enabled() && Block03 == target)
+			{
+				if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+				{
+					if (target->GetHealth() > ComboRcheck->GetFloat())
+					{
+						R->CastOnTarget(target);
+					}
+
+				}
+
+			}
+			if (Block4 != nullptr && !Block4->Enabled() && Block04 == target)
+			{
+				if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+				{
+					if (target->GetHealth() > ComboRcheck->GetFloat())
+					{
+						R->CastOnTarget(target);
+					}
+
+				}
+
+			}
+			if (Block5 != nullptr && !Block5->Enabled() && Block05 == target)
+			{
+				if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+				{
+					if (target->GetHealth() > ComboRcheck->GetFloat())
+					{
+						R->CastOnTarget(target);
 					}
 
 				}
@@ -555,7 +650,7 @@ void Killsteal()
 			}
 
 
-			if(WDamage > Enemy->GetHealth() && W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()))
+			if (WDamage > Enemy->GetHealth() && W->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), W->Range()))
 			{
 				if (GEntityList->Player()->HasBuff("syndrawtooltip") && GEntityList->Player()->GetSpellBook()->GetToggleState(kSlotW) == 2)
 				{
@@ -567,7 +662,7 @@ void Killsteal()
 							Vec3 pred;
 							GPrediction->GetFutureUnitPosition(target, 0.25f, true, pred);
 							W->CastOnPosition(pred);
-							
+
 						}
 
 					}
@@ -577,20 +672,48 @@ void Killsteal()
 			{
 				E->CastOnTarget(Enemy);
 			}
+
 			if (KSR->Enabled() && R->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), R->Range()) && GetUltimateDamage(Enemy) > Enemy->GetHealth())
 			{
-
-				for (auto enemy : GEntityList->GetAllHeros(false, true))
+				if (GetUltimateDamage(Enemy) > Enemy->GetHealth() && R->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), R->Range()))
 				{
-					IMenuOption* temp = RBlacklist->GetOption(enemy->ChampionName());
-					if (GetUltimateDamage(enemy) > enemy->GetHealth() && R->IsReady() && enemy->IsValidTarget(GEntityList->Player(), R->Range()))
+					if (Block1 != nullptr && !Block1->Enabled() && Block01 == Enemy)
 					{
-						if (!temp->Enabled() && enemy->GetHealth() > KSRcheck->GetFloat())
+						if (Enemy->GetHealth() > KSRcheck->GetFloat())
 						{
-							R->CastOnTarget(enemy);
+							R->CastOnTarget(Enemy);
+						}
+					}
+					if (Block2 != nullptr && !Block2->Enabled() && Block02 == Enemy)
+					{
+						if (Enemy->GetHealth() > KSRcheck->GetFloat())
+						{
+							R->CastOnTarget(Enemy);
 						}
 
 					}
+					if (Block3 != nullptr && !Block3->Enabled() && Block03 == Enemy)
+					{
+						if (Enemy->GetHealth() > KSRcheck->GetFloat())
+						{
+							R->CastOnTarget(Enemy);
+						}
+					}
+					if (Block4 != nullptr && !Block4->Enabled() && Block04 == Enemy)
+					{
+						if (Enemy->GetHealth() > KSRcheck->GetFloat())
+						{
+							R->CastOnTarget(Enemy);
+						}
+					}
+					if (Block5 != nullptr && !Block5->Enabled() && Block05 == Enemy)
+					{
+						if (Enemy->GetHealth() > KSRcheck->GetFloat())
+						{
+							R->CastOnTarget(Enemy);
+						}
+					}
+
 				}
 			}
 		}
