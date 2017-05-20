@@ -224,6 +224,23 @@ static int CountMinionsNearMe(IPluginSDK *sdk, float range)
 
 	return count;
 }
+static int GetMinionsWJ(float range)
+{
+	auto minions = GEntityList->GetAllMinions(false, false, true);
+	auto minionsInRange = 0;
+	for (auto minion : minions)
+	{
+		if (minion != nullptr && minion->IsValidTarget() && minion->IsEnemy(GEntityList->Player()) && !minion->IsDead())
+		{
+			auto minionDistance = (minion->GetPosition() - GEntityList->Player()->GetPosition()).Length2D();
+			if (minionDistance < range)
+			{
+				minionsInRange++;
+			}
+		}
+	}
+	return minionsInRange;
+}
 static int GetMinionsW(float range)
 {
 	auto minions = GEntityList->GetAllMinions(false, true, false);
@@ -257,7 +274,7 @@ void Farm()
 				{
 					E->CastOnUnit(Minion);
 				}
-				if (!GEntityList->Player()->HasBuff("AuraofDespair") && GetMinionsW(W->Range()) >= FarmWmin->GetFloat() && FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range()))
+				if (!GEntityList->Player()->HasBuff("AuraofDespair") && GetMinionsWJ(W->Range()) >= FarmWmin->GetFloat() && FarmW->Enabled() && W->IsReady() && Minion->IsValidTarget(GEntityList->Player(), W->Range()))
 				{
 					W->CastOnPlayer();
 				}
@@ -291,7 +308,7 @@ void AutoW()
 	{
 		if (GEntityList->Player()->HasBuff("AuraofDespair"))
 		{
-			if (GetMinionsW(W->Range()) == 0 && EnemiesInRange(GEntityList->Player(), W->Range()) == 0)
+			if (GetMinionsW(W->Range()) == 0 && EnemiesInRange(GEntityList->Player(), W->Range()) == 0 && GetMinionsWJ(W->Range()) == 0)
 			{
 				W->CastOnPlayer();
 			}
