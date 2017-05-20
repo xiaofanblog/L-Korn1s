@@ -17,6 +17,7 @@ public:
 			ComboR = ComboMenu->CheckBox("Use R in Combo", true);
 			ComboRmin = ComboMenu->AddInteger("Use R if enemies X >", 1, 5, 2);
 			SupportMode = ComboMenu->CheckBox("Support Mode", true);
+			ForceR = ComboMenu->AddKey("Semi R", 'T');
 
 		}
 		MiscMenu = MainMenu->AddMenu("Misc.");
@@ -220,7 +221,21 @@ public:
 
 		}
 	}
+	void Semi()
+	{
+		if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
+		{
+			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
+			if (!target->IsInvulnerable() && target->IsValidTarget(GEntityList->Player(), R->Range()) && !target->IsDead())
+			{
+				Vec3 pos;
+				int hit;
+				GPrediction->FindBestCastPosition(R->Range(), 250, false, false, true, pos, hit);
+				R->CastOnPosition(pos);
 
+			}
+		}
+	}
 	void AntiGapclose(GapCloserSpell const& Args)
 	{
 		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, 200 + Args.Source->BoundingRadius()) && AntigapQ->Enabled() && Q->IsReady())
