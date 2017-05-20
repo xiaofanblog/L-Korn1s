@@ -599,12 +599,13 @@ public:
 	{
 		if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
 		{
-			for (auto Enemy : GEntityList->GetAllHeros(false, true))
+			auto Target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
+			if (Target != nullptr)
 			{
-				if (!Enemy->IsInvulnerable() && Enemy->IsValidTarget(GEntityList->Player(), R->Range() - 100) && !Enemy->IsDead() && Enemy->IsValidTarget())
+				if (!Target->IsInvulnerable() && Target->IsValidTarget(GEntityList->Player(), R->Range() - 100) && !Target->IsDead() && Target->IsValidTarget())
 				{
 					Vec3 EstimatedEnemyPos;
-					GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, EstimatedEnemyPos);
+					GPrediction->GetFutureUnitPosition(Target, 0.2f, true, EstimatedEnemyPos);
 					R->CastOnPosition(EstimatedEnemyPos);
 				}
 			}

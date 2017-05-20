@@ -483,7 +483,7 @@ public:
 	{
 		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, 200 + Args.Source->BoundingRadius()) && AntiGapE->Enabled() && E->IsReady())
 		{
-			E->CastOnTarget(Args.Source, kHitChanceDashing);
+			E->CastOnPosition(Args.EndPosition);
 		}
 	}
 

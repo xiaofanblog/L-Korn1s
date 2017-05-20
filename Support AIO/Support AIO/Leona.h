@@ -117,10 +117,10 @@ public:
 							{
 								if (!ComboEQ->Enabled())
 								{
-									if (target != nullptr)
+									if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 									{
 										Vec3 pred;
-										GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+										GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
 										if (InSpellRange(E, pred))
 										{
 											if (E->CastOnPosition(pred))
@@ -135,10 +135,10 @@ public:
 								{
 									if (Q->IsReady())
 									{
-										if (target != nullptr)
+										if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 										{
 											Vec3 pred;
-											GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+											GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
 											if (InSpellRange(E, pred))
 												E->CastOnPosition(pred);
 											if (target->HasBuff("leonazenithblade"))
@@ -150,11 +150,11 @@ public:
 									}
 									else if (!Q->IsReady())
 									{
-										if (target != nullptr)
+										if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 										{
 											{
 												Vec3 pred;
-												GPrediction->GetFutureUnitPosition(Enemy, 0.2f, true, pred);
+												GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
 												if (InSpellRange(E, pred))
 													E->CastOnPosition(pred);
 											}
@@ -164,7 +164,7 @@ public:
 							}
 							if (!E->IsReady())
 							{
-								if (target != nullptr)
+								if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 								{
 									if (target->IsValidTarget(GEntityList->Player(), 300))
 									{
