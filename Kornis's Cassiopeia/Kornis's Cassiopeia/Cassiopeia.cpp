@@ -346,13 +346,13 @@ void Combo()
 							if (outputfam.HitChance >= kHitChanceHigh)
 							{
 								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
 								Q->CastOnPosition(pred);
 							}
 							else if (outputfam.HitChance == kHitChanceDashing)
 							{
 								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
 								Q->CastOnTarget(Qtarget, kHitChanceDashing);
 							}
 
@@ -370,13 +370,13 @@ void Combo()
 							if (outputfam.HitChance >= kHitChanceHigh)
 							{
 								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
 								Q->CastOnPosition(pred);
 							}
 							else if (outputfam.HitChance == kHitChanceDashing)
 							{
 								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
 								Q->CastOnTarget(Qtarget, kHitChanceDashing);
 							}
 						}
@@ -436,13 +436,13 @@ void Combo()
 								if (outputfam.HitChance >= kHitChanceHigh)
 								{
 									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
 									Q->CastOnPosition(pred);
 								}
 								else if (outputfam.HitChance == kHitChanceDashing)
 								{
 									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
 									Q->CastOnTarget(Qtarget, kHitChanceDashing);
 								}
 							}
@@ -459,13 +459,13 @@ void Combo()
 								if (outputfam.HitChance >= kHitChanceHigh)
 								{
 									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
 									Q->CastOnPosition(pred);
 								}
 								else if (outputfam.HitChance == kHitChanceDashing)
 								{
 									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
 									Q->CastOnTarget(Qtarget, kHitChanceDashing);
 								}
 							}
@@ -510,13 +510,13 @@ void Combo()
 							if (outputfam.HitChance >= kHitChanceHigh)
 							{
 								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
 								Q->CastOnPosition(pred);
 							}
 							else if (outputfam.HitChance == kHitChanceDashing)
 							{
 								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
 								Q->CastOnTarget(Qtarget, kHitChanceDashing);
 							}
 						}
@@ -533,13 +533,13 @@ void Combo()
 							if (outputfam.HitChance >= kHitChanceHigh)
 							{
 								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
 								Q->CastOnPosition(pred);
 							}
 							else if (outputfam.HitChance == kHitChanceDashing)
 							{
 								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.3f, true, pred);
+								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
 								Q->CastOnTarget(Qtarget, kHitChanceDashing);
 							}
 						}
@@ -720,13 +720,13 @@ void Mixed()
 					if (outputfam.HitChance >= kHitChanceHigh)
 					{
 						Vec3 pred;
-						GPrediction->GetFutureUnitPosition(target, 0.3f, true, pred);
+						GPrediction->GetFutureUnitPosition(target, 0.35f, true, pred);
 						Q->CastOnPosition(pred);
 					}
 					else if (outputfam.HitChance == kHitChanceDashing)
 					{
 						Vec3 pred;
-						GPrediction->GetFutureUnitPosition(target, 0.3f, true, pred);
+						GPrediction->GetFutureUnitPosition(target, 0.35f, true, pred);
 						Q->CastOnTarget(target, kHitChanceDashing);
 					}
 				}
@@ -779,13 +779,13 @@ void Killsteal()
 				if (outputfam.HitChance >= kHitChanceHigh)
 				{
 					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
+					GPrediction->GetFutureUnitPosition(Enemy, 0.35f, true, pred);
 					Q->CastOnPosition(pred);
 				}
 				else if (outputfam.HitChance == kHitChanceDashing)
 				{
 					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(Enemy, 0.3f, true, pred);
+					GPrediction->GetFutureUnitPosition(Enemy, 0.35f, true, pred);
 					Q->CastOnTarget(Enemy, kHitChanceDashing);
 				}
 			}
@@ -983,7 +983,7 @@ void Auto()
 					if (Q->IsReady())
 					{
 						Vec3 pred;
-						GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
+						GPrediction->GetFutureUnitPosition(target, 0.35f, true, pred);
 						Q->CastOnPosition(pred);
 					}
 				}
@@ -1069,7 +1069,7 @@ void drawpred()
 			if (!hero->IsDead() && hero->IsValidTarget())
 			{
 				Vec3 pred;
-				GPrediction->GetFutureUnitPosition(hero, 0.2f, true, pred);
+				GPrediction->GetFutureUnitPosition(hero, 0.35f, true, pred);
 				GRender->DrawOutlinedCircle(pred, Vec4(255, 255, 255, 255), Q->Radius());
 			}
 		}
