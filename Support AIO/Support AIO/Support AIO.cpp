@@ -1,12 +1,12 @@
 #include "PluginSDK.h"
 #include "Blitzcrank.h"
 #include "Leona.h"
-#include "Lulu.h"
 #include "Tahm Kench.h"
 #include "Morgana.h"
 #include "Sona.h"
 #include "Nami.h"
 #include "Braum.h"
+#include "Lulu.h"
 #include "Alistar.h"
 #include "Janna.h"
 #include "Malzahar.h"
@@ -116,81 +116,6 @@ private:
 		GGame->PrintChat("<b><font color = \"#f8a101\">Blitzcrank</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 	}
 };
-class Lulu : public zHero
-{
-public:
-	void OnLoad() override
-	{
-		PrintMessage();
-		LuluBase().DrawMenu();
-		LuluBase().LoadSpells();
-	}
-
-	void OnRender() override
-	{
-		LuluBase().Draw();
-	}
-
-	void OnGameUpdate() override
-	{
-		LuluBase().AutoE();
-		LuluBase().AutoR();
-		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
-		{
-			LuluBase().Combo();
-		}
-		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
-		{
-			//LuluBase().Farm();
-		}
-	}
-
-	void OnGapCloser(GapCloserSpell const& Args) override
-	{
-		LuluBase().AntiGapclose(Args);
-	}
-
-	void OnInterruptible(InterruptibleSpell const& Args) override
-	{
-		LuluBase().Interrupt(Args);
-	}
-	void OnSpellCast(CastedSpell const& Args) override
-	{
-		//none
-	}
-	void OnAfterAttack(IUnit* Source, IUnit* Target) override
-	{
-		//none
-	}
-	void OnCreateObject(IUnit* Source) override
-	{
-		//none
-	}
-	void OnLevelUp(IUnit* Source, int NewLevel) override
-	{
-
-	}
-	void OnDeleteObject(IUnit* Source) override
-	{
-	}
-	void OnPauseAnimation(IUnit* Source) override
-	{
-		//none
-	}
-	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
-	{
-
-	}
-	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
-	{
-		return true;
-	}
-private:
-	void PrintMessage()
-	{
-		GGame->PrintChat("<b><font color = \"#f8a101\">Lulu</font><font color=\"#7FFF00\"> - Loaded</font></b>");
-	}
-};
 class Zyra : public zHero
 {
 public:
@@ -287,10 +212,6 @@ public:
 		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
 			LeonaBase().Combo();
-		}
-		if (GUtility->IsKeyDown(ForceR->GetInteger()))
-		{
-			LeonaBase().Semi();
 		}
 
 	}
@@ -1432,7 +1353,7 @@ public:
 		VelKozBase().AutoE();
 		VelKozBase().AAdisable();
 		VelKozBase().autoQ();
-		//VelKozBase().setQ();
+		VelKozBase().setQ();
 		VelKozBase().Killsteal();
 		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
@@ -1741,6 +1662,90 @@ private:
 		GGame->PrintChat("<b><font color = \"#f8a101\">Rakan</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 	}
 };
+class Lulu : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		LuluBase().DrawMenu();
+		LuluBase().LoadSpells();
+	}
+
+	void OnRender() override
+	{
+		LuluBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		LuluBase().AutoE();
+		LuluBase().Auto();
+		LuluBase().AutoR();
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			LuluBase().Combo();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			LuluBase().Farm();
+		}
+		if (GUtility->IsKeyDown(FleeKey->GetInteger()))
+		{
+			LuluBase().Flee();
+		}
+		if (GUtility->IsKeyDown(ComboEally->GetInteger()))
+		{
+			LuluBase().Something();
+		}
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+		LuluBase().AntiGapclose(Args);
+	}
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+		LuluBase().Interrupt(Args);
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+		//none
+	}
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+		//none
+	}
+	void OnCreateObject(IUnit* Source) override
+	{
+		//none
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Lulu</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
 zHero* yHero = nullptr;
 
 PLUGIN_EVENT(void) OnRender()
@@ -1930,15 +1935,6 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 			TaricBase().AutoW();
 		});
 	}
-	if (playerHero == "Rakan")
-	{
-		eventManager = PluginSDK->GetEventManager();
-		eventmanager::RegisterEvents(eventManager);
-		eventmanager::GameEventManager::RegisterUpdateEvent([&](event_id_t id) -> void
-		{
-			RakanBase().AutoE();
-		});
-	}
 	if (playerHero == "Lulu")
 	{
 		eventManager = PluginSDK->GetEventManager();
@@ -1947,6 +1943,15 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 		{
 			LuluBase().AutoE();
 			LuluBase().AutoR();
+		});
+	}
+	if (playerHero == "Rakan")
+	{
+		eventManager = PluginSDK->GetEventManager();
+		eventmanager::RegisterEvents(eventManager);
+		eventmanager::GameEventManager::RegisterUpdateEvent([&](event_id_t id) -> void
+		{
+			RakanBase().AutoE();
 		});
 	}
 	MalachitePredOnload();
@@ -1975,10 +1980,6 @@ PLUGIN_API void OnUnload()
 	{
 		eventmanager::UnregisterEvents(eventManager);
 	}
-	if (playerHero == "Lulu")
-	{
-		eventmanager::UnregisterEvents(eventManager);
-	}
 	if (playerHero == "Rakan")
 	{
 		eventmanager::UnregisterEvents(eventManager);
@@ -2000,6 +2001,10 @@ PLUGIN_API void OnUnload()
 		eventmanager::UnregisterEvents(eventManager);
 	}
 	if (playerHero == "Taric")
+	{
+		eventmanager::UnregisterEvents(eventManager);
+	}
+	if (playerHero == "Lulu")
 	{
 		eventmanager::UnregisterEvents(eventManager);
 	}

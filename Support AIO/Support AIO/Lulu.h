@@ -16,8 +16,11 @@ public:
 		{
 			ComboQ = ComboMenu->CheckBox("Use Q in Combo", true);
 			ComboW = ComboMenu->CheckBox("Use W in Combo", true);
+			ComboWenable = ComboMenu->CheckBox("^- Block Myself", true);
 			ComboE = ComboMenu->CheckBox("Use E in Combo With Logic", true);
 			SupportMode = ComboMenu->CheckBox("Support Mode", true);
+			ComboEally = ComboMenu->AddKey("Semi W>E Ally", 'T');
+			ComboWQreset = ComboMenu->CheckBox("^- Block Myself", true);
 
 		}
 		ShieldMenu = MainMenu->AddMenu("Shielding");
@@ -53,7 +56,7 @@ public:
 			DrawEmin = DrawingMenu->CheckBox("Draw Pix Position", true);
 			DrawDamage = DrawingMenu->CheckBox("Draw Ranges from Ally", true);
 		}
-		FarmMenu = FarmMenu->AddMenu("Drawings");
+		FarmMenu = MainMenu->AddMenu("Farming");
 		{
 			FarmMana = FarmMenu->AddFloat("Mana Manager", 10, 100, 50);
 			FarmQ = FarmMenu->CheckBox("Use Q", true);
@@ -68,20 +71,390 @@ public:
 			AntiGapW = MiscMenu->CheckBox("Anti Gap W", true);
 			AutoQ = MiscMenu->CheckBox("Auto W Ally if Slowed", true);
 		}
+		FleeMenu = MainMenu->AddMenu("Flee");
+		{
+			FleeKey = FleeMenu->AddKey("Flee Key", 'G');
+		}
 
 	}
+	void Something()
+	{
+		if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
+		{
 
+			for (auto Ally : GEntityList->GetAllHeros(true, false))
+			{
+				if (EPriority1 != nullptr && EPriority1->Enabled() && EPriority01 == Ally)
+				{
+
+					if (Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+						if (Ally != nullptr)
+						{
+							if (ComboWQreset->Enabled())
+							{
+								if (Ally != GEntityList->Player())
+								{
+									W->CastOnUnit(EPriority01);
+									E->CastOnUnit(EPriority01);
+								}
+							}
+							if (!ComboWQreset->Enabled())
+							{
+
+								W->CastOnUnit(EPriority01);
+								E->CastOnUnit(EPriority01);
+
+							}
+						}
+
+					}
+				}
+				else if (EPriority1->Enabled() && !EPriority01->IsValidTarget(GEntityList->Player(), W->Range()))
+				{
+					if (Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+
+						if (Ally != nullptr)
+						{
+
+							if (ComboWQreset->Enabled())
+							{
+								if (Ally != GEntityList->Player())
+								{
+									W->CastOnUnit(Ally);
+									E->CastOnUnit(Ally);
+								}
+							}
+							if (!ComboWQreset->Enabled())
+							{
+								if (GetAlliesInRange(GEntityList->Player(), W->Range()) > 0)
+								{
+									W->CastOnUnit(Ally);
+									E->CastOnUnit(Ally);
+								}
+								if (GetAlliesInRange(GEntityList->Player(), W->Range()) == 0)
+								{
+									W->CastOnUnit(GEntityList->Player());
+									E->CastOnUnit(GEntityList->Player());
+								}
+
+							}
+						}
+					}
+				}
+				if (EPriority2 != nullptr && EPriority2->Enabled() && EPriority02 == Ally)
+				{
+
+					if (Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+						if (Ally != nullptr)
+						{
+
+							if (ComboWQreset->Enabled())
+							{
+								if (Ally != GEntityList->Player())
+								{
+									W->CastOnUnit(EPriority01);
+									E->CastOnUnit(EPriority01);
+								}
+							}
+							if (!ComboWQreset->Enabled())
+							{
+
+								W->CastOnUnit(EPriority02);
+								E->CastOnUnit(EPriority02);
+
+							}
+						}
+					}
+
+				}
+				else if (EPriority2->Enabled() && !EPriority02->IsValidTarget(GEntityList->Player(), W->Range()))
+				{
+					if (Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+
+						if (Ally != nullptr)
+						{
+							if (ComboWQreset->Enabled())
+							{
+								if (Ally != GEntityList->Player())
+								{
+									W->CastOnUnit(Ally);
+									E->CastOnUnit(Ally);
+								}
+							}
+							if (!ComboWQreset->Enabled())
+							{
+								if (GetAlliesInRange(GEntityList->Player(), W->Range()) > 0)
+								{
+									W->CastOnUnit(Ally);
+									E->CastOnUnit(Ally);
+								}
+								if (GetAlliesInRange(GEntityList->Player(), W->Range()) == 0)
+								{
+									W->CastOnUnit(GEntityList->Player());
+									E->CastOnUnit(GEntityList->Player());
+								}
+
+							}
+						}
+					}
+				}
+				if (EPriority3 != nullptr && EPriority3->Enabled() && EPriority03 == Ally)
+				{
+
+					if (Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+						if (Ally != nullptr)
+						{
+
+							if (ComboWQreset->Enabled())
+							{
+								if (Ally != GEntityList->Player())
+								{
+									W->CastOnUnit(EPriority01);
+									E->CastOnUnit(EPriority01);
+								}
+							}
+							if (!ComboWQreset->Enabled())
+							{
+
+								W->CastOnUnit(EPriority03);
+								E->CastOnUnit(EPriority03);
+
+							}
+						}
+					}
+				}
+				else if (EPriority3->Enabled() && !EPriority03->IsValidTarget(GEntityList->Player(), W->Range()))
+				{
+					if (Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+						if (Ally != nullptr)
+						{
+
+							if (Ally != nullptr)
+							{
+
+								if (ComboWQreset->Enabled())
+								{
+									if (Ally != GEntityList->Player())
+									{
+										W->CastOnUnit(Ally);
+										E->CastOnUnit(Ally);
+									}
+								}
+								if (!ComboWQreset->Enabled())
+								{
+
+									if (GetAlliesInRange(GEntityList->Player(), W->Range()) > 0)
+									{
+										W->CastOnUnit(Ally);
+										E->CastOnUnit(Ally);
+									}
+									if (GetAlliesInRange(GEntityList->Player(), W->Range()) == 0)
+									{
+										W->CastOnUnit(GEntityList->Player());
+										E->CastOnUnit(GEntityList->Player());
+									}
+
+								}
+							}
+						}
+					}
+				}
+				
+				if (EPriority4 != nullptr && EPriority4->Enabled() && EPriority04 == Ally)
+				{
+
+					if (Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+						if (Ally != nullptr)
+						{
+
+							if (ComboWQreset->Enabled())
+							{
+								if (Ally != GEntityList->Player())
+								{
+									W->CastOnUnit(EPriority01);
+									E->CastOnUnit(EPriority01);
+								}
+							}
+							if (!ComboWQreset->Enabled())
+							{
+
+								W->CastOnUnit(EPriority04);
+								E->CastOnUnit(EPriority04);
+
+							}
+						}
+					}
+				}
+				else if (EPriority4->Enabled() && !EPriority04->IsValidTarget(GEntityList->Player(), W->Range()))
+				{
+					if (Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+
+						if (Ally != nullptr)
+						{
+
+							if (ComboWQreset->Enabled())
+							{
+								if (Ally != GEntityList->Player())
+								{
+									W->CastOnUnit(Ally);
+									E->CastOnUnit(Ally);
+								}
+							}
+							if (!ComboWQreset->Enabled())
+							{
+
+								if (GetAlliesInRange(GEntityList->Player(), W->Range()) > 0)
+								{
+									W->CastOnUnit(Ally);
+									E->CastOnUnit(Ally);
+								}
+								if (GetAlliesInRange(GEntityList->Player(), W->Range()) == 0)
+								{
+									W->CastOnUnit(GEntityList->Player());
+									E->CastOnUnit(GEntityList->Player());
+								}
+							}
+						}
+					}
+				}
+					
+				if (EPriority5 != nullptr && EPriority5->Enabled() && EPriority05 == Ally)
+				{
+
+					if (Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+
+						if (Ally != nullptr)
+						{
+
+							if (ComboWQreset->Enabled())
+							{
+								if (Ally != GEntityList->Player())
+								{
+									W->CastOnUnit(EPriority01);
+									E->CastOnUnit(EPriority01);
+								}
+							}
+							if (!ComboWQreset->Enabled())
+							{
+
+								W->CastOnUnit(EPriority05);
+								E->CastOnUnit(EPriority05);
+
+							}
+						}
+					}
+				}
+				
+				else if (EPriority5->Enabled() && !EPriority05->IsValidTarget(GEntityList->Player(), W->Range()))
+				{
+					if (Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+
+						if (Ally != nullptr)
+						{
+							if (ComboWQreset->Enabled())
+							{
+								if (Ally != GEntityList->Player())
+								{
+									W->CastOnUnit(Ally);
+									E->CastOnUnit(Ally);
+								}
+							}
+							if (!ComboWQreset->Enabled())
+							{
+								if (GetAlliesInRange(GEntityList->Player(), W->Range()) > 0)
+								{
+									W->CastOnUnit(Ally);
+									E->CastOnUnit(Ally);
+								}
+								if (GetAlliesInRange(GEntityList->Player(), W->Range()) == 0)
+								{
+									W->CastOnUnit(GEntityList->Player());
+									E->CastOnUnit(GEntityList->Player());
+								}
+
+							}
+						}
+					}
+				}
+				if (!EPriority1->Enabled() && !EPriority2->Enabled() && !EPriority3->Enabled() && !EPriority4->Enabled() && !EPriority5->Enabled())
+				{
+					if (Ally->IsValidTarget(GEntityList->Player(), W->Range()))
+					{
+
+						if (Ally != nullptr)
+						{
+							if (ComboWQreset->Enabled())
+							{
+								if (Ally != GEntityList->Player())
+								{
+									W->CastOnUnit(Ally);
+									E->CastOnUnit(Ally);
+								}
+							}
+							if (!ComboWQreset->Enabled())
+							{
+								if (GetAlliesInRange(GEntityList->Player(), W->Range()) > 0)
+								{
+									W->CastOnUnit(Ally);
+									E->CastOnUnit(Ally);
+								}
+								if (GetAlliesInRange(GEntityList->Player(), W->Range()) == 0)
+								{
+									W->CastOnUnit(GEntityList->Player());
+									E->CastOnUnit(GEntityList->Player());
+								}
+
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	void Auto()
+	{
+		for (auto Ally : GEntityList->GetAllHeros(true, false))
+		{
+			if (Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), W->Range()) && Ally->HasBuffOfType(BUFF_Slow))
+			{
+				if (AutoQ->Enabled() && W->Range() && W->IsReady())
+					W->CastOnTarget(Ally);
+			}
+		}
+	}
+	void Flee()
+	{
+		if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
+		{
+			GGame->IssueOrderEx(GEntityList->Player(), kMoveTo, GGame->CursorPosition(), false);
+			if (W->IsReady())
+			{
+				W->CastOnPlayer();
+			}
+		}
+	}
 	void LoadSpells()
 	{
 		Q = GPluginSDK->CreateSpell2(kSlotQ, kLineCast, true, false, (kCollidesWithYasuoWall));
-		Q->SetSkillshot(0.25f, 60.f, 1450.f, 900.f);
+		Q->SetSkillshot(0.2, 60.f, 10000000.f, 900.f);
 
 		W = GPluginSDK->CreateSpell2(kSlotW, kTargetCast, false, false, (kCollidesWithNothing));
 
 		E = GPluginSDK->CreateSpell2(kSlotE, kTargetCast, false, false, (kCollidesWithNothing));
 
 		R = GPluginSDK->CreateSpell2(kSlotR, kTargetCast, false, false, (kCollidesWithNothing));
-	}static int GetMinionsQ(float range)
+	}
+	static int GetMinionsQ(float range)
 	{
 		auto minions = GEntityList->GetAllMinions(false, true, true);
 		auto minionsInRange = 0;
@@ -104,12 +477,12 @@ public:
 		{
 			if (FarmMana->GetFloat() < GEntityList->Player()->ManaPercent())
 			{
-				for (auto Minion : GEntityList->GetAllMinions(false, true, true))
+				for (auto Minion : GEntityList->GetAllMinions(false, true, false))
 				{
 
 					if (FarmQ->Enabled() && Q->IsReady() && Minion->IsValidTarget() && !Minion->IsDead() && Minion->IsValidTarget(GEntityList->Player(), Q->Range()))
 					{
-						if (GetMinionsQ(Q->Range()))
+						if (GetMinionsQ(Q->Range()) <= 7)
 						{
 							Vec3 pos;
 							int hit;
@@ -122,8 +495,20 @@ public:
 								}
 							}
 						}
+						if (GetMinionsQ(Q->Range()) > 7)
+						{
+							Q->CastOnTarget(Minion);
+						}
 					}
 				}
+				for (auto Minions : GEntityList->GetAllMinions(false, false, true))
+				{
+					if (FarmQ->Enabled() && Q->IsReady() && Minions->IsValidTarget() && !Minions->IsDead() && Minions->IsValidTarget(GEntityList->Player(), Q->Range()))
+					{
+						Q->CastOnUnit(Minions);
+					}
+				}
+
 			}
 		}
 	}
@@ -467,26 +852,32 @@ public:
 			{
 				if (GetEnemiesInRange(ally, 800) > 0)
 				{
-					if (ComboRally->Enabled())
+					if (ComboRally->Enabled() && !ComboRhp->Enabled())
 					{
-						if (ally->IsValidTarget() && ally != nullptr && !ally->IsDead() && GetEnemiesInRange(ally, 350) >= ComboRmin->GetFloat() && tracker.hasIncomingDamage(ally) && tracker.getIncomingDamage(ally) > 1)
+						if (ally->IsValidTarget(GEntityList->Player(), R->Range()))
 						{
-							if (GEntityList->Player()->IsValidTarget(ally, R->Range()))
+							if (ally->IsValidTarget() && ally != nullptr && !ally->IsDead() && GetEnemiesInRange(ally, 350) >= ComboRmin->GetFloat() && tracker.hasIncomingDamage(ally) && tracker.getIncomingDamage(ally) > 1)
 							{
-								if (ally->HealthPercent() < ComboR1vs1->GetFloat())
+								if (GEntityList->Player()->IsValidTarget(ally, R->Range()))
 								{
-									R->CastOnTarget(ally);
+									if (ally->HealthPercent() < ComboR1vs1->GetFloat())
+									{
+										R->CastOnTarget(ally);
+									}
 								}
 							}
 						}
 					}
-					if (!ComboRally->Enabled())
+					if (!ComboRally->Enabled() && ComboRhp->Enabled())
 					{
-						if (ally->IsValidTarget() && ally != nullptr && !ally->IsDead() && GetEnemiesInRange(ally, 350) >= ComboRmin->GetFloat() && tracker.getIncomingDamage(ally) > ally->GetHealth())
+						if (ally->IsValidTarget(GEntityList->Player(), R->Range()))
 						{
-							if (GEntityList->Player()->IsValidTarget(ally, R->Range()))
+							if (ally->IsValidTarget() && ally != nullptr && !ally->IsDead() && tracker.getIncomingDamage(ally) > ally->GetHealth() && ally->HealthPercent() < 30)
 							{
-								R->CastOnTarget(ally);
+								if (GEntityList->Player()->IsValidTarget(ally, R->Range()))
+								{
+									R->CastOnTarget(ally);
+								}
 							}
 						}
 					}
@@ -519,9 +910,13 @@ public:
 
 		if (ComboQ->Enabled() && Q->IsReady())
 		{
-			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range()+1300);
+			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range() + 1300);
 			if (target != nullptr && target->IsValidTarget() && target->IsHero())
 			{
+				if (target->HasBuff("lulufaerieshield"))
+				{
+
+				}
 				for (auto Ally : GEntityList->GetAllHeros(true, false))
 				{
 					if (target->IsValidTarget() && !target->IsDead() && target != nullptr &&  target->IsValidTarget(GEntityList->Player(), 1300 + Q->Range()))
@@ -532,7 +927,10 @@ public:
 							{
 								if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 								{
-									Q->CastOnTarget(target);
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(target, 0.4f, true, pred);
+
+									Q->CastOnPosition(pred);
 								}
 							}
 						}
@@ -545,42 +943,44 @@ public:
 							{
 								if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 								{
-									Q->CastOnTarget(target);
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(target, 0.4f, true, pred);
+
+									Q->CastOnPosition(pred);
 								}
 							}
 						}
 
-						if ((target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() > Q->Range())
+						if (Ally->HasBuff("lulufaerieshield") && !Ally->IsDead() && Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), 1300) && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < 1300 + Q->Range())
 						{
-							
-							if (Ally->HasBuff("lulufaerieshield") && !Ally->IsDead() && Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), 1300) && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < 1300 + Q->Range())
+
+							if (target->IsValidTarget(Ally, Q->Range()))
 							{
-								
-								if (target->IsValidTarget(Ally, Q->Range()))
+
+								if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 								{
 									
-									if (target != nullptr && target->IsValidTarget() && !target->IsDead())
-									{
-									
-										Q->SetRangeCheckFrom(Ally->GetPosition());
-										Q->SetFrom(Ally->GetPosition());
-										Q->CastOnTarget(target);
-									}
+									Q->SetRangeCheckFrom(Ally->GetPosition());
+									Q->SetFrom(Ally->GetPosition());
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(target, 0.4f, true, pred);
+
+									Q->CastOnPosition(pred);
 								}
 							}
 						}
 					}
-
 				}
+
 			}
 		}
-	
+
 		if (ComboE->Enabled())
 		{
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
 			if (target != nullptr && target->IsValidTarget() && target->IsHero() && target->IsValidTarget())
 			{
-				if ((GetAlliesInRange(GEntityList->Player(), E->Range()) == 0 || target->HealthPercent() < 10) && GEntityList->Player()->HealthPercent() > 20)
+				if ((GetAlliesInRange(GEntityList->Player(), E->Range()) == 0 || target->HealthPercent() < 5) && GEntityList->Player()->HealthPercent() > 20)
 				{
 					if (GEntityList->Player()->IsValidTarget(target, E->Range()) && E->IsReady())
 					{
@@ -591,7 +991,7 @@ public:
 			}
 		}
 
-		
+
 		for (auto Ally : GEntityList->GetAllHeros(true, false))
 		{
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, W->Range());
@@ -607,8 +1007,22 @@ public:
 							{
 								if (Ally != nullptr)
 								{
-									
-									W->CastOnUnit(EPriority01);
+
+									if (ComboWenable->Enabled())
+									{
+										if (Ally != GEntityList->Player())
+										{
+											W->CastOnUnit(EPriority01);
+											
+										}
+									}
+									if (!ComboWenable->Enabled())
+									{
+
+										W->CastOnUnit(EPriority01);
+										
+
+									}
 								}
 
 							}
@@ -622,8 +1036,23 @@ public:
 							{
 								if (Ally != nullptr)
 								{
-									
-									W->CastOnUnit(Ally);
+
+
+									if (ComboWenable->Enabled())
+									{
+										if (Ally != GEntityList->Player())
+										{
+											W->CastOnUnit(Ally);
+
+										}
+									}
+									if (!ComboWenable->Enabled())
+									{
+
+										W->CastOnUnit(Ally);
+
+
+									}
 								}
 							}
 						}
@@ -636,8 +1065,22 @@ public:
 							{
 								if (Ally != nullptr)
 								{
-									
-									W->CastOnUnit(EPriority02);
+
+									if (ComboWenable->Enabled())
+									{
+										if (Ally != GEntityList->Player())
+										{
+											W->CastOnUnit(EPriority02);
+
+										}
+									}
+									if (!ComboWenable->Enabled())
+									{
+
+										W->CastOnUnit(EPriority02);
+
+
+									}
 								}
 							}
 
@@ -651,8 +1094,23 @@ public:
 							{
 								if (Ally != nullptr)
 								{
-									
-									W->CastOnUnit(Ally);
+
+
+									if (ComboWenable->Enabled())
+									{
+										if (Ally != GEntityList->Player())
+										{
+											W->CastOnUnit(Ally);
+
+										}
+									}
+									if (!ComboWenable->Enabled())
+									{
+
+										W->CastOnUnit(Ally);
+
+
+									}
 								}
 							}
 						}
@@ -665,8 +1123,22 @@ public:
 							{
 								if (Ally != nullptr)
 								{
-									
-									W->CastOnUnit(EPriority03);
+
+									if (ComboWenable->Enabled())
+									{
+										if (Ally != GEntityList->Player())
+										{
+											W->CastOnUnit(EPriority03);
+
+										}
+									}
+									if (!ComboWenable->Enabled())
+									{
+
+										W->CastOnUnit(EPriority03);
+
+
+									}
 								}
 							}
 						}
@@ -681,8 +1153,23 @@ public:
 								{
 									if (Ally != nullptr)
 									{
-										
-										W->CastOnUnit(Ally);
+
+
+										if (ComboWenable->Enabled())
+										{
+											if (Ally != GEntityList->Player())
+											{
+												W->CastOnUnit(Ally);
+
+											}
+										}
+										if (!ComboWenable->Enabled())
+										{
+
+											W->CastOnUnit(Ally);
+
+
+										}
 									}
 								}
 							}
@@ -696,8 +1183,22 @@ public:
 							{
 								if (Ally != nullptr)
 								{
-									
-									W->CastOnUnit(EPriority04);
+
+									if (ComboWenable->Enabled())
+									{
+										if (Ally != GEntityList->Player())
+										{
+											W->CastOnUnit(EPriority04);
+
+										}
+									}
+									if (!ComboWenable->Enabled())
+									{
+
+										W->CastOnUnit(EPriority04);
+
+
+									}
 								}
 							}
 						}
@@ -710,8 +1211,23 @@ public:
 							{
 								if (Ally != nullptr)
 								{
-									
-									W->CastOnUnit(Ally);
+
+
+									if (ComboWenable->Enabled())
+									{
+										if (Ally != GEntityList->Player())
+										{
+											W->CastOnUnit(Ally);
+
+										}
+									}
+									if (!ComboWenable->Enabled())
+									{
+
+										W->CastOnUnit(Ally);
+
+
+									}
 								}
 							}
 						}
@@ -725,8 +1241,22 @@ public:
 
 								if (Ally != nullptr)
 								{
-									
-									W->CastOnUnit(EPriority05);
+
+									if (ComboWenable->Enabled())
+									{
+										if (Ally != GEntityList->Player())
+										{
+											W->CastOnUnit(EPriority05);
+
+										}
+									}
+									if (!ComboWenable->Enabled())
+									{
+
+										W->CastOnUnit(EPriority05);
+
+
+									}
 								}
 							}
 						}
@@ -739,8 +1269,23 @@ public:
 							{
 								if (Ally != nullptr)
 								{
-									
-									W->CastOnUnit(Ally);
+
+
+									if (ComboWenable->Enabled())
+									{
+										if (Ally != GEntityList->Player())
+										{
+											W->CastOnUnit(Ally);
+
+										}
+									}
+									if (!ComboWenable->Enabled())
+									{
+
+										W->CastOnUnit(Ally);
+
+
+									}
 								}
 							}
 						}
@@ -753,8 +1298,22 @@ public:
 							{
 								if (Ally != nullptr)
 								{
-									
-									W->CastOnUnit(Ally);
+
+									if (ComboWenable->Enabled())
+									{
+										if (Ally != GEntityList->Player())
+										{
+											W->CastOnUnit(Ally);
+
+										}
+									}
+									if (!ComboWenable->Enabled())
+									{
+
+										W->CastOnUnit(Ally);
+
+
+									}
 								}
 							}
 						}
@@ -819,27 +1378,34 @@ public:
 
 	void Interrupt(InterruptibleSpell const& Args)
 	{
+
+
 		if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, W->Range()) && InterruptW->Enabled() && W->IsReady())
 		{
 			W->CastOnTarget(Args.Source);
 
-			LastQcast = GGame->TickCount() + 1500;
 
 
 		}
-		if (LastQcast < GGame->TickCount())
+
+		for (auto ally : GEntityList->GetAllHeros(true, false))
 		{
 			if (Args.Source != GEntityList->Player() && Args.Source->IsEnemy(GEntityList->Player()) && GEntityList->Player()->IsValidTarget(Args.Source, R->Range()) && InterruptR->Enabled() && R->IsReady())
 			{
-				if (Args.DangerLevel == kHighDanger && !W->IsReady() && InterruptQ->Enabled())
+				if (Args.Source->IsValidTarget(GEntityList->Player(), 350))
 				{
-					R->CastOnPlayer();
+					if (Args.DangerLevel == kHighDanger && InterruptQ->Enabled())
+					{
+						R->CastOnPlayer();
 
+					}
 				}
-				if (!W->IsReady() && !InterruptQ->Enabled())
+				else if (ally != GEntityList->Player() && ally->IsValidTarget(Args.Source, 350) && ally->IsValidTarget() && !ally->IsDead())
 				{
-					R->CastOnPlayer();
-
+					if (Args.DangerLevel == kHighDanger && InterruptQ->Enabled())
+					{
+						R->CastOnTarget(ally);
+					}
 				}
 			}
 
