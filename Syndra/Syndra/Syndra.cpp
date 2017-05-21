@@ -14,6 +14,7 @@ IMenuOption* ComboQErange;
 IMenuOption* ComboQ2;
 IMenuOption* ComboW;
 IMenuOption* ComboE;
+IMenuOption* Rengage;
 IMenuOption* ComboR;
 IMenuOption* ComboRcheck;
 IMenuOption* KSRcheck;
@@ -34,6 +35,8 @@ IMenuOption* KSQ;
 IMenuOption* KSW;
 IMenuOption* KSE;
 IMenuOption* KSR;
+IMenuOption* RMode;
+IMenuOption* RModedraw;
 IMenu* DrawingMenu;
 IMenuOption* DrawQRange;
 IMenuOption* DrawERange;
@@ -70,6 +73,7 @@ ISpell2* W;
 ISpell2* E;
 ISpell2* R;
 ISpell2* Ignite;
+IMenuOption* RKill;
 
 IMenu* BlacklistMenu;
 IUnit* Enemy;
@@ -94,6 +98,7 @@ int lastwe;
 int lastqe;
 bool Farmenable = true;
 bool Harassenable = false;
+bool rmodo = false;
 float KeyPre; 
 float KeyPres;
 int lastqE;
@@ -222,12 +227,16 @@ void Menu()
 		DrawRfill= DrawingMenu->CheckBox("Draw R Damage", true);
 		DrawLane = DrawingMenu->CheckBox("Draw Lane Toggle", true);
 		DrawHarass = DrawingMenu->CheckBox("Draw Harass Toggle", true);
+		RModedraw = DrawingMenu->CheckBox("Draw R Mode", true);
 	}
 
 	MiscMenu = MainMenu->AddMenu("Misc.");
 	{
 		AntiGapE = MiscMenu->CheckBox("Anti-Gap E", true);
 		InterruptE = MiscMenu->CheckBox("Interrupt E", true);
+		RMode = MiscMenu->AddKey("R Mode Change", 'Z');
+		Rengage = MiscMenu->AddFloat("Min R Orbs", 3, 6, 5);
+		RKill = MiscMenu->CheckBox("Only if Combo Damage Kills", true);
 	}
 }
 inline float GetDistanceVectors(Vec3 from, Vec3 to)
@@ -329,7 +338,7 @@ static void CastQELogic(IUnit* target)
 }
 static double GetUltimateDamage(IUnit* target)
 {
-	if (target == nullptr || !R->IsReady() || !target->IsValidTarget() || target->HasBuffOfType(BUFF_SpellShield) || target->HasBuffOfType(BUFF_SpellImmunity))
+	if (target == nullptr || !R->IsReady() || !target->IsValidTarget() || target->HasBuffOfType(BUFF_SpellShield) || target->HasBuffOfType(BUFF_SpellImmunity) || target->HasBuffOfType(BUFF_Invulnerability))
 		return 0;
 	double baseR[3] = { 270.0, 405.0, 540.0 };
 	double baseOrbsR[3] = { 90.0, 135.0, 180.0 };
@@ -527,67 +536,261 @@ void Combo()
 	{
 
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range());
-		if (target != nullptr && ComboR->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range()) && GetUltimateDamage(target) > target->GetHealth())
+		if (target != nullptr && ComboR->Enabled() && target->IsValidTarget(GEntityList->Player(), R->Range()))
 		{
-			if (Block1 != nullptr && !Block1->Enabled() && Block01 == target)
+			if (rmodo == false)
 			{
-				if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+				if (Block1 != nullptr && !Block1->Enabled() && Block01 == target)
 				{
-					if (target->GetHealth() > ComboRcheck->GetFloat())
+					if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
 					{
-						R->CastOnTarget(target);
+						if (target->GetHealth() > ComboRcheck->GetFloat())
+						{
+							R->CastOnTarget(target);
+						}
+
 					}
 
 				}
+				if (Block2 != nullptr && !Block2->Enabled() && Block02 == target)
+				{
+					if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+					{
+						if (target->GetHealth() > ComboRcheck->GetFloat())
+						{
+							R->CastOnTarget(target);
+						}
 
+					}
+
+				}
+				if (Block3 != nullptr && !Block3->Enabled() && Block03 == target)
+				{
+					if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+					{
+						if (target->GetHealth() > ComboRcheck->GetFloat())
+						{
+							R->CastOnTarget(target);
+						}
+
+					}
+
+				}
+				if (Block4 != nullptr && !Block4->Enabled() && Block04 == target)
+				{
+					if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+					{
+						if (target->GetHealth() > ComboRcheck->GetFloat())
+						{
+							R->CastOnTarget(target);
+						}
+
+					}
+
+				}
+				if (Block5 != nullptr && !Block5->Enabled() && Block05 == target)
+				{
+					if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+					{
+						if (target->GetHealth() > ComboRcheck->GetFloat())
+						{
+							R->CastOnTarget(target);
+						}
+
+					}
+
+
+				}
 			}
-			if (Block2 != nullptr && !Block2->Enabled() && Block02 == target)
+			if (rmodo == true)
 			{
-				if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+				if (!RKill->Enabled())
 				{
-					if (target->GetHealth() > ComboRcheck->GetFloat())
+					if (Block1 != nullptr && !Block1->Enabled() && Block01 == target)
 					{
-						R->CastOnTarget(target);
+
+						if (Rengage->GetFloat() <= (GEntityList->Player()->GetSpellBook()->GetAmmo(kSlotR)))
+						{
+							if (R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+							{
+								if (target->GetHealth() > ComboRcheck->GetFloat())
+								{
+									R->CastOnTarget(target);
+								}
+
+							}
+
+						}
 					}
+					if (Block2 != nullptr && !Block2->Enabled() && Block02 == target)
+					{
+						if (Rengage->GetFloat() <= (GEntityList->Player()->GetSpellBook()->GetAmmo(kSlotR)))
+						{
+							if (R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+							{
+								if (target->GetHealth() > ComboRcheck->GetFloat())
+								{
+									R->CastOnTarget(target);
+								}
 
+							}
+
+						}
+
+					}
+					if (Block3 != nullptr && !Block3->Enabled() && Block03 == target)
+					{
+						if (Rengage->GetFloat() <= (GEntityList->Player()->GetSpellBook()->GetAmmo(kSlotR)))
+						{
+							if (R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+							{
+								if (target->GetHealth() > ComboRcheck->GetFloat())
+								{
+									R->CastOnTarget(target);
+								}
+
+							}
+
+						}
+
+					}
+					if (Block4 != nullptr && !Block4->Enabled() && Block04 == target)
+					{
+						if (Rengage->GetFloat() <= (GEntityList->Player()->GetSpellBook()->GetAmmo(kSlotR)))
+						{
+							if (R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+							{
+								if (target->GetHealth() > ComboRcheck->GetFloat())
+								{
+									R->CastOnTarget(target);
+								}
+
+							}
+
+						}
+
+					}
+					if (Block5 != nullptr && !Block5->Enabled() && Block05 == target)
+					{
+						if (Rengage->GetFloat() <= (GEntityList->Player()->GetSpellBook()->GetAmmo(kSlotR)))
+						{
+							if (R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+							{
+								if (target->GetHealth() > ComboRcheck->GetFloat())
+								{
+									R->CastOnTarget(target);
+								}
+
+							}
+
+						}
+
+
+					}
 				}
-
-			}
-			if (Block3 != nullptr && !Block3->Enabled() && Block03 == target)
-			{
-				if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+				if (RKill->Enabled())
 				{
-					if (target->GetHealth() > ComboRcheck->GetFloat())
+					auto EDamage = 0;
+					if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotE) > 0)
 					{
-						R->CastOnTarget(target);
+						EDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotE);
 					}
-
-				}
-
-			}
-			if (Block4 != nullptr && !Block4->Enabled() && Block04 == target)
-			{
-				if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
-				{
-					if (target->GetHealth() > ComboRcheck->GetFloat())
+					auto QDamage = 0;
+					if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotQ) > 0)
 					{
-						R->CastOnTarget(target);
+						QDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotQ);
 					}
-
-				}
-
-			}
-			if (Block5 != nullptr && !Block5->Enabled() && Block05 == target)
-			{
-				if (GetUltimateDamage(target) > target->GetHealth() && R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
-				{
-					if (target->GetHealth() > ComboRcheck->GetFloat())
+					auto WDamage = 0;
+					if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotW) > 0)
 					{
-						R->CastOnTarget(target);
+						WDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotW);
 					}
+					auto RDamage = GetUltimateDamage(target);
+					if (target->GetHealth() < QDamage + WDamage + EDamage + RDamage)
+					{
+						if (Block1 != nullptr && !Block1->Enabled() && Block01 == target)
+						{
 
+							if (Rengage->GetFloat() <= (GEntityList->Player()->GetSpellBook()->GetAmmo(kSlotR)))
+							{
+								if (R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+								{
+									if (target->GetHealth() > ComboRcheck->GetFloat())
+									{
+										R->CastOnTarget(target);
+									}
+
+								}
+
+							}
+						}
+						if (Block2 != nullptr && !Block2->Enabled() && Block02 == target)
+						{
+							if (Rengage->GetFloat() <= (GEntityList->Player()->GetSpellBook()->GetAmmo(kSlotR)))
+							{
+								if (R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+								{
+									if (target->GetHealth() > ComboRcheck->GetFloat())
+									{
+										R->CastOnTarget(target);
+									}
+
+								}
+
+							}
+
+						}
+						if (Block3 != nullptr && !Block3->Enabled() && Block03 == target)
+						{
+							if (Rengage->GetFloat() <= (GEntityList->Player()->GetSpellBook()->GetAmmo(kSlotR)))
+							{
+								if (R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+								{
+									if (target->GetHealth() > ComboRcheck->GetFloat())
+									{
+										R->CastOnTarget(target);
+									}
+
+								}
+
+							}
+
+						}
+						if (Block4 != nullptr && !Block4->Enabled() && Block04 == target)
+						{
+							if (Rengage->GetFloat() <= (GEntityList->Player()->GetSpellBook()->GetAmmo(kSlotR)))
+							{
+								if (R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+								{
+									if (target->GetHealth() > ComboRcheck->GetFloat())
+									{
+										R->CastOnTarget(target);
+									}
+
+								}
+
+							}
+
+						}
+						if (Block5 != nullptr && !Block5->Enabled() && Block05 == target)
+						{
+							if (Rengage->GetFloat() <= (GEntityList->Player()->GetSpellBook()->GetAmmo(kSlotR)))
+							{
+								if (R->IsReady() && target->IsValidTarget(GEntityList->Player(), R->Range()))
+								{
+									if (target->GetHealth() > ComboRcheck->GetFloat())
+									{
+										R->CastOnTarget(target);
+									}
+
+								}
+
+							}
+
+
+						}
+					}
 				}
-
 			}
 		}
 	}
@@ -774,6 +977,28 @@ void HarasTog()
 			if (Harassenable == false && GGame->Time() > KeyPres)
 			{
 				Harassenable = true;
+				KeyPres = GGame->Time() + 0.250;
+
+			}
+
+		}
+	}
+}
+void rchange()
+{
+	if (!GGame->IsChatOpen() && GUtility->IsLeagueWindowFocused())
+	{
+		if (GUtility->IsKeyDown(RMode->GetInteger()))
+		{
+			if (rmodo == true && GGame->Time() > KeyPres)
+			{
+				rmodo = false;
+				KeyPres = GGame->Time() + 0.250;
+
+			}
+			if (rmodo == false && GGame->Time() > KeyPres)
+			{
+				rmodo = true;
 				KeyPres = GGame->Time() + 0.250;
 
 			}
@@ -1119,34 +1344,85 @@ void dmgdraw()
 		Vec2 barPos = Vec2();
 		if (hero->GetHPBarPosition(barPos) && !hero->IsDead())
 		{
-			auto damage = GetUltimateDamage(hero);
-			float percentHealthAfterDamage = max(0, hero->GetHealth() - float(damage)) / hero->GetMaxHealth();
-			float yPos = barPos.y + yOffset;
-			float xPosDamage = (barPos.x + xOffset) + Width * percentHealthAfterDamage;
-			float xPosCurrentHp = barPos.x + xOffset + Width * (hero->GetHealth() / hero->GetMaxHealth());
-			if (!hero->IsDead() && hero->IsValidTarget())
+			if (rmodo == false)
 			{
-				float differenceInHP = xPosCurrentHp - xPosDamage;
-				float pos1 = barPos.x + 9 + (107 * percentHealthAfterDamage);
-
-				for (int i = 0; i < differenceInHP; i++)
+				auto damage = GetUltimateDamage(hero);
+				float percentHealthAfterDamage = max(0, hero->GetHealth() - float(damage)) / hero->GetMaxHealth();
+				float yPos = barPos.y + yOffset;
+				float xPosDamage = (barPos.x + xOffset) + Width * percentHealthAfterDamage;
+				float xPosCurrentHp = barPos.x + xOffset + Width * (hero->GetHealth() / hero->GetMaxHealth());
+				if (!hero->IsDead() && hero->IsValidTarget())
 				{
-					if (damage < hero->GetHealth() && DrawRfill->Enabled())
+					float differenceInHP = xPosCurrentHp - xPosDamage;
+					float pos1 = barPos.x + 9 + (107 * percentHealthAfterDamage);
+
+					for (int i = 0; i < differenceInHP; i++)
 					{
-						GRender->DrawLine(Vec2(pos1 + i, yPos), Vec2(pos1 + i, yPos + Height), FillColor);
+						if (damage < hero->GetHealth() && DrawRfill->Enabled())
+						{
+							GRender->DrawLine(Vec2(pos1 + i, yPos), Vec2(pos1 + i, yPos + Height), FillColor);
+						}
+						if (damage > hero->GetHealth() && DrawRfill->Enabled())
+						{
+							GRender->DrawLine(Vec2(pos1 + i, yPos), Vec2(pos1 + i, yPos + Height), Color2);
+						}
+						if (damage > hero->GetHealth() && DrawRkill->Enabled())
+						{
+							GRender->DrawTextW(Vec2(barPos.x + xOffset, barPos.y + yOffset - 13), Color, "Killable");
+						}
 					}
-					if (damage > hero->GetHealth() && DrawRfill->Enabled())
+					if (!hero->IsVisible())
 					{
-						GRender->DrawLine(Vec2(pos1 + i, yPos), Vec2(pos1 + i, yPos + Height), Color2);
-					}
-					if (damage > hero->GetHealth() && DrawRkill->Enabled())
-					{
-						GRender->DrawTextW(Vec2(barPos.x + xOffset, barPos.y + yOffset - 13), Color, "Killable");
+
 					}
 				}
-				if (!hero->IsVisible())
+			}
+			if (rmodo == true)
+			{
+				auto EDamage = 0;
+				if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotE) > 0)
 				{
+					EDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotE);
+				}
+				auto QDamage = 0;
+				if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotQ) > 0)
+				{
+					QDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotQ);
+				}
+				auto WDamage = 0;
+				if (GEntityList->Player()->GetSpellBook()->GetLevel(kSlotW) > 0)
+				{
+					WDamage = GDamage->GetSpellDamage(GEntityList->Player(), hero, kSlotW);
+				}				
+				auto damage = GetUltimateDamage(hero) + QDamage + WDamage + EDamage;
+				float percentHealthAfterDamage = max(0, hero->GetHealth() - float(damage)) / hero->GetMaxHealth();
+				float yPos = barPos.y + yOffset;
+				float xPosDamage = (barPos.x + xOffset) + Width * percentHealthAfterDamage;
+				float xPosCurrentHp = barPos.x + xOffset + Width * (hero->GetHealth() / hero->GetMaxHealth());
+				if (!hero->IsDead() && hero->IsValidTarget())
+				{
+					float differenceInHP = xPosCurrentHp - xPosDamage;
+					float pos1 = barPos.x + 9 + (107 * percentHealthAfterDamage);
 
+					for (int i = 0; i < differenceInHP; i++)
+					{
+						if (damage < hero->GetHealth() && DrawRfill->Enabled())
+						{
+							GRender->DrawLine(Vec2(pos1 + i, yPos), Vec2(pos1 + i, yPos + Height), FillColor);
+						}
+						if (damage > hero->GetHealth() && DrawRfill->Enabled())
+						{
+							GRender->DrawLine(Vec2(pos1 + i, yPos), Vec2(pos1 + i, yPos + Height), Color2);
+						}
+						if (damage > hero->GetHealth() && DrawRkill->Enabled())
+						{
+							GRender->DrawTextW(Vec2(barPos.x + xOffset, barPos.y + yOffset - 13), Color, "Killable");
+						}
+					}
+					if (!hero->IsVisible())
+					{
+
+					}
 				}
 			}
 		}
@@ -1163,6 +1439,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	FarmTog();
 	HarasTog();
 	HarassAuto();
+	rchange();
 	if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 	{
 		Combo();
@@ -1270,16 +1547,45 @@ PLUGIN_EVENT(void) OnRender()
 			if (Farmenable == true)
 			{
 				std::string text = std::string("Farm ON");
-				Vec4 clr = Vec4(188, 255, 50, 255);
+				Vec4 clr = Vec4(75, 255, 75, 255);
 				pFont->SetColor(clr);
-				pFont->Render(pos.x, pos.y, text.c_str());
+				pFont->Render(pos.x+10, pos.y, text.c_str());
 			}
 			if (Farmenable == false)
 			{
 				std::string text = std::string("Farm OFF");
-				Vec4 clr = Vec4(188, 255, 50, 255);
+				Vec4 clr = Vec4(75, 255, 75, 255);
 				pFont->SetColor(clr);
-				pFont->Render(pos.x, pos.y, text.c_str());
+				pFont->Render(pos.x+10, pos.y, text.c_str());
+			}
+		}
+	}
+	if (RModedraw->Enabled())
+	{
+		static IFont* pFont = nullptr;
+
+		if (pFont == nullptr)
+		{
+			pFont = GRender->CreateFont("Arial", 15.f, kFontWeightBold);
+			pFont->SetOutline(true);
+			pFont->SetLocationFlags(kFontLocationNormal);
+		}
+		Vec2 pos;
+		if (GGame->Projection(GEntityList->Player()->GetPosition(), &pos))
+		{
+			if (rmodo == false)
+			{
+				std::string text = std::string("R: Finisher");
+				Vec4 clr = Vec4(220, 20, 60, 255);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x+10, pos.y - 40, text.c_str());
+			}
+			if (rmodo == true)
+			{
+				std::string text = std::string("R: Engaging");
+				Vec4 clr = Vec4(220, 20, 60, 255);
+				pFont->SetColor(clr);
+				pFont->Render(pos.x+10, pos.y - 40, text.c_str());
 			}
 		}
 	}
@@ -1298,17 +1604,17 @@ PLUGIN_EVENT(void) OnRender()
 		{
 			if (Harassenable == true)
 			{
-				std::string text = std::string("Harass ON");
-				Vec4 clr = Vec4(188, 255, 50, 255);
+				std::string text = std::string("Auto Harass ON");
+				Vec4 clr = Vec4(75, 255, 75, 255);
 				pFont->SetColor(clr);
-				pFont->Render(pos.x, pos.y - 10, text.c_str());
+				pFont->Render(pos.x+10, pos.y - 20, text.c_str());
 			}
 			if (Harassenable == false)
 			{
-				std::string text = std::string("Harass OFF");
-				Vec4 clr = Vec4(188, 255, 50, 255);
+				std::string text = std::string("Auto Harass OFF");
+				Vec4 clr = Vec4(75, 255, 75, 255);
 				pFont->SetColor(clr);
-				pFont->Render(pos.x, pos.y - 20, text.c_str());
+				pFont->Render(pos.x+10, pos.y - 20, text.c_str());
 			}
 		}
 	}
