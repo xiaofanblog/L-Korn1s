@@ -155,22 +155,22 @@ public:
 			{
 				if (WHeal1 != nullptr && !WHeal1->Enabled() && WHeal01 == target)
 				{
-					GGame->PrintChat("1");
+
 					if (ComboQ->Enabled() && Q->IsReady() && Q->Range() && target->IsValidTarget())
 					{
-						GGame->PrintChat("2");
+
 						if ((!target->HasBuffOfType(BUFF_SpellShield) || !target->HasBuffOfType(BUFF_SpellImmunity)) && target != nullptr && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() <= ComboQmax->GetInteger() && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length() >= ComboQmin->GetInteger())
 						{
-							GGame->PrintChat("3");
+
 							AdvPredictionOutput outputfam;
 							Q->RunPrediction(target, false, kCollidesWithMinions, &outputfam);
 							if (outputfam.HitChance >= kHitChanceHigh &&  outputfam.HitChance != kHitChanceCollision)
 							{
-								GGame->PrintChat("4");
+
 								Vec3 pred;
 								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
 								if (InSpellRange(Q, pred))
-									GGame->PrintChat("5");
+
 									Q->CastOnPosition(pred);
 							}
 						}
@@ -315,7 +315,6 @@ public:
 
 	void ManQ()
 	{
-		GGame->PrintChat("test");
 		for (auto Enemy : GEntityList->GetAllHeros(false, true))
 		{
 			if (Enemy != nullptr)
