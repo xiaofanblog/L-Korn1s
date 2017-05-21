@@ -1,6 +1,7 @@
 #include "PluginSDK.h"
 #include "Blitzcrank.h"
 #include "Leona.h"
+#include "Lulu.h"
 #include "Tahm Kench.h"
 #include "Morgana.h"
 #include "Sona.h"
@@ -115,6 +116,81 @@ private:
 		GGame->PrintChat("<b><font color = \"#f8a101\">Blitzcrank</font><font color=\"#7FFF00\"> - Loaded</font></b>");
 	}
 };
+class Lulu : public zHero
+{
+public:
+	void OnLoad() override
+	{
+		PrintMessage();
+		LuluBase().DrawMenu();
+		LuluBase().LoadSpells();
+	}
+
+	void OnRender() override
+	{
+		LuluBase().Draw();
+	}
+
+	void OnGameUpdate() override
+	{
+		LuluBase().AutoE();
+		LuluBase().AutoR();
+		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
+		{
+			LuluBase().Combo();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeLaneClear)
+		{
+			//LuluBase().Farm();
+		}
+	}
+
+	void OnGapCloser(GapCloserSpell const& Args) override
+	{
+		LuluBase().AntiGapclose(Args);
+	}
+
+	void OnInterruptible(InterruptibleSpell const& Args) override
+	{
+		LuluBase().Interrupt(Args);
+	}
+	void OnSpellCast(CastedSpell const& Args) override
+	{
+		//none
+	}
+	void OnAfterAttack(IUnit* Source, IUnit* Target) override
+	{
+		//none
+	}
+	void OnCreateObject(IUnit* Source) override
+	{
+		//none
+	}
+	void OnLevelUp(IUnit* Source, int NewLevel) override
+	{
+
+	}
+	void OnDeleteObject(IUnit* Source) override
+	{
+	}
+	void OnPauseAnimation(IUnit* Source) override
+	{
+		//none
+	}
+	void OnUpdateChargedSpell(int Slot, Vec3* Position, bool* ReleaseCast, bool* TriggerEvent)
+	{
+
+	}
+	bool OnPreCast(int Slot, IUnit* Target, Vec3* StartPosition, Vec3* EndPosition) override
+	{
+		return true;
+	}
+private:
+	void PrintMessage()
+	{
+		GGame->PrintChat("<b><font color = \"#f8a101\">Lulu</font><font color=\"#7FFF00\"> - Loaded</font></b>");
+	}
+};
 class Zyra : public zHero
 {
 public:
@@ -211,6 +287,10 @@ public:
 		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
 			LeonaBase().Combo();
+		}
+		if (GUtility->IsKeyDown(ForceR->GetInteger()))
+		{
+			LeonaBase().Semi();
 		}
 
 	}
@@ -1767,6 +1847,8 @@ void LoadChampion()
 		yHero = new Rakan;
 	else if (playerHero == "Zyra")
 		yHero = new Zyra;
+	else if (playerHero == "Lulu")
+		yHero = new Lulu;
 	else
 	{
 		GGame->PrintChat("<b><font color=\"#FFFFFF\">This champion isn't supported.</b></font>");
@@ -1857,6 +1939,16 @@ PLUGIN_API void OnLoad(IPluginSDK* PluginSDK)
 			RakanBase().AutoE();
 		});
 	}
+	if (playerHero == "Lulu")
+	{
+		eventManager = PluginSDK->GetEventManager();
+		eventmanager::RegisterEvents(eventManager);
+		eventmanager::GameEventManager::RegisterUpdateEvent([&](event_id_t id) -> void
+		{
+			LuluBase().AutoE();
+			LuluBase().AutoR();
+		});
+	}
 	MalachitePredOnload();
 	
 
@@ -1880,6 +1972,10 @@ PLUGIN_API void OnUnload()
 	GEventManager->RemoveEventHandler(kEventOnDestroyObject, OnDeleteObject);
 	GEventManager->RemoveEventHandler(kEventOnUpdateChargedSpell, OnUpdateChargedSpell);
 	if (playerHero == "Janna")
+	{
+		eventmanager::UnregisterEvents(eventManager);
+	}
+	if (playerHero == "Lulu")
 	{
 		eventmanager::UnregisterEvents(eventManager);
 	}
