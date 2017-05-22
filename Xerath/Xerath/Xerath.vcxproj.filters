@@ -21,28 +21,31 @@
     <ClCompile Include="PluginSDK.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Rembrandt.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="LPPConstants.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PluginData.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="Vector3.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PluginSDK.h">
-      <Filter>Resource Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Vector3.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="PluginData.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Rembrandt.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="LPPConstants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MalachitePred.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Extension.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Geometry.h">
-      <Filter>Resource Files</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Template.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

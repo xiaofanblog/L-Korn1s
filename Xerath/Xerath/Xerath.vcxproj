@@ -20,15 +20,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PluginSDK.cpp" />
-    <ClCompile Include="Rembrandt.cpp" />
     <ClCompile Include="Xerath.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Extension.h" />
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="LPPConstants.h" />
+    <ClInclude Include="MalachitePred.h" />
     <ClInclude Include="PluginData.h" />
     <ClInclude Include="PluginSDK.h" />
-    <ClInclude Include="Rembrandt.h" />
+    <ClInclude Include="Template.h" />
     <ClInclude Include="Vector3.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
