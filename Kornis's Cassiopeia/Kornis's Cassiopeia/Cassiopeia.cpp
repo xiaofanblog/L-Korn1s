@@ -51,6 +51,7 @@ IMenuOption* DrawPred;
 
 IMenu* DrawingMenu;
 IMenuOption* DrawQRange;
+IMenuOption* PredMethod;
 IMenuOption* DrawWRange;
 IMenuOption* DrawERange;
 IMenuOption* ComboQdash;
@@ -221,6 +222,7 @@ void Menu()
 		StackTear = MiscMenu->CheckBox("Stack Tear", true);
 		StackTearQ = MiscMenu->CheckBox("^- use Q", true);
 		StackTearW = MiscMenu->CheckBox("^- use W", true);
+		PredMethod = MiscMenu->AddSelection("Pred Method", 1, { "Old", "New" });
 	}
 
 }
@@ -255,7 +257,10 @@ void Semi()
 				Vec3 pos;
 				int hit;
 				GPrediction->FindBestCastPosition(ComboRRANGE->GetInteger(), 290, false, false, true, pos, hit);
-				R->CastOnPosition(pos);
+				if (hit > 0)
+				{
+					R->CastOnPosition(pos);
+				}
 
 
 			}
@@ -341,21 +346,42 @@ void Combo()
 					if (Qtarget != nullptr && Qtarget->IsValidTarget())
 					{
 						{
-							AdvPredictionOutput outputfam;
-							Q->RunPrediction(Qtarget, true, kCollidesWithNothing, &outputfam);
-							if (outputfam.HitChance >= kHitChanceHigh)
+							if (PredMethod->GetInteger() == 1)
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
-								Q->CastOnPosition(pred);
-							}
-							else if (outputfam.HitChance == kHitChanceDashing)
-							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
-								Q->CastOnTarget(Qtarget, kHitChanceDashing);
-							}
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Qtarget, true, kCollidesWithNothing, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, false, pred);
+									Q->CastOnPosition(pred);
+								}
+								else if (outputfam.HitChance == kHitChanceDashing)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, false, pred);
+									Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								}
 
+							}
+							if (PredMethod->GetInteger() == 0)
+							{
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Qtarget, true, kCollidesWithNothing, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
+									Q->CastOnPosition(pred);
+								}
+								else if (outputfam.HitChance == kHitChanceDashing)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
+									Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								}
+
+							}
 						}
 					}
 				}
@@ -365,19 +391,41 @@ void Combo()
 					{
 						if (!Qtarget->HasBuffOfType(BUFF_Poison))
 						{
-							AdvPredictionOutput outputfam;
-							Q->RunPrediction(Qtarget, false, kCollidesWithNothing, &outputfam);
-							if (outputfam.HitChance >= kHitChanceHigh)
+							if (PredMethod->GetInteger() == 1)
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
-								Q->CastOnPosition(pred);
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Qtarget, true, kCollidesWithNothing, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, false, pred);
+									Q->CastOnPosition(pred);
+								}
+								else if (outputfam.HitChance == kHitChanceDashing)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, false, pred);
+									Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								}
+
 							}
-							else if (outputfam.HitChance == kHitChanceDashing)
+							if (PredMethod->GetInteger() == 0)
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
-								Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Qtarget, true, kCollidesWithNothing, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
+									Q->CastOnPosition(pred);
+								}
+								else if (outputfam.HitChance == kHitChanceDashing)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
+									Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								}
+
 							}
 						}
 					}
@@ -431,19 +479,41 @@ void Combo()
 						if (Qtarget != nullptr && Qtarget->IsValidTarget())
 						{
 							{
-								AdvPredictionOutput outputfam;
-								Q->RunPrediction(Qtarget, false, kCollidesWithNothing, &outputfam);
-								if (outputfam.HitChance >= kHitChanceHigh)
+								if (PredMethod->GetInteger() == 1)
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
-									Q->CastOnPosition(pred);
+									AdvPredictionOutput outputfam;
+									Q->RunPrediction(Qtarget, true, kCollidesWithNothing, &outputfam);
+									if (outputfam.HitChance >= kHitChanceHigh)
+									{
+										Vec3 pred;
+										GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, false, pred);
+										Q->CastOnPosition(pred);
+									}
+									else if (outputfam.HitChance == kHitChanceDashing)
+									{
+										Vec3 pred;
+										GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, false, pred);
+										Q->CastOnTarget(Qtarget, kHitChanceDashing);
+									}
+
 								}
-								else if (outputfam.HitChance == kHitChanceDashing)
+								if (PredMethod->GetInteger() == 0)
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
-									Q->CastOnTarget(Qtarget, kHitChanceDashing);
+									AdvPredictionOutput outputfam;
+									Q->RunPrediction(Qtarget, true, kCollidesWithNothing, &outputfam);
+									if (outputfam.HitChance >= kHitChanceHigh)
+									{
+										Vec3 pred;
+										GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
+										Q->CastOnPosition(pred);
+									}
+									else if (outputfam.HitChance == kHitChanceDashing)
+									{
+										Vec3 pred;
+										GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
+										Q->CastOnTarget(Qtarget, kHitChanceDashing);
+									}
+
 								}
 							}
 						}
@@ -454,19 +524,41 @@ void Combo()
 						{
 							if (!Qtarget->HasBuffOfType(BUFF_Poison))
 							{
-								AdvPredictionOutput outputfam;
-								Q->RunPrediction(Qtarget, false, kCollidesWithNothing, &outputfam);
-								if (outputfam.HitChance >= kHitChanceHigh)
+								if (PredMethod->GetInteger() == 1)
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
-									Q->CastOnPosition(pred);
+									AdvPredictionOutput outputfam;
+									Q->RunPrediction(Qtarget, true, kCollidesWithNothing, &outputfam);
+									if (outputfam.HitChance >= kHitChanceHigh)
+									{
+										Vec3 pred;
+										GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, false, pred);
+										Q->CastOnPosition(pred);
+									}
+									else if (outputfam.HitChance == kHitChanceDashing)
+									{
+										Vec3 pred;
+										GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, false, pred);
+										Q->CastOnTarget(Qtarget, kHitChanceDashing);
+									}
+
 								}
-								else if (outputfam.HitChance == kHitChanceDashing)
+								if (PredMethod->GetInteger() == 0)
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
-									Q->CastOnTarget(Qtarget, kHitChanceDashing);
+									AdvPredictionOutput outputfam;
+									Q->RunPrediction(Qtarget, true, kCollidesWithNothing, &outputfam);
+									if (outputfam.HitChance >= kHitChanceHigh)
+									{
+										Vec3 pred;
+										GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
+										Q->CastOnPosition(pred);
+									}
+									else if (outputfam.HitChance == kHitChanceDashing)
+									{
+										Vec3 pred;
+										GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
+										Q->CastOnTarget(Qtarget, kHitChanceDashing);
+									}
+
 								}
 							}
 						}
@@ -505,19 +597,41 @@ void Combo()
 					if (Qtarget != nullptr && Qtarget->IsValidTarget())
 					{
 						{
-							AdvPredictionOutput outputfam;
-							Q->RunPrediction(Qtarget, false, kCollidesWithNothing, &outputfam);
-							if (outputfam.HitChance >= kHitChanceHigh)
+							if (PredMethod->GetInteger() == 1)
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
-								Q->CastOnPosition(pred);
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Qtarget, true, kCollidesWithNothing, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, false, pred);
+									Q->CastOnPosition(pred);
+								}
+								else if (outputfam.HitChance == kHitChanceDashing)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, false, pred);
+									Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								}
+
 							}
-							else if (outputfam.HitChance == kHitChanceDashing)
+							if (PredMethod->GetInteger() == 0)
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
-								Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Qtarget, true, kCollidesWithNothing, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
+									Q->CastOnPosition(pred);
+								}
+								else if (outputfam.HitChance == kHitChanceDashing)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
+									Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								}
+
 							}
 						}
 					}
@@ -528,19 +642,41 @@ void Combo()
 					{
 						if (!Qtarget->HasBuffOfType(BUFF_Poison))
 						{
-							AdvPredictionOutput outputfam;
-							Q->RunPrediction(Qtarget, false, kCollidesWithNothing, &outputfam);
-							if (outputfam.HitChance >= kHitChanceHigh)
+							if (PredMethod->GetInteger() == 1)
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
-								Q->CastOnPosition(pred);
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Qtarget, true, kCollidesWithNothing, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, false, pred);
+									Q->CastOnPosition(pred);
+								}
+								else if (outputfam.HitChance == kHitChanceDashing)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, false, pred);
+									Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								}
+
 							}
-							else if (outputfam.HitChance == kHitChanceDashing)
+							if (PredMethod->GetInteger() == 0)
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
-								Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								AdvPredictionOutput outputfam;
+								Q->RunPrediction(Qtarget, true, kCollidesWithNothing, &outputfam);
+								if (outputfam.HitChance >= kHitChanceHigh)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
+									Q->CastOnPosition(pred);
+								}
+								else if (outputfam.HitChance == kHitChanceDashing)
+								{
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(Qtarget, 0.35f, true, pred);
+									Q->CastOnTarget(Qtarget, kHitChanceDashing);
+								}
+
 							}
 						}
 					}
@@ -573,22 +709,14 @@ void Combo()
 
 					if (target->GetHealth() > ComboRcheck->GetFloat())
 					{
-						Vec3 pos;
-						int hit;
-						GPrediction->FindBestCastPosition(ComboRRANGE->GetInteger(), 290, false, false, true, pos, hit);
-						if (hit >= ComboRMin->GetInteger())
+
+						if (QDamage + EDamage * 4 + RDamage > target->GetHealth())
 						{
-							if (QDamage + EDamage * 4 + RDamage > target->GetHealth())
+							if (target != nullptr && target->IsValidTarget())
 							{
-								if (target != nullptr && ComboRFacing->Enabled() && target->IsFacing(Player) && target->IsValidTarget())
-								{
-									R->CastOnPosition(pos);
-								}
-								if (target != nullptr && !ComboRFacing->Enabled() && target->IsValidTarget())
-								{
-									R->CastOnPosition(pos);
-								}
+								R->CastOnTarget(target);
 							}
+
 						}
 					}
 				}
@@ -715,19 +843,41 @@ void Mixed()
 				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
 				if (target != nullptr && !target->IsDashing())
 				{
-					AdvPredictionOutput outputfam;
-					Q->RunPrediction(target, false, kCollidesWithNothing, &outputfam);
-					if (outputfam.HitChance >= kHitChanceHigh)
+					if (PredMethod->GetInteger() == 1)
 					{
-						Vec3 pred;
-						GPrediction->GetFutureUnitPosition(target, 0.35f, true, pred);
-						Q->CastOnPosition(pred);
+						AdvPredictionOutput outputfam;
+						Q->RunPrediction(target, true, kCollidesWithNothing, &outputfam);
+						if (outputfam.HitChance >= kHitChanceHigh)
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.35f, false, pred);
+							Q->CastOnPosition(pred);
+						}
+						else if (outputfam.HitChance == kHitChanceDashing)
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.35f, false, pred);
+							Q->CastOnTarget(target, kHitChanceDashing);
+						}
+
 					}
-					else if (outputfam.HitChance == kHitChanceDashing)
+					if (PredMethod->GetInteger() == 0)
 					{
-						Vec3 pred;
-						GPrediction->GetFutureUnitPosition(target, 0.35f, true, pred);
-						Q->CastOnTarget(target, kHitChanceDashing);
+						AdvPredictionOutput outputfam;
+						Q->RunPrediction(target, true, kCollidesWithNothing, &outputfam);
+						if (outputfam.HitChance >= kHitChanceHigh)
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.35f, true, pred);
+							Q->CastOnPosition(pred);
+						}
+						else if (outputfam.HitChance == kHitChanceDashing)
+						{
+							Vec3 pred;
+							GPrediction->GetFutureUnitPosition(target, 0.35f, true, pred);
+							Q->CastOnTarget(target, kHitChanceDashing);
+						}
+
 					}
 				}
 			}
@@ -774,19 +924,41 @@ void Killsteal()
 		{
 			if (KSQ->Enabled() && Q->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && QDamage > Enemy->GetHealth())
 			{
-				AdvPredictionOutput outputfam;
-				Q->RunPrediction(Enemy, false, kCollidesWithNothing, &outputfam);
-				if (outputfam.HitChance >= kHitChanceHigh)
+				if (PredMethod->GetInteger() == 1)
 				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(Enemy, 0.35f, true, pred);
-					Q->CastOnPosition(pred);
+					AdvPredictionOutput outputfam;
+					Q->RunPrediction(Enemy, true, kCollidesWithNothing, &outputfam);
+					if (outputfam.HitChance >= kHitChanceHigh)
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(Enemy, 0.35f, false, pred);
+						Q->CastOnPosition(pred);
+					}
+					else if (outputfam.HitChance == kHitChanceDashing)
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(Enemy, 0.35f, false, pred);
+						Q->CastOnTarget(Enemy, kHitChanceDashing);
+					}
+
 				}
-				else if (outputfam.HitChance == kHitChanceDashing)
+				if (PredMethod->GetInteger() == 0)
 				{
-					Vec3 pred;
-					GPrediction->GetFutureUnitPosition(Enemy, 0.35f, true, pred);
-					Q->CastOnTarget(Enemy, kHitChanceDashing);
+					AdvPredictionOutput outputfam;
+					Q->RunPrediction(Enemy, true, kCollidesWithNothing, &outputfam);
+					if (outputfam.HitChance >= kHitChanceHigh)
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(Enemy, 0.35f, true, pred);
+						Q->CastOnPosition(pred);
+					}
+					else if (outputfam.HitChance == kHitChanceDashing)
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(Enemy, 0.35f, true, pred);
+						Q->CastOnTarget(Enemy, kHitChanceDashing);
+					}
+
 				}
 			}
 			if (KSE->Enabled() && E->IsReady() && Enemy->IsValidTarget(GEntityList->Player(), E->Range()) && EDamage > Enemy->GetHealth())
@@ -800,7 +972,10 @@ void Killsteal()
 					Vec3 pos;
 					int hit;
 					GPrediction->FindBestCastPosition(ComboRRANGE->GetInteger(), 290, false, false, true, pos, hit);
-					R->CastOnPosition(pos);
+					if (hit > 0)
+					{
+						R->CastOnPosition(pos);
+					}
 				}
 			}
 		}
@@ -982,9 +1157,30 @@ void Auto()
 
 					if (Q->IsReady())
 					{
-						Vec3 pred;
-						GPrediction->GetFutureUnitPosition(target, 0.35f, true, pred);
-						Q->CastOnPosition(pred);
+						if (PredMethod->GetInteger() == 1)
+						{
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(target, true, kCollidesWithNothing, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh)
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.35f, false, pred);
+								Q->CastOnPosition(pred);
+							}
+
+						}
+						if (PredMethod->GetInteger() == 0)
+						{
+							AdvPredictionOutput outputfam;
+							Q->RunPrediction(target, true, kCollidesWithNothing, &outputfam);
+							if (outputfam.HitChance >= kHitChanceHigh)
+							{
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.35f, true, pred);
+								Q->CastOnPosition(pred);
+							}
+
+						}
 					}
 				}
 
@@ -1000,11 +1196,11 @@ void stacking()
 		{
 			if (StackTearQ->Enabled())
 			{
-				Q->CastOnPosition(GEntityList->Player()->GetPosition().Extend(GGame->CursorPosition(), 300));
+				Q->CastOnPosition(GEntityList->Player()->GetPosition());
 			}
 			if (StackTearW->Enabled())
 			{
-				W->CastOnPosition(GEntityList->Player()->GetPosition().Extend(GGame->CursorPosition(), 300));
+				W->CastOnPosition(GEntityList->Player()->GetPosition());
 			}
 		}
 	}
@@ -1068,9 +1264,18 @@ void drawpred()
 		{
 			if (!hero->IsDead() && hero->IsValidTarget())
 			{
-				Vec3 pred;
-				GPrediction->GetFutureUnitPosition(hero, 0.35f, true, pred);
-				GRender->DrawOutlinedCircle(pred, Vec4(255, 255, 255, 255), Q->Radius());
+				if (PredMethod->GetInteger() == 0)
+				{
+					Vec3 pred;
+					GPrediction->GetFutureUnitPosition(hero, 0.35f, true, pred);
+					GRender->DrawOutlinedCircle(pred, Vec4(255, 255, 255, 255), Q->Radius());
+				}
+				if (PredMethod->GetInteger() == 1)
+				{
+					Vec3 pred;
+					GPrediction->GetFutureUnitPosition(hero, 0.35f, false, pred);
+					GRender->DrawOutlinedCircle(pred, Vec4(255, 255, 255, 255), Q->Radius());
+				}
 			}
 		}
 	}
