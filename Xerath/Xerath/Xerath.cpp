@@ -1,7 +1,6 @@
 #include "PluginSDK.h"
 #include <string>
-#include "Rembrandt.h"
-
+#include "MalachitePred.h"
 PluginSetup("Xerath by Kornis")
 
 
@@ -98,10 +97,10 @@ void LoadSpells()
 	W->SetSkillshot(0.2f, 100, FLT_MAX, 1100);
 	E = GPluginSDK->CreateSpell2(kSlotE, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithYasuoWall | kCollidesWithMinions));
 	E->SetSkillshot(0.25f, 70, 2000, 1050);
-	R = GPluginSDK->CreateSpell2(kSlotR, kCircleCast, true, false, kCollidesWithNothing);
-	R->SetOverrideDelay(0.2);
+	R = GPluginSDK->CreateSpell2(kSlotR, kLineCast, true, false, kCollidesWithNothing);
+	R->SetOverrideDelay(0.4);
 	R->SetOverrideRadius(130);
-	R->SetOverrideSpeed(FLT_MAX);
+	R->SetOverrideSpeed(std::numeric_limits<float>::infinity());
 }
 void Menu()
 {
@@ -308,16 +307,18 @@ void Farm()
 					{
 						if (Q->GetChargePercent() > 30)
 						{
-							std::vector<Vec3> CastPos;
-							CastPos.push_back(GEntityList->Player()->GetPosition());
-							FarmLocation Farmlocation;
-							Rembrandt::FindBestLineCastPosition(CastPos, Q->Range(), Q->Range(), 150, false, true, true, Farmlocation);
-							if (FarmQ->Enabled())
+							if ((GetMinionsQ(800) <= 7))
 							{
-								if (Farmlocation.HitCount > 1)
+								GPrediction->FindBestCastPosition(Q->Range(), 150, true, true, false, pos, hit);
 								{
-									Q->CastOnPosition(Farmlocation.CastPosition);
+
+									Q->CastOnPosition(pos);
+
 								}
+							}
+							if ((GetMinionsQ(800) >= 7))
+							{
+								Q->CastOnTarget(Minion);
 							}
 
 						}
@@ -331,13 +332,18 @@ void Farm()
 						{
 							if (GetMinionsQ(Q->Range()) > 1)
 							{
-								std::vector<Vec3> CastPos;
-								CastPos.push_back(GEntityList->Player()->GetPosition());
-								FarmLocation Farmlocation;
-								Rembrandt::FindBestLineCastPosition(CastPos, Q->Range(), Q->Range(), Q->Radius(), false, true, true, Farmlocation);
-								if (FarmQ->Enabled())
+								if ((GetMinionsQ(800) <= 7))
 								{
-									Q->StartCharging(Farmlocation.CastPosition);
+									GPrediction->FindBestCastPosition(Q->Range(), 150, true, true, false, pos, hit);
+									{
+
+										Q->StartCharging();
+
+									}
+								}
+								if ((GetMinionsQ(800) >= 7))
+								{
+									Q->StartCharging();
 								}
 							}
 						}
@@ -411,10 +417,7 @@ void RCastAuto()
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 						{
-
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-							R->CastOnPosition(pred);
+							MalachiteCast(R, target, kHitChanceHigh);
 
 
 						}
@@ -430,9 +433,7 @@ void RCastAuto()
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 4400);
 						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-							R->CastOnPosition(pred);
+							MalachiteCast(R, target, kHitChanceHigh);
 						}
 					}
 				}
@@ -443,10 +444,10 @@ void RCastAuto()
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 5600);
 						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-							R->CastOnPosition(pred);
+							MalachiteCast(R, target, kHitChanceHigh);
+							
 						}
+						
 					}
 				}
 			}
@@ -460,11 +461,10 @@ void RCastAuto()
 						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 						{
 
+
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 
 
@@ -481,11 +481,11 @@ void RCastAuto()
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 4400);
 						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 						{
+	
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
+							
 							}
 						}
 					}
@@ -497,11 +497,11 @@ void RCastAuto()
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 5600);
 						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 						{
+
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
+								
 							}
 						}
 					}
@@ -527,10 +527,7 @@ void RCastAuto()
 								auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 								if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-									R->CastOnPosition(pred);
-
+									MalachiteCast(R, target, kHitChanceHigh);
 
 								}
 
@@ -544,9 +541,7 @@ void RCastAuto()
 								auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 								if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-									R->CastOnPosition(pred);
+									MalachiteCast(R, target, kHitChanceHigh);
 
 
 								}
@@ -561,9 +556,7 @@ void RCastAuto()
 								auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 								if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-									R->CastOnPosition(pred);
+									MalachiteCast(R, target, kHitChanceHigh);
 
 
 								}
@@ -587,10 +580,7 @@ void RCastAuto()
 								auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 								if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-									R->CastOnPosition(pred);
-
+									MalachiteCast(R, target, kHitChanceHigh);
 
 								}
 
@@ -604,9 +594,7 @@ void RCastAuto()
 								auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 								if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-									R->CastOnPosition(pred);
+									MalachiteCast(R, target, kHitChanceHigh);
 
 
 								}
@@ -621,10 +609,7 @@ void RCastAuto()
 								auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 								if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-									R->CastOnPosition(pred);
-
+									MalachiteCast(R, target, kHitChanceHigh);
 
 								}
 
@@ -638,9 +623,7 @@ void RCastAuto()
 								auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 								if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-									R->CastOnPosition(pred);
+									MalachiteCast(R, target, kHitChanceHigh);
 
 
 								}
@@ -661,9 +644,7 @@ void RCastAuto()
 								auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 								if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-									R->CastOnPosition(pred);
+									MalachiteCast(R, target, kHitChanceHigh);
 
 
 								}
@@ -678,9 +659,7 @@ void RCastAuto()
 								auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 								if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-									R->CastOnPosition(pred);
+									MalachiteCast(R, target, kHitChanceHigh);
 
 
 								}
@@ -695,9 +674,7 @@ void RCastAuto()
 								auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 								if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-									R->CastOnPosition(pred);
+									MalachiteCast(R, target, kHitChanceHigh);
 
 
 								}
@@ -712,9 +689,7 @@ void RCastAuto()
 								auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 								if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-									R->CastOnPosition(pred);
+									MalachiteCast(R, target, kHitChanceHigh);
 
 
 								}
@@ -729,10 +704,7 @@ void RCastAuto()
 								auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 								if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 								{
-									Vec3 pred;
-									GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-									R->CastOnPosition(pred);
-
+									MalachiteCast(R, target, kHitChanceHigh);
 
 								}
 
@@ -757,9 +729,7 @@ void RCastAuto()
 								{
 									if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 									{
-										Vec3 pred;
-										GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-										R->CastOnPosition(pred);
+										MalachiteCast(R, target, kHitChanceHigh);
 									}
 
 
@@ -777,9 +747,7 @@ void RCastAuto()
 								{
 									if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 									{
-										Vec3 pred;
-										GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-										R->CastOnPosition(pred);
+										MalachiteCast(R, target, kHitChanceHigh);
 									}
 
 
@@ -797,9 +765,7 @@ void RCastAuto()
 								{
 									if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 									{
-										Vec3 pred;
-										GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-										R->CastOnPosition(pred);
+										MalachiteCast(R, target, kHitChanceHigh);
 									}
 
 
@@ -826,9 +792,7 @@ void RCastAuto()
 								{
 									if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 									{
-										Vec3 pred;
-										GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-										R->CastOnPosition(pred);
+										MalachiteCast(R, target, kHitChanceHigh);
 									}
 
 
@@ -846,9 +810,7 @@ void RCastAuto()
 								{
 									if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 									{
-										Vec3 pred;
-										GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-										R->CastOnPosition(pred);
+										MalachiteCast(R, target, kHitChanceHigh);
 									}
 
 
@@ -866,9 +828,7 @@ void RCastAuto()
 								{
 									if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 									{
-										Vec3 pred;
-										GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-										R->CastOnPosition(pred);
+										MalachiteCast(R, target, kHitChanceHigh);
 									}
 
 
@@ -886,9 +846,7 @@ void RCastAuto()
 								{
 									if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 									{
-										Vec3 pred;
-										GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-										R->CastOnPosition(pred);
+										MalachiteCast(R, target, kHitChanceHigh);
 									}
 
 								}
@@ -911,9 +869,7 @@ void RCastAuto()
 								{
 									if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 									{
-										Vec3 pred;
-										GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-										R->CastOnPosition(pred);
+										MalachiteCast(R, target, kHitChanceHigh);
 									}
 
 
@@ -931,9 +887,7 @@ void RCastAuto()
 								{
 									if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 									{
-										Vec3 pred;
-										GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-										R->CastOnPosition(pred);
+										MalachiteCast(R, target, kHitChanceHigh);
 									}
 
 
@@ -951,9 +905,7 @@ void RCastAuto()
 								{
 									if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 									{
-										Vec3 pred;
-										GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-										R->CastOnPosition(pred);
+										MalachiteCast(R, target, kHitChanceHigh);
 									}
 
 
@@ -971,9 +923,7 @@ void RCastAuto()
 								{
 									if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 									{
-										Vec3 pred;
-										GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-										R->CastOnPosition(pred);
+										MalachiteCast(R, target, kHitChanceHigh);
 									}
 
 
@@ -991,9 +941,7 @@ void RCastAuto()
 								{
 									if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 									{
-										Vec3 pred;
-										GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-										R->CastOnPosition(pred);
+										MalachiteCast(R, target, kHitChanceHigh);
 									}
 
 
@@ -1023,9 +971,7 @@ void RCastTapo()
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-							R->CastOnPosition(pred);
+							MalachiteCast(R, target, kHitChanceHigh);
 						}
 					}
 				}
@@ -1040,9 +986,7 @@ void RCastTapo()
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 4400);
 						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-							R->CastOnPosition(pred);
+							MalachiteCast(R, target, kHitChanceHigh);
 						}
 					}
 				}
@@ -1057,9 +1001,7 @@ void RCastTapo()
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 5600);
 						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-							R->CastOnPosition(pred);
+							MalachiteCast(R, target, kHitChanceHigh);
 						}
 					}
 				}
@@ -1080,9 +1022,7 @@ void RCastTapo()
 						{
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 						}
 					}
@@ -1100,9 +1040,7 @@ void RCastTapo()
 						{
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 						}
 					}
@@ -1120,9 +1058,7 @@ void RCastTapo()
 						{
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 						}
 					}
@@ -1147,9 +1083,7 @@ void RCastTapo()
 						{
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 
 
@@ -1167,9 +1101,7 @@ void RCastTapo()
 						{
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 
 
@@ -1187,9 +1119,7 @@ void RCastTapo()
 						{
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 
 
@@ -1216,9 +1146,7 @@ void RCastTapo()
 						{
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 
 
@@ -1236,9 +1164,7 @@ void RCastTapo()
 						{
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 
 
@@ -1256,9 +1182,7 @@ void RCastTapo()
 						{
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 
 
@@ -1276,9 +1200,7 @@ void RCastTapo()
 						{
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 
 
@@ -1302,9 +1224,7 @@ void RCastTapo()
 						{
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 
 						}
@@ -1319,9 +1239,7 @@ void RCastTapo()
 						auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 3200);
 						if (target != nullptr && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 						{
-							Vec3 pred;
-							GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-							R->CastOnPosition(pred);
+							MalachiteCast(R, target, kHitChanceHigh);
 
 
 						}
@@ -1338,9 +1256,7 @@ void RCastTapo()
 						{
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 
 						}
@@ -1357,9 +1273,7 @@ void RCastTapo()
 						{
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 
 
@@ -1377,9 +1291,7 @@ void RCastTapo()
 						{
 							if ((target->GetPosition() - GGame->CursorPosition()).Length2D() < ComboRradi->GetFloat())
 							{
-								Vec3 pred;
-								GPrediction->GetFutureUnitPosition(target, 0.2f, true, pred);
-								R->CastOnPosition(pred);
+								MalachiteCast(R, target, kHitChanceHigh);
 							}
 
 						}
@@ -1508,7 +1420,7 @@ void Combo()
 			if (W->IsReady() && W->Range())
 			{
 				Vec3 EstimatedEnemyPos;
-				GPrediction->GetFutureUnitPosition(target, 0.15f, true, EstimatedEnemyPos);
+				GPrediction->GetFutureUnitPosition(target, 0.13f, true, EstimatedEnemyPos);
 				W->CastOnPosition(EstimatedEnemyPos);
 
 			}
@@ -1586,11 +1498,11 @@ PLUGIN_EVENT(void) OnGapCloser(GapCloserSpell const& Args)
 {
 	if (Args.Source != nullptr && Args.Source != GEntityList->Player()
 		&& Args.Source->IsEnemy(GEntityList->Player())
-		&& AntiGap->Enabled() && E->IsReady())
+		&& AntiGap->Enabled() && E->IsReady() && Args.Source->IsValidTarget())
 	{
 		if ((Args.EndPosition - GEntityList->Player()->GetPosition()).Length() < E->Range())
 		{
-			E->CastOnTarget(Args.Source);
+			E->CastOnPosition(Args.EndPosition);
 		}
 
 	}

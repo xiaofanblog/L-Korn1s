@@ -1,26 +1,25 @@
 #pragma once
-#include "PluginSDK.h"
+#include "Template.h"
 #include "cmath"
 #include <map>
 #define PI 3.14159265f
 
-//CREDITS TO LEAGUESHARP COMMON GEOMETRY.H
-
- Vec2 ToVec2(Vec3 vec)
+//lay khoang cach ne may ban
+inline Vec2 ToVec2(Vec3 vec)
 {
 	return Vec2(vec.x, vec.z);
 }
- Vec3 ToVec3(Vec2 vec)
+inline Vec3 ToVec3(Vec2 vec)
 {
 	return Vec3(vec.x, 0, vec.y);
 }
- Vec3 Normalize(Vec3 x)
+inline Vec3 Normalize(Vec3 x)
 {
 	auto X1 = ToVec2(x);
 	float sqr = X1.x * X1.x + X1.y * X1.y;
 	return ToVec3((X1 * (1.0f / sqrt(sqr))));
 }
- Vec3 Pendicular(Vec3 x)
+inline Vec3 Pendicular(Vec3 x)
 {
 	auto X1 = ToVec2(x);
 	Vec2 X2;
@@ -28,12 +27,21 @@
 	X2.y = X1.x;
 	return ToVec3(X2);
 }
-
- float Distance(Vec3 from, Vec3 to)
+inline float DistanceSqr(Vec3 from, Vec3 to)
 {
-	return (from - to).Length2D();
+	float distance = (from.To2D() - to.To2D()).LengthSqr();
+	if (isnan(distance))
+		return 0;
+	return distance;
 }
- float AngleBetween(Vec3 a, Vec3 center, Vec3 c)
+inline float Distance(Vec3 from, Vec3 to)
+{
+	float distance = (from.To2D() - to.To2D()).Length();
+	if (isnan(distance))
+		return 0;
+	return distance;
+}
+inline float AngleBetween(Vec3 a, Vec3 center, Vec3 c)
 {
 	float a1 = Distance(c, center);
 	float b1 = Distance(a, c);
@@ -44,15 +52,15 @@
 		return acos((a1 * a1 + c1 * c1 - b1 * b1) / (2 * a1 * c1)) * (180 / PI);
 	}
 }
- float AngleToRadian(float Angle)
+inline float AngleToRadian(float Angle)
 {
 	return Angle * PI / 180.f;
 }
- Vec3 RotateAround(Vec3 pointToRotate3D, Vec3 centerPoint3D, float angleInDegree)
+inline Vec3 RotateAround(Vec3 pointToRotate3D, Vec3 centerPoint3D, float angleInDegree)
 {
 	auto angleInRadians = AngleToRadian(angleInDegree);
 	double cosTheta = cos(angleInRadians);
-	double sinTheta = sin(angleInRadians);
+	double sinTheta = cos(angleInRadians);
 	Vec2 pointToRotate = ToVec2(pointToRotate3D);
 	Vec2 centerPoint = ToVec2(centerPoint3D);
 	Vec2 vec2Return
@@ -65,7 +73,7 @@
 			);
 	return ToVec3(vec2Return);
 }
- bool InTheCone(Vec3 pos, Vec3 centerconePolar, Vec3 centerconeEnd, float coneAngle)
+inline bool InTheCone(Vec3 pos, Vec3 centerconePolar, Vec3 centerconeEnd, float coneAngle)
 
 {
 
@@ -74,7 +82,7 @@
 		&& Distance(pos, centerconePolar) < Distance(centerconePolar, centerconeEnd);
 
 }
- float Distance(Vec3 point, Vec3 segmentStart, Vec3 segmentEnd, bool onlyIfOnSegment = false)
+inline float Distance(Vec3 point, Vec3 segmentStart, Vec3 segmentEnd, bool onlyIfOnSegment = false)
 {
 	auto a = ToVec2(point);
 	auto b = ToVec2(segmentStart);
@@ -88,28 +96,32 @@
 		return 100000.f;
 	return distance;
 }
- float Distance(IUnit* from, IUnit* to)
+inline float Distance(IUnit* from, IUnit* to)
 {
-	return (from->GetPosition() - to->GetPosition()).Length2D();
+	return Distance(from->GetPosition(), to->GetPosition());
 }
- float Distance(IUnit* from, Vec3 to)
+inline float Distance(IUnit* from, Vec3 to)
 {
-	return (from->GetPosition() - to).Length2D();
+	return Distance(from->GetPosition(), to);
 }
- float Distance(Vec2 from, Vec2 to)
+inline float Distance(Vec2 from, Vec2 to)
 {
-	return (from - to).Length();
+	return Distance(ToVec3(from), ToVec3(to));
 }
+//dich chuyen ex- vector tend
 
- Vec3 Extend(Vec3 from, Vec3 to, float distance)
+inline Vec2 Extend(Vec2 from, Vec2 to, float distance)
 {
-	float realDistance = (from - to).Length() * distance / (from - to).Length2D();
 	auto direction = (to - from).VectorNormalize();
-	return from + direction * realDistance;
+	return from + direction * distance;
 }
- std::vector<Vec3> GetCircleCircleIntersections(Vec3 center1, Vec3 center2, float radius1, float radius2)
+inline Vec3 Extend(Vec3 from, Vec3 to, float distance)
 {
-	std::vector<Vec3> result;
+	return ToVec3(Extend(from.To2D(), to.To2D(), distance));
+}
+inline SArray<Vec3> GetCircleCircleIntersections(Vec3 center1, Vec3 center2, float radius1, float radius2)
+{
+	SArray<Vec3> result;
 	float D = Distance(center2, center1);
 	//The Circles dont intersect:
 	if (D > radius1 + radius2 || (D <= abs(radius1 - radius2)))
@@ -123,12 +135,12 @@
 	Vec3 PA = ToVec3(ToVec2(center1) + A * ToVec2(Direction));
 	Vec3 S1 = ToVec3(ToVec2(PA) + H * ToVec2(Pendicular(Direction)));
 	Vec3 S2 = ToVec3((ToVec2(PA) - H * ToVec2(Pendicular(Direction))));
-	result.push_back(S1);
-	result.push_back(S2);
+	result.Add(S1);
+	result.Add(S2);
 	return result;
 }
 
- bool GetSegmentSegmentIntersections(
+inline bool GetSegmentSegmentIntersections(
 	Vec2 lineSegment1Start,
 	Vec2 lineSegment1End,
 	Vec2 lineSegment2Start,
@@ -182,7 +194,7 @@
 	intersectpoint.y = lineSegment1Start.y + r * deltaBAy;
 	return true;
 }
- bool GetSegmentSegmentIntersections(
+inline bool GetSegmentSegmentIntersections(
 	Vec3 lineSegment1Start,
 	Vec3 lineSegment1End,
 	Vec3 lineSegment2Start,
@@ -190,4 +202,19 @@
 {
 	Vec2 out;
 	return GetSegmentSegmentIntersections(ToVec2(lineSegment1Start), ToVec2(lineSegment1End), ToVec2(lineSegment2Start), ToVec2(lineSegment2End), out);
+}
+inline Vec2 GetLineLineIntersections(Vec2 A1, Vec2 A2, Vec2 B1, Vec2 B2)
+{
+	float a1 = A2.y - A1.y;
+	float b1 = A1.x - A2.x;
+	float c1 = a1* A1.x + b1 * A1.y;
+
+	float a2 = B2.y - B1.y;
+	float b2 = B1.x - B2.x;
+	float c2 = a2* B1.x + b2 * B1.y;
+
+	float det = a1*b2 - a2*b1;
+	float x = (b2*c1 - b1*c2) / det;
+	float y = (a1*c2 - a2*c1) / det;
+	return Vec2(x, y);
 }
