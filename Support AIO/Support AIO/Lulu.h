@@ -150,9 +150,12 @@ public:
 
 						if (Ally->IsValidTarget(GEntityList->Player(), E->Range()) && Ally->IsValidTarget(targets, Q->Range()))
 						{
-							if (Ally->IsValidTarget() && Ally != nullptr && !Ally->IsDead() && Q->IsReady())
+							if (Ally != GEntityList->Player())
 							{
-								E->CastOnTarget(Ally);
+								if (Ally->IsValidTarget() && Ally != nullptr && !Ally->IsDead() && Q->IsReady())
+								{
+									E->CastOnTarget(Ally);
+								}
 							}
 						}
 
@@ -1054,11 +1057,15 @@ public:
 						auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), targets, kSlotQ);
 						if (Ally->IsValidTarget(GEntityList->Player(), E->Range()) && Ally->IsValidTarget(targets, Q->Range()))
 						{
-							if (Ally->IsValidTarget() && Ally != nullptr && !Ally->IsDead() && Q->IsReady() && targets->GetHealth() < QDamage)
+							if (Ally != GEntityList->Player())
 							{
-								E->CastOnTarget(Ally);
+								if (Ally->IsValidTarget() && Ally != nullptr && !Ally->IsDead() && Q->IsReady() && targets->GetHealth() < QDamage)
+								{
+									E->CastOnTarget(Ally);
+								}
 							}
 						}
+
 
 
 						if (Ally->HasBuff("lulufaerieshield") && !Ally->IsDead() && Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), 2000))
