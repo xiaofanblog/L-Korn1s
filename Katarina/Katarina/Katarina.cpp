@@ -487,15 +487,6 @@ void Combo()
 					}
 				}
 			}
-
-			if (ComboQ->Enabled() && Q->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime) && !E->IsReady())
-			{
-				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
-				if (target != nullptr && target->IsValidTarget() && !target->IsDead())
-				{
-					Q->CastOnTarget(target);
-				}
-			}
 			if (ComboW->Enabled() && W->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
 			{
 				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 350);
@@ -504,6 +495,14 @@ void Combo()
 					W->CastOnPlayer();
 				}
 
+			}
+			if (ComboQ->Enabled() && Q->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime) && !E->IsReady())
+			{
+				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+				if (target != nullptr && target->IsValidTarget() && !target->IsDead())
+				{
+					Q->CastOnTarget(target);
+				}
 			}
 		}
 	}
@@ -654,6 +653,15 @@ void Combo()
 		}
 		if (ComboMode->GetInteger() == 1 && GGame->TickCount() > hello)
 		{
+			if (ComboW->Enabled() && W->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
+			{
+				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 400);
+				if (target != nullptr && target->IsValidTarget() && !target->IsDead())
+				{
+					W->CastOnPlayer();
+				}
+
+			}
 			if (ComboE->Enabled() && E->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
 			{
 				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, E->Range());
@@ -707,15 +715,6 @@ void Combo()
 				{
 					Q->CastOnTarget(target);
 				}
-			}
-			if (ComboW->Enabled() && W->IsReady() && !GEntityList->Player()->IsCastingImportantSpell(&endtime))
-			{
-				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, 350);
-				if (target != nullptr && target->IsValidTarget() && !target->IsDead())
-				{
-					W->CastOnPlayer();
-				}
-
 			}
 		}
 		if (GEntityList->Player()->IsCastingImportantSpell(&endtime))
@@ -782,12 +781,12 @@ void Combo()
 		auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, R->Range() - 100);
 		if (target != nullptr && target->IsValidTarget() && !target->IsDead())
 		{
-			if (ComboRalways->Enabled() && target->GetHealth() > ComboRcheck->GetFloat())
+			if (ComboRalways->Enabled() && target->GetHealth() > ComboRcheck->GetFloat() && (!W->IsReady() || CountEnemy(GEntityList->Player()->GetPosition(), 350) == 0) && !Q->IsReady())
 			{
 				R->CastOnPlayer();
 				hello = GGame->TickCount() + 100;
 			}
-			if (ComboRkill->Enabled() && ComboRhit->GetFloat() <= CountEnemy(GEntityList->Player()->GetPosition(), R->Range()))
+			if (ComboRkill->Enabled() && ComboRhit->GetFloat() <= CountEnemy(GEntityList->Player()->GetPosition(), R->Range()) && (!W->IsReady() || CountEnemy(GEntityList->Player()->GetPosition(), 350) == 0) && !Q->IsReady())
 			{
 				auto RDamage = GDamage->GetSpellDamage(GEntityList->Player(), target, kSlotR);
 				if ((RDamage * ComboRstack->GetFloat()) >= target->GetHealth() && target->GetHealth() > ComboRcheck->GetFloat())
