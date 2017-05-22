@@ -66,6 +66,7 @@ IMenuOption* HarassW;
 IMenuOption* HarassE;
 IMenuOption* HarassQauto;
 IMenuOption* HarassQautom;
+IMenuOption* AutoGrab;
 ISpell2* Q;
 ISpell2* Q2;
 ISpell2* QE;
@@ -168,6 +169,23 @@ void qblack()
 		}
 	}
 }
+void tibbersivern()
+{
+	if (AutoGrab->Enabled())
+	for (auto Minion : GEntityList->GetAllUnits())
+	{
+		if (std::string(Minion->GetObjectName()) == "tibbers" || std::string(Minion->GetObjectName()) == "Tibbers" || std::string(Minion->GetObjectName()) == "ivernminion")
+		{
+			if (Minion->IsValidTarget(GEntityList->Player(), W->Range()) && Minion->IsValidObject() && Minion != nullptr && !Minion->IsDead() && Minion->IsValidTarget())
+			{
+				if (!GEntityList->Player()->HasBuff("syndrawtooltip") && GEntityList->Player()->GetSpellBook()->GetToggleState(kSlotW) == 1)
+				{
+					W->CastOnTarget(Minion);
+				}
+			}
+		}
+	}
+}
 void Menu()
 {
 	MainMenu = GPluginSDK->AddMenu("Kornis Syndra");
@@ -237,6 +255,7 @@ void Menu()
 		RMode = MiscMenu->AddKey("R Mode Change", 'Z');
 		Rengage = MiscMenu->AddFloat("Min R Orbs", 3, 6, 5);
 		RKill = MiscMenu->CheckBox("Only if Combo Damage Kills", true);
+		AutoGrab = MiscMenu->CheckBox("Auto Grab Tibbers/Daisy", true);
 	}
 }
 inline float GetDistanceVectors(Vec3 from, Vec3 to)
@@ -1440,6 +1459,7 @@ PLUGIN_EVENT(void) OnGameUpdate()
 	HarasTog();
 	HarassAuto();
 	rchange();
+	tibbersivern();
 	if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 	{
 		Combo();
