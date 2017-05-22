@@ -32,6 +32,7 @@ public:
 			ShieldKill = ShieldMenu->CheckBox("Auto Shield if inc. damage will kill", true);
 			ShieldAA = ShieldMenu->CheckBox("Priority Allies over me", true);
 			ShieldSelf = ShieldMenu->CheckBox("Shield myself", true);
+			ShieldSelfHP = ShieldMenu->AddFloat("Start Shielding Self if HP", 0, 100, 70);
 		}
 		RSettings = MainMenu->AddMenu("R Settings");
 		{
@@ -62,6 +63,15 @@ public:
 			FarmQ = FarmMenu->CheckBox("Use Q", true);
 			FarmQmin = FarmMenu->AddFloat("^- if hits", 0, 6, 3);
 		}
+		KillstealMenu = MainMenu->AddMenu("Killsteal");
+		{
+			KSQ = KillstealMenu->CheckBox("Killsteal with Q and E Logic", true);
+		}
+		HarassMenu = MainMenu->AddMenu("Harass");
+		{
+			HarassQ = HarassMenu->CheckBox("Use Q", true);
+			HarassQ2 = HarassMenu->CheckBox("Use E>Q Harass Logic", true);
+		}
 		MiscMenu = MainMenu->AddMenu("Misc.");
 		{
 			InterruptW = MiscMenu->CheckBox("Use W to interrupt", true);
@@ -76,6 +86,93 @@ public:
 			FleeKey = FleeMenu->AddKey("Flee Key", 'G');
 		}
 
+	}
+	void Harass()
+	{
+		if (HarassQ->Enabled())
+		{
+			if (Q->IsReady())
+			{
+				auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range());
+				if (target != nullptr && target->IsValidTarget() && !target->IsDead())
+				{
+					Vec3 pred;
+					GPrediction->GetFutureUnitPosition(target, 0.4f, true, pred);
+
+					Q->CastOnPosition(pred);
+				}
+			}
+		}
+		if (HarassQ2->Enabled())
+		{
+			for (auto Minions : GEntityList->GetAllMinions(false, true, true))
+			{
+				if (Minions->IsValidTarget() && Minions != nullptr && !Minions->IsDead() && (Minions->IsCreep() || Minions->IsJungleCreep()))
+				{
+
+					for (auto targets : GEntityList->GetAllHeros(false, true))
+					{
+						if (targets != nullptr && !targets->IsDead() & targets->IsValidTarget())
+						{
+							if (Minions->IsValidTarget(GEntityList->Player(), E->Range()))
+							{
+								if (Minions->IsValidTarget(targets, Q->Range()) && Q->IsReady())
+								{
+									E->CastOnTarget(Minions);
+								}
+							}
+							if (Minions->HasBuff("lulufaerieburn") || Minions->HasBuff("lulufaerieshield"))
+							{
+								if (Minions->IsValidTarget(GEntityList->Player(), 2000))
+								{
+									if ((targets->GetPosition() - Minions->GetPosition()).Length2D() < Q->Range())
+									{
+										Q->SetRangeCheckFrom(Minions->GetPosition());
+										Q->SetFrom(Minions->GetPosition());
+										Vec3 pred;
+										GPrediction->GetFutureUnitPosition(targets, 0.4f, true, pred);
+
+										Q->CastOnPosition(pred);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			for (auto Ally : GEntityList->GetAllHeros(true, false))
+			{
+
+				for (auto targets : GEntityList->GetAllHeros(false, true))
+				{
+					if (targets != nullptr && !targets->IsDead() & targets->IsValidTarget())
+					{
+
+						if (Ally->IsValidTarget(GEntityList->Player(), E->Range()) && Ally->IsValidTarget(targets, Q->Range()))
+						{
+							if (Ally->IsValidTarget() && Ally != nullptr && !Ally->IsDead() && Q->IsReady())
+							{
+								E->CastOnTarget(Ally);
+							}
+						}
+
+
+						if (Ally->HasBuff("lulufaerieshield") && !Ally->IsDead() && Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), 2000))
+						{
+							if ((targets->GetPosition() - Ally->GetPosition()).Length2D() < Q->Range())
+							{
+								Q->SetRangeCheckFrom(Ally->GetPosition());
+								Q->SetFrom(Ally->GetPosition());
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(targets, 0.4f, true, pred);
+
+								Q->CastOnPosition(pred);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 	void Something()
 	{
@@ -155,8 +252,8 @@ public:
 							{
 								if (Ally != GEntityList->Player())
 								{
-									W->CastOnUnit(EPriority01);
-									E->CastOnUnit(EPriority01);
+									W->CastOnUnit(EPriority02);
+									E->CastOnUnit(EPriority02);
 								}
 							}
 							if (!ComboWQreset->Enabled())
@@ -214,8 +311,8 @@ public:
 							{
 								if (Ally != GEntityList->Player())
 								{
-									W->CastOnUnit(EPriority01);
-									E->CastOnUnit(EPriority01);
+									W->CastOnUnit(EPriority03);
+									E->CastOnUnit(EPriority03);
 								}
 							}
 							if (!ComboWQreset->Enabled())
@@ -278,8 +375,8 @@ public:
 							{
 								if (Ally != GEntityList->Player())
 								{
-									W->CastOnUnit(EPriority01);
-									E->CastOnUnit(EPriority01);
+									W->CastOnUnit(EPriority04);
+									E->CastOnUnit(EPriority04);
 								}
 							}
 							if (!ComboWQreset->Enabled())
@@ -339,8 +436,8 @@ public:
 							{
 								if (Ally != GEntityList->Player())
 								{
-									W->CastOnUnit(EPriority01);
-									E->CastOnUnit(EPriority01);
+									W->CastOnUnit(EPriority05);
+									E->CastOnUnit(EPriority05);
 								}
 							}
 							if (!ComboWQreset->Enabled())
@@ -705,11 +802,11 @@ public:
 							if (GEntityList->Player() != nullptr && !GEntityList->Player()->IsDead())
 							{
 
-								if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
+								if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat() && GEntityList->Player()->HealthPercent() < ShieldSelfHP->GetFloat() && ally->HealthPercent() > GEntityList->Player()->HealthPercent())
 								{
 									E->CastOnPlayer();
 								}
-								if (GetEnemiesInRange(GEntityList->Player(), E->Range()) >= 1 && GEntityList->Player()->HealthPercent() <= ShieldHP->GetFloat())
+								if (GetEnemiesInRange(GEntityList->Player(), E->Range()) >= 1 && GEntityList->Player()->HealthPercent() <= ShieldHP->GetFloat() && GEntityList->Player()->HealthPercent() < ShieldSelfHP->GetFloat() && ally->HealthPercent() > GEntityList->Player()->HealthPercent())
 								{
 									E->CastOnPlayer();
 								}
@@ -764,7 +861,7 @@ public:
 										if (ally->HealthPercent() >= GEntityList->Player()->HealthPercent())
 										{
 
-											if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
+											if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat() && GEntityList->Player()->HealthPercent() < ShieldSelfHP->GetFloat() && ally->HealthPercent() > GEntityList->Player()->HealthPercent())
 											{
 
 												E->CastOnPlayer();
@@ -818,7 +915,7 @@ public:
 								if (ShieldSelf->Enabled())
 								{
 
-									if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat())
+									if (tracker.getIncomingDamagePercent(GEntityList->Player()) >= ShieldHPinc->GetFloat() && GEntityList->Player()->HealthPercent() < ShieldSelfHP->GetFloat() && ally->HealthPercent() > GEntityList->Player()->HealthPercent())
 									{
 										E->CastOnPlayer();
 									}
@@ -905,6 +1002,97 @@ public:
 		return enemiesInRange;
 	}
 
+	void Killsteal()
+	{
+		if (KSQ->Enabled())
+		{
+
+			for (auto Minions : GEntityList->GetAllMinions(false, true, true))
+			{
+				if (Minions->IsValidTarget() && Minions != nullptr && !Minions->IsDead() && (Minions->IsCreep() || Minions->IsJungleCreep()))
+				{
+
+
+					for (auto targets : GEntityList->GetAllHeros(false, true))
+					{
+						if (targets != nullptr && !targets->IsDead() & targets->IsValidTarget())
+						{
+							auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), targets, kSlotQ);
+							if (Minions->IsValidTarget(GEntityList->Player(), E->Range()) && targets->GetHealth() < QDamage)
+							{
+								if (Minions->IsValidTarget(targets, Q->Range()) && Q->IsReady())
+								{
+									E->CastOnTarget(Minions);
+								}
+							}
+							if (Minions->HasBuff("lulufaerieburn") || Minions->HasBuff("lulufaerieshield"))
+							{
+								if (Minions->IsValidTarget(GEntityList->Player(), 2000))
+								{
+									if ((targets->GetPosition() - Minions->GetPosition()).Length2D() < Q->Range() && targets->GetHealth() < QDamage)
+									{
+										Q->SetRangeCheckFrom(Minions->GetPosition());
+										Q->SetFrom(Minions->GetPosition());
+										Vec3 pred;
+										GPrediction->GetFutureUnitPosition(targets, 0.4f, true, pred);
+
+										Q->CastOnPosition(pred);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			for (auto Ally : GEntityList->GetAllHeros(true, false))
+			{
+
+				for (auto targets : GEntityList->GetAllHeros(false, true))
+				{
+					if (targets != nullptr && !targets->IsDead() & targets->IsValidTarget())
+					{
+						auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), targets, kSlotQ);
+						if (Ally->IsValidTarget(GEntityList->Player(), E->Range()) && Ally->IsValidTarget(targets, Q->Range()))
+						{
+							if (Ally->IsValidTarget() && Ally != nullptr && !Ally->IsDead() && Q->IsReady() && targets->GetHealth() < QDamage)
+							{
+								E->CastOnTarget(Ally);
+							}
+						}
+
+
+						if (Ally->HasBuff("lulufaerieshield") && !Ally->IsDead() && Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), 2000))
+						{
+							auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), targets, kSlotQ);
+							if ((targets->GetPosition() - Ally->GetPosition()).Length2D() < Q->Range() && targets->GetHealth() < QDamage)
+							{
+								Q->SetRangeCheckFrom(Ally->GetPosition());
+								Q->SetFrom(Ally->GetPosition());
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(targets, 0.4f, true, pred);
+
+								Q->CastOnPosition(pred);
+							}
+						}
+					}
+				}
+			}
+			for (auto targets : GEntityList->GetAllHeros(false, true))
+			{
+				if (Enemy != nullptr && !Enemy->IsDead() & Enemy->IsValidTarget())
+				{
+					auto QDamage = GDamage->GetSpellDamage(GEntityList->Player(), targets, kSlotQ);
+					if (Enemy->IsValidTarget(GEntityList->Player(), Q->Range()) && QDamage > Enemy->GetHealth())
+					{
+						Vec3 pred;
+						GPrediction->GetFutureUnitPosition(targets, 0.4f, true, pred);
+
+						Q->CastOnPosition(pred);
+					}
+				}
+			}
+		}
+	}
 	void Combo()
 	{
 
@@ -913,9 +1101,46 @@ public:
 			auto target = GTargetSelector->FindTarget(QuickestKill, SpellDamage, Q->Range() + 1300);
 			if (target != nullptr && target->IsValidTarget() && target->IsHero())
 			{
-				if (target->HasBuff("lulufaerieshield"))
+				for (auto Minions : GEntityList->GetAllMinions(true, true, true))
 				{
+					if (Minions->IsValidTarget() && Minions != nullptr && !Minions->IsDead() && Minions->IsValidTarget(GEntityList->Player(), 2000))
+					{
+						if (Minions->HasBuff("lulufaerieburn") || Minions->HasBuff("lulufaerieshield"))
+						{
+							if ((target->GetPosition() - Minions->GetPosition()).Length2D() < Q->Range())
+							{
+								Q->SetRangeCheckFrom(Minions->GetPosition());
+								Q->SetFrom(Minions->GetPosition());
+								Vec3 pred;
+								GPrediction->GetFutureUnitPosition(target, 0.4f, true, pred);
 
+								Q->CastOnPosition(pred);
+							}
+						}
+					}
+				}
+				for (auto targets : GEntityList->GetAllHeros(false, true))
+				{
+					if (targets->HasBuff("lulufaerieburn"))
+					{
+
+						if (targets->IsValidTarget() && targets != nullptr && !targets->IsDead() && targets->IsValidTarget(GEntityList->Player(), 2000))
+						{
+
+							if (targets->HasBuff("lulufaerieburn"))
+							{
+								if ((targets->GetPosition() - target->GetPosition()).Length2D() < Q->Range())
+								{
+									Q->SetRangeCheckFrom(targets->GetPosition());
+									Q->SetFrom(targets->GetPosition());
+									Vec3 pred;
+									GPrediction->GetFutureUnitPosition(target, 0.4f, true, pred);
+
+									Q->CastOnPosition(pred);
+								}
+							}
+						}
+					}
 				}
 				for (auto Ally : GEntityList->GetAllHeros(true, false))
 				{
@@ -951,7 +1176,7 @@ public:
 							}
 						}
 
-						if (Ally->HasBuff("lulufaerieshield") && !Ally->IsDead() && Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), 1300) && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < 1300 + Q->Range())
+						if (Ally->HasBuff("lulufaerieshield") && !Ally->IsDead() && Ally != nullptr && Ally->IsValidTarget(GEntityList->Player(), 2000) && (target->GetPosition() - GEntityList->Player()->GetPosition()).Length2D() < 1300 + Q->Range())
 						{
 
 							if (target->IsValidTarget(Ally, Q->Range()))
@@ -1432,13 +1657,39 @@ public:
 		{
 			for (auto Ally : GEntityList->GetAllHeros(true, false))
 			{
-				if (Ally->IsValidTarget() && Ally != nullptr && !Ally->IsDead() && Ally->IsValidTarget(GEntityList->Player(), 1280))
+				if (Ally->IsValidTarget() && Ally != nullptr && !Ally->IsDead() && Ally->IsValidTarget(GEntityList->Player(), 1800))
 				{
 					if (Ally->HasBuff("lulufaerieshield"))
 					{
 						if (DrawQRange->Enabled())
 						{
 							GPluginSDK->GetRenderer()->DrawOutlinedCircle(Ally->GetPosition(), Vec4(255, 255, 0, 255), Q->Range());
+						}
+					}
+				}
+			}
+			for (auto target : GEntityList->GetAllHeros(false, true))
+			{
+				if (target->IsValidTarget() && target != nullptr && !target->IsDead() && target->IsValidTarget(GEntityList->Player(), 1800))
+				{
+					if (target->HasBuff("lulufaerieburn"))
+					{
+						if (DrawQRange->Enabled())
+						{
+							GPluginSDK->GetRenderer()->DrawOutlinedCircle(target->GetPosition(), Vec4(255, 255, 0, 255), Q->Range());
+						}
+					}
+				}
+			}
+			for (auto Minions : GEntityList->GetAllMinions(true, true, true))
+			{
+				if (Minions->IsValidTarget() && Minions != nullptr && !Minions->IsDead() && Minions->IsValidTarget(GEntityList->Player(), 1800))
+				{
+					if (Minions->HasBuff("lulufaerieburn") || Minions->HasBuff("lulufaerieshield"))
+					{
+						if (DrawQRange->Enabled())
+						{
+							GPluginSDK->GetRenderer()->DrawOutlinedCircle(Minions->GetPosition(), Vec4(255, 255, 0, 255), Q->Range());
 						}
 					}
 				}

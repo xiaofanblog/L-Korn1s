@@ -1682,6 +1682,8 @@ public:
 		LuluBase().AutoE();
 		LuluBase().Auto();
 		LuluBase().AutoR();
+		LuluBase().Killsteal();
+		
 		if (GOrbwalking->GetOrbwalkingMode() == kModeCombo)
 		{
 			LuluBase().Combo();
@@ -1693,6 +1695,10 @@ public:
 		if (GUtility->IsKeyDown(FleeKey->GetInteger()))
 		{
 			LuluBase().Flee();
+		}
+		if (GOrbwalking->GetOrbwalkingMode() == kModeMixed)
+		{
+			LuluBase().Harass();
 		}
 		if (GUtility->IsKeyDown(ComboEally->GetInteger()))
 		{

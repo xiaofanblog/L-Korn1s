@@ -44,6 +44,7 @@ IMenuOption* ComboQMode;
 IMenuOption* ComboMode;
 IMenuOption* HarassQMode;
 IMenuOption* HarassMode;
+IMenuOption* ShieldSelfHP;
 IMenuOption* ComboEmin;
 IMenuOption* ComboR;
 IMenuOption* ComboRinterrupt;
