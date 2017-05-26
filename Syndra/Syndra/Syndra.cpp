@@ -286,7 +286,6 @@ static void CastQELogic(IUnit* target)
 			if (Q->CastOnPosition(pred))
 			{
 				QE->SetFrom(Vec3(0, 0, 0));
-				lastqE = GGame->Latency();
 			}
 		}
 	}
@@ -308,7 +307,6 @@ static void CastQELogic(IUnit* target)
 			if (Q2->CastOnPosition(startPosition))
 			{
 				QE->SetFrom(Vec3(0, 0, 0));
-				lastqE = GGame->Latency();
 			}
 		}
 	}
@@ -330,29 +328,8 @@ static void CastQELogic(IUnit* target)
 			if (Q2->CastOnPosition(startPosition))
 			{
 				QE->SetFrom(Vec3(0, 0, 0));
-				lastqE = GGame->Latency();
 			}
 		}
-		/*Vec3 pred;
-		GPrediction->GetFutureUnitPosition(target, 0.3, true, pred);
-		if (!target->IsValidTarget(GEntityList->Player(), E->Range()))
-		{
-			if (Q->CastOnPosition(pred.Extend(GEntityList->Player()->ServerPosition(), 420)));
-			{
-				lastqE = GGame->Latency();
-				Q->SetOverrideRange(800);
-				QE->SetFrom(Vec3(0, 0, 0));
-			}
-		}
-		if (target->IsValidTarget(GEntityList->Player(), E->Range()))
-		{
-			if (Q->CastOnPosition(pred));
-			{
-				lastqE = GGame->Latency();
-				Q->SetOverrideRange(800);
-				QE->SetFrom(Vec3(0, 0, 0));
-			}
-		}*/
 	}
 }
 static double GetUltimateDamage(IUnit* target)
@@ -443,7 +420,6 @@ static void CastELogic(IUnit* target)
 				&& Distance(prediction_output.TargetPosition.To2D(), start_point, end_point, false) < QE->Radius() + target->BoundingRadius()-20)
 			{
 				E->CastOnPosition(orb);
-				lastqE = GGame->Latency();
 				QE->SetFrom(Vec3(0, 0, 0));
 				return;
 			}
@@ -538,6 +514,7 @@ void Combo()
 		if (target != nullptr && target->IsValidTarget(GEntityList->Player(), QE->Range()) && ComboE->Enabled() && target->IsValidTarget() && target->IsHero() && !target->IsDead())
 		{
 			CastELogic(target);
+			lastqe = GGame->TickCount() + GGame->Latency() + 100;
 
 		}
 	}
@@ -1334,7 +1311,7 @@ static void OnProcessSpellCast(CastedSpell const& Args)
 					GPluginSDK->DelayFunctionCall(lastqE, []()
 					{
 						E->CastOnPosition(EndPos);
-						lastqE = 0;
+						
 					});
 				}
 			}
@@ -1346,7 +1323,7 @@ static void OnProcessSpellCast(CastedSpell const& Args)
 					GPluginSDK->DelayFunctionCall(lastqE, []()
 					{
 						E->CastOnPosition(EndPos);
-						lastqE = 0;
+						
 					});
 				}
 			}
